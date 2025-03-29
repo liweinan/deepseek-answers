@@ -16,10 +16,13 @@ Here are the topics:
 - [How to Run sshd in Debug Mode](https://github.com/liweinan/deepseek-answers/blob/main/ssh-in-debug-mode.md)
 - [What Does "receive packet: type 51" Mean in SSH?](https://github.com/liweinan/deepseek-answers/blob/main/what-does-type-51-mean-in-ssh.md)
 - [What is gcr-ssh-agent?](https://github.com/liweinan/deepseek-answers/blob/main/what-is-gcr-ssh-agent.md)
+- [使用ImageMagick对图片进行剪裁](https://github.com/liweinan/deepseek-answers/blob/main/imagemagick-crop.md)
 
 ### Frontend Frameworks
 
 ### Backend Frameworks
+
+- [Spring WebFlux Implementation Overview](https://github.com/liweinan/deepseek-answers/blob/main/spring-webflux-implementation-overview.md)
 
 ### Cloud Native
 
