@@ -16,7 +16,9 @@ Here are the topics:
 - [使用ImageMagick对图片进行剪裁](https://github.com/liweinan/deepseek-answers/blob/main/imagemagick-crop.md)
 
 ### Rust
- 
+
+### Linux Administration
+
 - [Disable SELinux On Ubuntu](https://github.com/liweinan/deepseek-answers/blob/main/disable-selinux.md)
 - [Enable SSH login on Ubuntu](https://github.com/liweinan/deepseek-answers/blob/main/enable-ssh-login-in-ubuntu.md)
 - [How to Fix "Missing Privilege Separation Directory: /run/sshd" Error in SSH](https://github.com/liweinan/deepseek-answers/blob/main/fix-ssd-dir-error.md)
@@ -24,9 +26,10 @@ Here are the topics:
 - [What Does "receive packet: type 51" Mean in SSH?](https://github.com/liweinan/deepseek-answers/blob/main/what-does-type-51-mean-in-ssh.md)
 - [What is gcr-ssh-agent?](https://github.com/liweinan/deepseek-answers/blob/main/what-is-gcr-ssh-agent.md)
 
-### Linux Administration
-
 ### Frontend Frameworks
+
+- [Vue Mixin 示例](https://github.com/liweinan/deepseek-answers/blob/main/vue-mixin.md)
+- [Vue Composition API 详解与示例](https://github.com/liweinan/deepseek-answers/blob/main/vue-composition-api.md)
 
 ### Backend Frameworks
 
