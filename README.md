@@ -2,6 +2,10 @@ Collect the questions and the answers I interacted with DeepSeek. These answers 
 
 Here are the topics:
 
+### Algorithm
+
+- [Circular Queue (Ring Buffer): Introduction and Advantages](https://github.com/liweinan/deepseek-answers/blob/main/ring-buffer.md)
+
 ### Go
 
 - [Go语言中的Backpressure实现](https://github.com/liweinan/deepseek-answers/blob/main/go-backpressure.md)
