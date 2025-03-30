@@ -34,10 +34,15 @@ Here are the topics:
 ### Backend Frameworks
 
 - [Spring WebFlux Implementation Overview](https://github.com/liweinan/deepseek-answers/blob/main/spring-webflux-implementation-overview.md)
-- [Comprehensive Technical Report: TcpRest Project](https://github.com/liweinan/deepseek-answers/blob/main/tcprest-proj-intro.md.md)
+- [Comprehensive Technical Report: TcpRest Project](https://github.com/liweinan/deepseek-answers/blob/main/tcprest-proj-intro.md)
 
 ### Database
 
+- [Creating and Verifying Indexes in PostgreSQL](https://github.com/liweinan/deepseek-answers/blob/main/postgresql-index.md)
+
 ### Cloud Native
 
+- [Hypershift 与 OpenShift 深度对比分析](https://github.com/liweinan/deepseek-answers/blob/main/hypershift-vs-openshift.md)
+- [使用 client-go 操作 Kubernetes 的完整指南](https://github.com/liweinan/deepseek-answers/blob/main/k8s-client-go.md)
+- [Why client-go Works with k3s](https://github.com/liweinan/deepseek-answers/blob/main/client-go-with-k3s.md)
 
