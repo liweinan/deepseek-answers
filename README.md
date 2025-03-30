@@ -6,6 +6,7 @@ Here are the topics:
 
 - [Go语言中的Backpressure实现](https://github.com/liweinan/deepseek-answers/blob/main/go-backpressure.md)
 - [带缓冲区的内存溢出问题及解决方案](https://github.com/liweinan/deepseek-answers/blob/main/backpressure-buffer.md)
+- [Range Usage Examples in Go](https://github.com/liweinan/deepseek-answers/blob/main/range-usage-in-go.md)
 
 ### Java
 
