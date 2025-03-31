@@ -55,4 +55,5 @@ Here are the topics:
 - [Hypershift 与 OpenShift 深度对比分析](https://github.com/liweinan/deepseek-answers/blob/main/files/hypershift-vs-openshift.md)
 - [使用 client-go 操作 Kubernetes 的完整指南](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-client-go.md)
 - [Why client-go Works with k3s](https://github.com/liweinan/deepseek-answers/blob/main/files/client-go-with-k3s.md)
+- [OpenShift Origin: An Introduction](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-origin-intro.md)
 
