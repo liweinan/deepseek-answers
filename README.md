@@ -56,4 +56,6 @@ Here are the topics:
 - [使用 client-go 操作 Kubernetes 的完整指南](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-client-go.md)
 - [Why client-go Works with k3s](https://github.com/liweinan/deepseek-answers/blob/main/files/client-go-with-k3s.md)
 - [OpenShift Origin: An Introduction](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-origin-intro.md)
-
+- [MLflow vs Kubeflow Comparison Overview](https://github.com/liweinan/deepseek-answers/blob/main/files/mlflow-vs-kubeflow.md)
+- [**Kubeflow MLOps Example on OKD/OpenShift**](https://github.com/liweinan/deepseek-answers/blob/main/files/kubeflow-ml-ops-example.md)
+- [Strategies in OpenShift](https://github.com/liweinan/deepseek-answers/blob/main/files/strategies-in-openshift.md)
