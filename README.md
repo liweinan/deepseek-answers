@@ -20,6 +20,8 @@ Here are the topics:
 - [Range Usage Examples in Go](https://github.com/liweinan/deepseek-answers/blob/main/files/range-usage-in-go.md)
 - [Go Channel Buffer](https://github.com/liweinan/deepseek-answers/blob/main/files/go-channel-buffer.md)
 - [Go vs Maven/Gradle Tool Comparison](https://github.com/liweinan/deepseek-answers/blob/main/files/go-vs-maven-gradle.md)
+- [Using `select` in Go](https://github.com/liweinan/deepseek-answers/blob/main/files/using-select-in-go.md)
+- [Go's I/O Approach vs Java NIO](https://github.com/liweinan/deepseek-answers/blob/main/files/go-nio.md)
 
 ### Java
 
