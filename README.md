@@ -6,12 +6,20 @@ Here are the topics:
 
 - [Circular Queue (Ring Buffer): Introduction and Advantages](https://github.com/liweinan/deepseek-answers/blob/main/files/ring-buffer.md)
 
+### AI / Machine Learning
+
+
+### Database
+
+- [Creating and Verifying Indexes in PostgreSQL](https://github.com/liweinan/deepseek-answers/blob/main/files/postgresql-index.md)
+
 ### Go
 
 - [Go语言中的Backpressure实现](https://github.com/liweinan/deepseek-answers/blob/main/files/go-backpressure.md)
 - [带缓冲区的内存溢出问题及解决方案](https://github.com/liweinan/deepseek-answers/blob/main/files/backpressure-buffer.md)
 - [Range Usage Examples in Go](https://github.com/liweinan/deepseek-answers/blob/main/files/range-usage-in-go.md)
 - [Go Channel Buffer](https://github.com/liweinan/deepseek-answers/blob/main/files/go-channel-buffer.md)
+- [Go vs Maven/Gradle Tool Comparison](https://github.com/liweinan/deepseek-answers/blob/main/files/go-vs-maven-gradle.md)
 
 ### Java
 
@@ -41,10 +49,6 @@ Here are the topics:
 
 - [Spring WebFlux Implementation Overview](https://github.com/liweinan/deepseek-answers/blob/main/files/spring-webflux-implementation-overview.md)
 - [Comprehensive Technical Report: TcpRest Project](https://github.com/liweinan/deepseek-answers/blob/main/files/tcprest-proj-intro.md)
-
-### Database
-
-- [Creating and Verifying Indexes in PostgreSQL](https://github.com/liweinan/deepseek-answers/blob/main/files/postgresql-index.md)
 
 ### Cloud Native
 
