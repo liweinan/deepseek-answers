@@ -797,3 +797,163 @@ document.body.appendChild(script);
 ---
 
 按照以上方法配置，既能保证安全性，又能实现合法的跨域请求。对于敏感操作（如修改数据），建议始终通过同源代理中转。
+
+---
+
+# 避免前端XSS注入的全面防护方案
+
+XSS（跨站脚本攻击）是Web应用最常见的安全威胁之一，以下是全方位的防护策略和实践方法：
+
+## 一、基础防护措施
+
+### 1. 输入验证与过滤
+```javascript
+// 使用正则表达式过滤危险字符
+function sanitizeInput(input) {
+  return input.replace(/[<>"'&\/]/g, '');
+}
+
+// 或使用专业库
+import DOMPurify from 'dompurify';
+const clean = DOMPurify.sanitize(userInput);
+```
+
+### 2. 输出编码
+```javascript
+// HTML实体编码
+function htmlEncode(str) {
+  return str.replace(/[&<>'"]/g, 
+    char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
+}
+```
+
+## 二、现代框架的安全实践
+
+### React安全实践
+```jsx
+// 自动转义内容
+<div>{userContent}</div> 
+
+// 需要渲染HTML时消毒
+<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlContent) }} />
+```
+
+### Vue安全实践
+```html
+<!-- 自动转义 -->
+<div>{{ userContent }}</div>
+
+<!-- 需要渲染HTML时使用v-html + 消毒 -->
+<div v-html="sanitizedHtml"></div>
+```
+
+## 三、内容安全策略（CSP）
+
+### 配置示例
+```http
+Content-Security-Policy: 
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval';
+  style-src 'self' 'unsafe-inline'; 
+  img-src 'self' data:;
+  connect-src 'self';
+  frame-ancestors 'none';
+```
+
+### 元标签方式
+```html
+<meta http-equiv="Content-Security-Policy" 
+      content="default-src 'self'; script-src 'self'">
+```
+
+## 四、安全HTTP头配置
+
+```http
+X-XSS-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: no-referrer-when-downgrade
+```
+
+## 五、DOM操作安全
+
+### 危险操作（避免使用）
+```javascript
+element.innerHTML = userInput;
+document.write(userInput);
+eval(userInput);
+```
+
+### 安全替代方案
+```javascript
+element.textContent = userInput;
+element.setAttribute('data-value', userInput);
+```
+
+## 六、专业防护库推荐
+
+1. **DOMPurify** - HTML消毒
+   ```bash
+   npm install dompurify
+   ```
+
+2. **xss-filters** - 通用XSS过滤
+   ```bash
+   npm install xss-filters
+   ```
+
+3. **sanitize-html** - 富文本消毒
+   ```bash
+   npm install sanitize-html
+   ```
+
+## 七、进阶防护技术
+
+### 1. 子资源完整性（SRI）
+```html
+<script src="https://example.com/script.js"
+        integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC"
+        crossorigin="anonymous"></script>
+```
+
+### 2. Trusted Types API（Chrome）
+```javascript
+// 服务端头
+Content-Security-Policy: require-trusted-types-for 'script'
+
+// 前端配置
+if (window.trustedTypes) {
+  const policy = trustedTypes.createPolicy('default', {
+    createHTML: input => DOMPurify.sanitize(input)
+  });
+}
+```
+
+## 八、开发流程中的安全实践
+
+1. **代码审查**：检查所有动态内容渲染点
+2. **自动化扫描**：使用工具如OWASP ZAP
+3. **安全测试**：定期进行渗透测试
+4. **依赖更新**：保持安全库版本最新
+
+## 九、常见XSS攻击场景防御
+
+### 1. 存储型XSS
+- 所有用户输入在存储前消毒
+- 输出时再次编码
+
+### 2. 反射型XSS
+- 对URL参数严格验证
+- 实现CSP限制内联脚本
+
+### 3. DOM型XSS
+- 避免使用`eval()`、`setTimeout(string)`等
+- 使用`textContent`代替`innerHTML`
+
+通过实施以上多层次的防御措施，可以显著降低XSS攻击风险。记住：**没有单一的银弹解决方案**，安全需要纵深防御体系。
