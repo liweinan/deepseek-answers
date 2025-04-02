@@ -27,6 +27,8 @@ Here are the topics:
 
 ### JavaScript / TypeScript
 
+- [Collection of some JavaScript quiz](https://github.com/liweinan/deepseek-answers/blob/main/files/js-quiz.md)
+
 ### Bash Scripting
 
 - [使用ImageMagick对图片进行剪裁](https://github.com/liweinan/deepseek-answers/blob/main/files/imagemagick-crop.md)
