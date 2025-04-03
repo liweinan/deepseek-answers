@@ -67,6 +67,7 @@ Here are the topics:
 - [Comprehensive Technical Report: TcpRest Project](https://github.com/liweinan/deepseek-answers/blob/main/files/tcprest-proj-intro.md)
 - [Messaging Systems in Go Similar to RabbitMQ](https://github.com/liweinan/deepseek-answers/blob/main/files/go-messaging.md)
 - [Ent Framework in Go: A Modern Entity Framework](https://github.com/liweinan/deepseek-answers/blob/main/files/go-ent.md)
+- [Comparison: `computed` in Vue vs `useEffect` in React](https://github.com/liweinan/deepseek-answers/blob/main/files/vue-computed-vs-react-useeffect.md)
 
 ### Cloud Native
 
