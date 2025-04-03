@@ -31,6 +31,7 @@ Here are the topics:
 - [Anonymous Fields in Go Structs (Embedding)](https://github.com/liweinan/deepseek-answers/blob/main/files/go-anonymous-fields.md)
 - [Setting Up Golang Bin Path in Fish Shell](https://github.com/liweinan/deepseek-answers/blob/main/files/go-fish.md)
 - [Determining if a Go Struct Implements an Interface](https://github.com/liweinan/deepseek-answers/blob/main/files/go-uml.md)
+- [When to Use Pointer Fields in Go Structs](https://github.com/liweinan/deepseek-answers/blob/main/files/go-ptr.md)
 
 ### Java
 
