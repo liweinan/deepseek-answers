@@ -27,6 +27,8 @@ Here are the topics:
 - [Go vs Maven/Gradle Tool Comparison](https://github.com/liweinan/deepseek-answers/blob/main/files/go-vs-maven-gradle.md)
 - [Using `select` in Go](https://github.com/liweinan/deepseek-answers/blob/main/files/using-select-in-go.md)
 - [Go's I/O Approach vs Java NIO](https://github.com/liweinan/deepseek-answers/blob/main/files/go-nio.md)
+- [Go's Interfaces vs Structs: Comparison and Differences](https://github.com/liweinan/deepseek-answers/blob/main/files/go-struct-vs-interface.md)
+- [Anonymous Fields in Go Structs (Embedding)](https://github.com/liweinan/deepseek-answers/blob/main/files/go-anonymous-fields.md)
 
 ### Java
 
