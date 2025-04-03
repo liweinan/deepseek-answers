@@ -29,6 +29,7 @@ Here are the topics:
 - [Go's I/O Approach vs Java NIO](https://github.com/liweinan/deepseek-answers/blob/main/files/go-nio.md)
 - [Go's Interfaces vs Structs: Comparison and Differences](https://github.com/liweinan/deepseek-answers/blob/main/files/go-struct-vs-interface.md)
 - [Anonymous Fields in Go Structs (Embedding)](https://github.com/liweinan/deepseek-answers/blob/main/files/go-anonymous-fields.md)
+- [Setting Up Golang Bin Path in Fish Shell](https://github.com/liweinan/deepseek-answers/blob/main/files/go-fish.md)
 
 ### Java
 
