@@ -62,6 +62,8 @@ Here are the topics:
 
 - [Spring WebFlux Implementation Overview](https://github.com/liweinan/deepseek-answers/blob/main/files/spring-webflux-implementation-overview.md)
 - [Comprehensive Technical Report: TcpRest Project](https://github.com/liweinan/deepseek-answers/blob/main/files/tcprest-proj-intro.md)
+- [Messaging Systems in Go Similar to RabbitMQ](https://github.com/liweinan/deepseek-answers/blob/main/files/go-messaging.md)
+- [Ent Framework in Go: A Modern Entity Framework](https://github.com/liweinan/deepseek-answers/blob/main/files/go-ent.md)
 
 ### Cloud Native
 
