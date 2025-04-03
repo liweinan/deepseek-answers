@@ -30,6 +30,7 @@ Here are the topics:
 - [Go's Interfaces vs Structs: Comparison and Differences](https://github.com/liweinan/deepseek-answers/blob/main/files/go-struct-vs-interface.md)
 - [Anonymous Fields in Go Structs (Embedding)](https://github.com/liweinan/deepseek-answers/blob/main/files/go-anonymous-fields.md)
 - [Setting Up Golang Bin Path in Fish Shell](https://github.com/liweinan/deepseek-answers/blob/main/files/go-fish.md)
+- [Determining if a Go Struct Implements an Interface](https://github.com/liweinan/deepseek-answers/blob/main/files/go-uml.md)
 
 ### Java
 
