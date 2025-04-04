@@ -32,6 +32,7 @@ Here are the topics:
 - [Setting Up Golang Bin Path in Fish Shell](https://github.com/liweinan/deepseek-answers/blob/main/files/go-fish.md)
 - [Determining if a Go Struct Implements an Interface](https://github.com/liweinan/deepseek-answers/blob/main/files/go-uml.md)
 - [When to Use Pointer Fields in Go Structs](https://github.com/liweinan/deepseek-answers/blob/main/files/go-ptr.md)
+- [The Work-Stealing Model in Go (Golang)](https://github.com/liweinan/deepseek-answers/blob/main/files/gmp-in-go.md)
 
 ### Java
 
