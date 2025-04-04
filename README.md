@@ -61,6 +61,7 @@ Here are the topics:
 - [Comparing the Vue and React data models.](https://github.com/liweinan/deepseek-answers/blob/main/files/vue-vs-react-data-model.md)
 - [XSS跨域问题与正确防护方法](https://github.com/liweinan/deepseek-answers/blob/main/files/xss-solution.md)
 - [Node.js servers](https://github.com/liweinan/deepseek-answers/blob/main/files/nodejs-servers.md)
+- [Introduction to Node.js](https://github.com/liweinan/deepseek-answers/blob/main/files/node-intro.md)
 
 ### Backend Frameworks
 
