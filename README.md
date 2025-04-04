@@ -5,6 +5,7 @@ Here are the topics:
 ### Algorithm
 
 - [Circular Queue (Ring Buffer): Introduction and Advantages](https://github.com/liweinan/deepseek-answers/blob/main/files/ring-buffer.md)
+- [Spin Locks: A Low-Level Synchronization Primitive](https://github.com/liweinan/deepseek-answers/blob/main/files/spin-lock.md)
 
 ### AI / Machine Learning
 
