@@ -11,6 +11,10 @@ Here are the topics:
 
 - [全球AI - 区块链 -软件工具项目融资情况以及项目介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/ai-stat.md)
 
+### Tools
+
+- [比较 **TraeAI** 和 **Cursor**](https://github.com/liweinan/deepseek-answers/blob/main/files/cursor-vs-trae.md)
+
 ### C / C++
 
 - [Diamond Inheritance in C++](https://github.com/liweinan/deepseek-answers/blob/main/files/diamond-inheritance.md)
