@@ -68,6 +68,7 @@ Here are the topics:
 - [XSS跨域问题与正确防护方法](https://github.com/liweinan/deepseek-answers/blob/main/files/xss-solution.md)
 - [Node.js servers](https://github.com/liweinan/deepseek-answers/blob/main/files/nodejs-servers.md)
 - [Introduction to Node.js](https://github.com/liweinan/deepseek-answers/blob/main/files/node-intro.md)
+- [**Tauri** 的架构解析和基本用法指南](https://github.com/liweinan/deepseek-answers/blob/main/files/tauri-intro.md)
 
 ### Backend Frameworks
 
