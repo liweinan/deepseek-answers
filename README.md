@@ -52,6 +52,8 @@ Here are the topics:
 
 ### Rust
 
+- [ORM 框架比较: Diesel vs Hibernate vs MyBatis vs GORM](https://github.com/liweinan/deepseek-answers/blob/main/files/diesel-hibernate-mybatis-gorm.md)
+
 ### Linux Administration
 
 - [Disable SELinux On Ubuntu](https://github.com/liweinan/deepseek-answers/blob/main/files/disable-selinux.md)
