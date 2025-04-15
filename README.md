@@ -100,3 +100,4 @@ Here are the topics:
 - [**Kubernetes Service** 的样例](https://github.com/liweinan/deepseek-answers/blob/main/files/a-sample-of-k8s-service-config.md)
 - [**OpenShift 中的 Headless Service（无头服务）**](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-headless-service.md)
 - [OpenShift的三种核心资源](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-resources.md)
+- [在本机通过 **Ingress** 访问 **Service** 服务](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-ingress.md)
