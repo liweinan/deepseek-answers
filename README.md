@@ -74,6 +74,7 @@ Here are the topics:
 - [Introduction to Node.js](https://github.com/liweinan/deepseek-answers/blob/main/files/node-intro.md)
 - [**Tauri** 的架构解析和基本用法指南](https://github.com/liweinan/deepseek-answers/blob/main/files/tauri-intro.md)
 - [深入探讨 React 中的 `setState()`：同步与异步的奥秘](https://github.com/liweinan/deepseek-answers/blob/main/files/react-set-state.md)
+- [Hackerrank SlideShow](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-slideshow.md)
 
 ### Backend Frameworks
 
