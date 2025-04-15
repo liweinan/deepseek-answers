@@ -39,6 +39,7 @@ Here are the topics:
 - [Determining if a Go Struct Implements an Interface](https://github.com/liweinan/deepseek-answers/blob/main/files/go-uml.md)
 - [When to Use Pointer Fields in Go Structs](https://github.com/liweinan/deepseek-answers/blob/main/files/go-ptr.md)
 - [The Work-Stealing Model in Go (Golang)](https://github.com/liweinan/deepseek-answers/blob/main/files/gmp-in-go.md)
+- [Go 语言面试题卷（含答案）]((https://github.com/liweinan/deepseek-answers/blob/main/files/go-exam.md))
 
 ### Java
 
