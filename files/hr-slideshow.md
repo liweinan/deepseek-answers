@@ -1,4 +1,4 @@
-# Hackerrank SlideShow
+# HackerRank - SlideShow
 
 - [https://www.hackerrank.com/challenges/react-slideshow-1](https://www.hackerrank.com/challenges/react-slideshow-1)
 
