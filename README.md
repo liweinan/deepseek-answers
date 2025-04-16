@@ -23,6 +23,7 @@ Here are the topics:
 ### Database
 
 - [Creating and Verifying Indexes in PostgreSQL](https://github.com/liweinan/deepseek-answers/blob/main/files/postgresql-index.md)
+- [数据库分片面试题及答案](https://github.com/liweinan/deepseek-answers/blob/main/files/db-exam.md)
 
 ### Go
 
@@ -40,6 +41,8 @@ Here are the topics:
 - [When to Use Pointer Fields in Go Structs](https://github.com/liweinan/deepseek-answers/blob/main/files/go-ptr.md)
 - [The Work-Stealing Model in Go (Golang)](https://github.com/liweinan/deepseek-answers/blob/main/files/gmp-in-go.md)
 - [Go 语言面试题卷（含答案）](https://github.com/liweinan/deepseek-answers/blob/main/files/go-exam.md)
+- [如何编写基于Go的单元测试](https://github.com/liweinan/deepseek-answers/blob/main/files/go-test.md)
+
 
 ### Java
 
@@ -54,6 +57,7 @@ Here are the topics:
 ### Rust
 
 - [ORM 框架比较: Diesel vs Hibernate vs MyBatis vs GORM](https://github.com/liweinan/deepseek-answers/blob/main/files/diesel-hibernate-mybatis-gorm.md)
+- [Rust Programming Interview Questions with Answers](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-exam.md)
 
 ### Linux Administration
 
@@ -63,6 +67,10 @@ Here are the topics:
 - [How to Run sshd in Debug Mode](https://github.com/liweinan/deepseek-answers/blob/main/files/ssh-in-debug-mode.md)
 - [What Does "receive packet: type 51" Mean in SSH?](https://github.com/liweinan/deepseek-answers/blob/main/files/what-does-type-51-mean-in-ssh.md)
 - [What is gcr-ssh-agent?](https://github.com/liweinan/deepseek-answers/blob/main/files/what-is-gcr-ssh-agent.md)
+
+### Testing
+
+- [**Jenkins Pipeline手把手教程 - 为OpenShift测试设计**](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-jenkins.md)
 
 ### Frontend Frameworks
 
@@ -103,3 +111,8 @@ Here are the topics:
 - [**OpenShift 中的 Headless Service（无头服务）**](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-headless-service.md)
 - [OpenShift的三种核心资源](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-resources.md)
 - [在本机通过 **Ingress** 访问 **Service** 服务](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-ingress.md)
+- [**kube-proxy 具体工作流程详解**](https://github.com/liweinan/deepseek-answers/blob/main/files/kube-proxy-intro.md)
+- [在 Kubernetes 中删除 Service、Deployment 和对应的 Pods](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-delete.md)
+- [Kubernetes 和 OpenShift 面试考卷](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-exam.md)
+- [kubelet简介](https://github.com/liweinan/deepseek-answers/blob/main/files/kubelet-intro.md)
+- [在 Kubernetes 集群中部署 Jenkins 的 **手把手完整教程**](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-jenkins.md)
