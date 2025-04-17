@@ -53,6 +53,7 @@ Here are the topics:
 ### Bash Scripting
 
 - [使用ImageMagick对图片进行剪裁](https://github.com/liweinan/deepseek-answers/blob/main/files/imagemagick-crop.md)
+- [Bash的双方括号 `[[ ]]`](https://github.com/liweinan/deepseek-answers/blob/main/files/bash-double-quote.md)
 
 ### Rust
 
