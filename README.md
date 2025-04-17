@@ -123,6 +123,7 @@ Here are the topics:
 - [kubelet简介](https://github.com/liweinan/deepseek-answers/blob/main/files/kubelet-intro.md)
 - [在 Kubernetes 集群中部署 Jenkins 的 **手把手完整教程**](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-jenkins.md)
 - [OpenShift Installer 详解](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-installer.md)
+- [Konflux CI介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/konflux-ci.md)
 
 ### CheatSheets
 
