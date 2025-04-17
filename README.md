@@ -6,7 +6,6 @@ Here are the topics:
 
 - [Circular Queue (Ring Buffer): Introduction and Advantages](https://github.com/liweinan/deepseek-answers/blob/main/files/ring-buffer.md)
 - [Spin Locks: A Low-Level Synchronization Primitive](https://github.com/liweinan/deepseek-answers/blob/main/files/spin-lock.md)
-- [Solution to the "New Year Chaos" Problem on HackerRank](https://github.com/liweinan/deepseek-answers/blob/main/files/new-year-chaos.md)
 
 ### AI / Machine Learning
 
@@ -87,8 +86,6 @@ Here are the topics:
 - [Introduction to Node.js](https://github.com/liweinan/deepseek-answers/blob/main/files/node-intro.md)
 - [**Tauri** 的架构解析和基本用法指南](https://github.com/liweinan/deepseek-answers/blob/main/files/tauri-intro.md)
 - [深入探讨 React 中的 `setState()`：同步与异步的奥秘](https://github.com/liweinan/deepseek-answers/blob/main/files/react-set-state.md)
-- [Hackerrank - SlideShow](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-slideshow.md)
-- [HackerRank - Blog Post](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-blogpost.md)
 
 ### Backend Frameworks
 
@@ -124,6 +121,15 @@ Here are the topics:
 - [在 Kubernetes 集群中部署 Jenkins 的 **手把手完整教程**](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-jenkins.md)
 - [OpenShift Installer 详解](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-installer.md)
 - [Konflux CI介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/konflux-ci.md)
+
+
+## HackerRank
+
+- [HackerRank - SlideShow](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-slideshow.md)
+- [HackerRank - SlideShow](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-slideshow.md)
+- [HackerRank - Blog Post](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-blogpost.md)
+- [HackerRank - Item List Manager](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-itemlistmanager.md)
+- [Solution to the "New Year Chaos" Problem on HackerRank](https://github.com/liweinan/deepseek-answers/blob/main/files/new-year-chaos.md)
 
 ### CheatSheets
 
