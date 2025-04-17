@@ -59,6 +59,10 @@ Here are the topics:
 - [ORM 框架比较: Diesel vs Hibernate vs MyBatis vs GORM](https://github.com/liweinan/deepseek-answers/blob/main/files/diesel-hibernate-mybatis-gorm.md)
 - [Rust Programming Interview Questions with Answers](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-exam.md)
 
+### Languages
+
+- [**Rust**、**Go** 和 **Java** 的详细对比](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-go-java.md)
+
 ### Linux Administration
 
 - [Disable SELinux On Ubuntu](https://github.com/liweinan/deepseek-answers/blob/main/files/disable-selinux.md)
@@ -117,10 +121,11 @@ Here are the topics:
 - [Kubernetes 和 OpenShift 面试考卷](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-exam.md)
 - [kubelet简介](https://github.com/liweinan/deepseek-answers/blob/main/files/kubelet-intro.md)
 - [在 Kubernetes 集群中部署 Jenkins 的 **手把手完整教程**](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-jenkins.md)
+- [OpenShift Installer 详解](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-installer.md)
 
 ### CheatSheets
 
 - [Bash Shell 脚本速查表 (Cheatsheet)](https://github.com/liweinan/deepseek-answers/blob/main/files/bash-cheatsheet.md)
 - [Kubernetes 速查表 (Cheatsheet)](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-cheatsheet.md)
 - [Go 语言速查表 (Cheatsheet)](https://github.com/liweinan/deepseek-answers/blob/main/files/go-cheatsheet.md)
-
+- [Python Cheat Sheet](https://github.com/liweinan/deepseek-answers/blob/main/files/python-cheatsheet.md)
