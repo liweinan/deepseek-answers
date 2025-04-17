@@ -129,6 +129,7 @@ Here are the topics:
 - [HackerRank - SlideShow](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-slideshow.md)
 - [HackerRank - Blog Post](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-blogpost.md)
 - [HackerRank - Item List Manager](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-itemlistmanager.md)
+- [HackerRank - CryptoRank Exchange](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-cryptorank-exchange.md)
 - [Solution to the "New Year Chaos" Problem on HackerRank](https://github.com/liweinan/deepseek-answers/blob/main/files/new-year-chaos.md)
 
 ### CheatSheets
