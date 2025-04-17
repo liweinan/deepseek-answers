@@ -117,3 +117,10 @@ Here are the topics:
 - [Kubernetes 和 OpenShift 面试考卷](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-exam.md)
 - [kubelet简介](https://github.com/liweinan/deepseek-answers/blob/main/files/kubelet-intro.md)
 - [在 Kubernetes 集群中部署 Jenkins 的 **手把手完整教程**](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-jenkins.md)
+
+### CheatSheets
+
+- [Bash Shell 脚本速查表 (Cheatsheet)](https://github.com/liweinan/deepseek-answers/blob/main/files/bash-cheatsheet.md)
+- [Kubernetes 速查表 (Cheatsheet)](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-cheatsheet.md)
+- [Go 语言速查表 (Cheatsheet)](https://github.com/liweinan/deepseek-answers/blob/main/files/go-cheatsheet.md)
+
