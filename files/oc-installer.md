@@ -1227,3 +1227,345 @@ oc get routes -n openshift-console
 | 学习多节点管理 | 两节点紧凑集群    | 手动配置 HAProxy + Ignition 文件       |
 
 通过 Vagrant 在 macOS 上部署 OpenShift，可以高效模拟生产环境，适合开发和学习。生产环境请使用官方支持的硬件平台。
+
+
+---
+
+以下是针对 **192.168.0.0/24** 网段调整后的 **macOS + Vagrant + VirtualBox 部署 OpenShift** 教程（单节点 SNO 或两节点集群），确保所有 IP 配置与您的本地网络兼容。
+
+---
+
+## **调整要点**
+1. **虚拟机 IP 范围**：改为 `192.168.0.100-192.168.0.200`（避免与现有设备冲突）。
+2. **VIP (Virtual IP)**：使用 `192.168.0.150`（API）和 `192.168.0.151`（Ingress）。
+3. **负载均衡器配置**：绑定到宿主机（Mac）的 `192.168.0.x` 地址。
+
+---
+
+# **教程开始**
+## **1. 环境准备**
+### **1.1 安装工具（Mac）**
+```bash
+# 安装 Homebrew、Vagrant、VirtualBox
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install vagrant virtualbox
+
+# 安装 OpenShift 客户端
+brew install openshift-cli
+wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-install-mac.tar.gz
+tar -xvf openshift-install-mac.tar.gz
+sudo mv openshift-install /usr/local/bin/
+```
+
+### **1.2 配置 VirtualBox 网络**
+1. 打开 **VirtualBox** -> **偏好设置** -> **网络** -> **Host-only Networks**。
+2. 创建一个新网卡（如 `vboxnet0`），配置如下：
+    - **IPv4 地址**: `192.168.0.1`
+    - **子网掩码**: `255.255.255.0`
+    - 取消勾选 **DHCP 服务器**（手动分配 IP）。
+
+---
+
+## **2. 单节点 OpenShift (SNO) 部署**
+### **2.1 创建 Vagrantfile**
+```bash
+mkdir openshift-sno && cd openshift-sno
+cat <<EOF > Vagrantfile
+Vagrant.configure("2") do |config|
+  config.vm.define "sno" do |node|
+    node.vm.box = "fedora/38-cloud-base"
+    node.vm.hostname = "sno"
+    node.vm.network "private_network", ip: "192.168.0.100"  # 静态 IP
+    node.vm.provider "virtualbox" do |v|
+      v.memory = 32768  # 32GB RAM
+      v.cpus = 8        # 8 CPU
+      v.customize ["modifyvm", :id, "--ioapic", "on"]
+      v.customize ["createhd", "--filename", "sno-disk.vdi", "--size", 120 * 1024]  # 120GB 磁盘
+      v.customize ["storageattach", :id, "--storagectl", "SATA Controller", "--port", 1, "--device", 0, "--type", "hdd", "--medium", "sno-disk.vdi"]
+    end
+  end
+end
+EOF
+```
+
+### **2.2 生成安装配置**
+```bash
+# 生成 install-config.yaml
+cat <<EOF > install-config.yaml
+apiVersion: v1
+baseDomain: example.com
+metadata:
+  name: sno-cluster
+compute:
+- name: worker
+  replicas: 0
+controlPlane:
+  name: master
+  replicas: 1
+platform:
+  baremetal:
+    apiVIP: "192.168.0.150"  # 虚拟 IP（与虚拟机 IP 不同）
+    ingressVIP: "192.168.0.151"
+pullSecret: '$(cat ~/Downloads/pull-secret.json | jq -c)'
+sshKey: '$(cat ~/.ssh/id_rsa.pub)'
+EOF
+
+# 生成 Ignition 配置
+openshift-install create single-node-ignition-config --dir=.
+```
+
+### **2.3 启动虚拟机并安装**
+```bash
+vagrant up
+vagrant ssh sno -- sudo coreos-installer install /dev/sda --ignition-file /vagrant/bootstrap-in-place-for-live-iso.ign
+vagrant reload sno  # 重启虚拟机
+```
+
+### **2.4 验证安装**
+```bash
+export KUBECONFIG=auth/kubeconfig
+oc get nodes  # 应显示 1 个节点
+```
+
+---
+
+## **3. 两节点紧凑集群部署**
+### **3.1 创建 Vagrantfile**
+```bash
+mkdir openshift-compact && cd openshift-compact
+cat <<EOF > Vagrantfile
+Vagrant.configure("2") do |config|
+  config.vm.define "master" do |node|
+    node.vm.box = "fedora/38-cloud-base"
+    node.vm.hostname = "master"
+    node.vm.network "private_network", ip: "192.168.0.100"
+    node.vm.provider "virtualbox" do |v|
+      v.memory = 16384  # 16GB RAM
+      v.cpus = 4        # 4 CPU
+      v.customize ["createhd", "--filename", "master-disk.vdi", "--size", 100 * 1024]  # 100GB 磁盘
+      v.customize ["storageattach", :id, "--storagectl", "SATA Controller", "--port", 1, "--device", 0, "--type", "hdd", "--medium", "master-disk.vdi"]
+    end
+  end
+
+  config.vm.define "worker" do |node|
+    node.vm.box = "fedora/38-cloud-base"
+    node.vm.hostname = "worker"
+    node.vm.network "private_network", ip: "192.168.0.101"
+    node.vm.provider "virtualbox" do |v|
+      v.memory = 8192   # 8GB RAM
+      v.cpus = 4        # 4 CPU
+      v.customize ["createhd", "--filename", "worker-disk.vdi", "--size", 50 * 1024]  # 50GB 磁盘
+      v.customize ["storageattach", :id, "--storagectl", "SATA Controller", "--port", 1, "--device", 0, "--type", "hdd", "--medium", "worker-disk.vdi"]
+    end
+  end
+end
+EOF
+```
+
+### **3.2 配置负载均衡（Mac 宿主机）**
+```bash
+# 安装并配置 HAProxy
+brew install haproxy
+cat <<EOF | sudo tee /usr/local/etc/haproxy.cfg
+frontend openshift-api
+    bind 192.168.0.1:6443  # 宿主机 IP
+    default_backend openshift-api
+backend openshift-api
+    server master 192.168.0.100:6443 check
+
+frontend openshift-ingress
+    bind 192.168.0.1:80
+    bind 192.168.0.1:443
+    default_backend openshift-ingress
+backend openshift-ingress
+    server worker 192.168.0.101:80 check
+EOF
+
+# 启动 HAProxy
+sudo haproxy -f /usr/local/etc/haproxy.cfg
+```
+
+### **3.3 生成安装配置**
+```bash
+cat <<EOF > install-config.yaml
+apiVersion: v1
+baseDomain: example.com
+metadata:
+  name: compact-cluster
+compute:
+- name: worker
+  replicas: 1
+controlPlane:
+  name: master
+  replicas: 1
+platform:
+  baremetal:
+    apiVIP: "192.168.0.150"  # 虚拟 IP
+    ingressVIP: "192.168.0.151"
+pullSecret: '$(cat ~/Downloads/pull-secret.json | jq -c)'
+sshKey: '$(cat ~/.ssh/id_rsa.pub)'
+EOF
+
+openshift-install create ignition-configs --dir=.
+```
+
+### **3.4 部署节点**
+```bash
+vagrant up
+vagrant ssh master -- sudo coreos-installer install /dev/sda --ignition-file /vagrant/master.ign
+vagrant ssh worker -- sudo coreos-installer install /dev/sda --ignition-file /vagrant/worker.ign
+vagrant reload master worker
+```
+
+### **3.5 验证集群**
+```bash
+export KUBECONFIG=auth/kubeconfig
+oc get nodes                 # 应显示 2 个节点
+oc get clusteroperators      # 检查所有 Operator 状态
+```
+
+---
+
+## **4. 访问 OpenShift 控制台**
+1. 在 Mac 的 `/etc/hosts` 中添加解析：
+   ```bash
+   # 编辑 hosts 文件
+   sudo sh -c 'echo "192.168.0.150 console-openshift-console.apps.example.com" >> /etc/hosts'
+   sudo sh -c 'echo "192.168.0.151 oauth-openshift.apps.example.com" >> /etc/hosts'
+   ```
+2. 浏览器访问：
+    - **控制台**: https://console-openshift-console.apps.example.com
+    - **用户名**: `kubeadmin`
+    - **密码**: `cat auth/kubeadmin-password`
+
+---
+
+## **关键调整总结**
+| **配置项**       | **原值**         | **调整为**       | **原因**                     |
+|------------------|------------------|------------------|------------------------------|
+| 虚拟机 IP        | 192.168.56.x    | 192.168.0.100+   | 匹配您的本地网络             |
+| VIP (API/Ingress)| 192.168.56.10   | 192.168.0.150/151 | 避免冲突且易记忆            |
+| HAProxy 绑定 IP  | 任意            | 192.168.0.1      | 宿主机在 192.168.0.x 网段   |
+
+---
+
+## **故障排查**
+1. **虚拟机无法通信**：
+    - 检查 VirtualBox 的 `vboxnet0` 配置是否与宿主机同网段。
+    - 禁用 Mac 防火墙：`sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate off`。
+2. **Ignition 文件失效**：
+    - 确保文件通过 `vagrant upload` 或共享文件夹 (`/vagrant`) 传递。
+3. **证书错误**：
+    - 手动批准 CSR：
+      ```bash
+      oc get csr -o name | xargs oc adm certificate approve
+      ```
+
+---
+
+通过以上调整，您可以在 **192.168.0.0/24** 网段中顺利部署 OpenShift。如果需要进一步简化，可以使用 [CodeReady Containers (CRC)](https://developers.redhat.com/products/codeready-containers) 快速启动单节点集群。
+
+
+---
+
+以下是针对 **ARM 架构 Mac（如 M1/M2 芯片）** 的 OpenShift 部署方案调整说明：
+
+---
+
+### **关键结论**
+1. **原生支持有限**：  
+   OpenShift 官方仅正式支持 x86_64 架构，**不原生支持 ARM 架构的 Mac**（如 M1/M2）。
+2. **替代方案**：
+    - **使用 x86 模拟器**（如 Rosetta 2 + VirtualBox）运行 x86 虚拟机（性能较低）。
+    - **等待官方支持**：Red Hat 已开始测试 OpenShift 对 ARM 的支持，但尚未正式发布。
+
+---
+
+## **可行方案（基于 ARM Mac）**
+### **方案 1：使用 CodeReady Containers (CRC)**
+**适用场景**：快速本地开发测试（单节点 OpenShift）  
+**优势**：唯一官方支持的轻量级方案（需 Rosetta 2 转译）。
+
+#### **步骤**
+1. **安装依赖**：
+   ```bash
+   # 安装 Rosetta 2（如果未安装）
+   softwareupdate --install-rosetta
+
+   # 安装 CRC 和 Podman
+   brew install crc podman
+   ```
+
+2. **下载 CRC（x86 版本）**：
+   ```bash
+   # 下载 x86 版 CRC（通过 Rosetta 运行）
+   wget https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/latest/crc-macos-amd64.tar.xz
+   tar -xvf crc-macos-amd64.tar.xz
+   sudo mv crc-macos-amd64/crc /usr/local/bin/
+   ```
+
+3. **启动 CRC**：
+   ```bash
+   crc setup
+   crc start --pull-secret-file=pull-secret.json  # 使用从 Red Hat 下载的 pull-secret
+   ```
+
+4. **访问集群**：
+   ```bash
+   eval $(crc oc-env)
+   oc get nodes  # 应显示 1 个节点
+   ```
+
+---
+
+### **方案 2：使用 x86 虚拟机（UTM/QEMU）**
+**适用场景**：需要多节点测试（性能较差）  
+**工具**：UTM（Mac 上的 QEMU 前端）模拟 x86 环境。
+
+#### **步骤**
+1. **安装 UTM**：
+   ```bash
+   brew install --cask utm
+   ```
+
+2. **创建 x86 虚拟机**：
+    - 在 UTM 中新建虚拟机，选择 **x86_64** 架构。
+    - 安装 RHEL 8/9 x86 镜像（需 Red Hat 订阅）。
+
+3. **在虚拟机内部署 OpenShift**：
+    - 参考 [x86 部署教程](#)，但需注意：
+        - 虚拟机性能较低（建议分配 8 CPU / 32GB RAM）。
+        - 仅适合功能验证，不适用于生产。
+
+---
+
+### **方案 3：等待官方 ARM 支持**
+- **当前进展**：  
+  Red Hat 已开始测试 OpenShift 对 ARM64（如 AWS Graviton）的支持，但尚未覆盖 Mac M1/M2。
+- **跟踪动态**：  
+  关注 [OpenShift 官方博客](https://www.openshift.com/blog) 或 [GitHub 问题](https://github.com/openshift/installer/issues/5163)。
+
+---
+
+## **不支持的场景**
+1. **直接运行 OpenShift Installer**：  
+   `openshift-install` 无 ARM 原生版本，无法直接在 M1/M2 上运行。
+2. **Vagrant + VirtualBox**：  
+   VirtualBox 不支持 ARM Mac，需改用 UTM 或 Parallels（仅商业版支持）。
+
+---
+
+## **性能对比**
+| **方案**          | **兼容性** | **性能** | **复杂度** | **适用场景**       |
+|--------------------|------------|----------|------------|--------------------|
+| **CRC (Rosetta 2)** | ✅         | ⭐⭐      | 低         | 开发测试           |
+| **UTM x86 虚拟机** | ✅         | ⭐        | 高         | 功能验证           |
+| **原生 ARM 支持**  | ❌         | ⭐⭐⭐⭐    | -          | 未来生产环境       |
+
+---
+
+## **总结建议**
+- **短期方案**：  
+  使用 **CRC**（通过 Rosetta 2）快速测试 OpenShift 功能。
+- **长期方案**：  
+  等待 Red Hat 官方发布 ARM 版 OpenShift，或使用 AWS Graviton 实例（如已订阅 ROSA）。
