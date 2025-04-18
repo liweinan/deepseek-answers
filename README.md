@@ -9,9 +9,10 @@ Here are the topics:
 - [高铁订票系统核心算法解析](https://github.com/liweinan/deepseek-answers/blob/main/files/gaotie.md)
 - [Raft 的并发性能限制](https://github.com/liweinan/deepseek-answers/blob/main/files/raft-perform.md)
 
-### AI / Machine Learning
+### AI / Machine Learning / BlockChain
 
 - [全球AI - 区块链 -软件工具项目融资情况以及项目介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/ai-stat.md)
+- [数字人民币与DeFi的关系解析](https://github.com/liweinan/deepseek-answers/blob/main/files/rmb.md)
 
 ### Tools
 
