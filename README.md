@@ -143,3 +143,4 @@ Here are the topics:
 - [Kubernetes 速查表 (Cheatsheet)](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-cheatsheet.md)
 - [Go 语言速查表 (Cheatsheet)](https://github.com/liweinan/deepseek-answers/blob/main/files/go-cheatsheet.md)
 - [Python Cheat Sheet](https://github.com/liweinan/deepseek-answers/blob/main/files/python-cheatsheet.md)
+- [TypeScript + JavaScript Cheatsheet](https://github.com/liweinan/deepseek-answers/blob/main/files/ts-js-cheatsheet.md)
