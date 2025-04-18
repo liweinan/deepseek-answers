@@ -6,6 +6,8 @@ Here are the topics:
 
 - [Circular Queue (Ring Buffer): Introduction and Advantages](https://github.com/liweinan/deepseek-answers/blob/main/files/ring-buffer.md)
 - [Spin Locks: A Low-Level Synchronization Primitive](https://github.com/liweinan/deepseek-answers/blob/main/files/spin-lock.md)
+- [高铁订票系统核心算法解析](https://github.com/liweinan/deepseek-answers/blob/main/files/gaotie.md)
+- [Raft 的并发性能限制](https://github.com/liweinan/deepseek-answers/blob/main/files/raft-perform.md)
 
 ### AI / Machine Learning
 
@@ -62,6 +64,7 @@ Here are the topics:
 ### Languages
 
 - [**Rust**、**Go** 和 **Java** 的详细对比](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-go-java.md)
+- [JavaScript (JS) 与 TypeScript (TS) 全面比较](https://github.com/liweinan/deepseek-answers/blob/main/files/ts-js-java.md)
 
 ### Linux Administration
 
@@ -86,6 +89,7 @@ Here are the topics:
 - [Introduction to Node.js](https://github.com/liweinan/deepseek-answers/blob/main/files/node-intro.md)
 - [**Tauri** 的架构解析和基本用法指南](https://github.com/liweinan/deepseek-answers/blob/main/files/tauri-intro.md)
 - [深入探讨 React 中的 `setState()`：同步与异步的奥秘](https://github.com/liweinan/deepseek-answers/blob/main/files/react-set-state.md)
+- [Next.js 手把手入门教程](https://github.com/liweinan/deepseek-answers/blob/main/files/nextjs.md)
 
 ### Backend Frameworks
 
