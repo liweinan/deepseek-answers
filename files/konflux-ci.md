@@ -318,3 +318,244 @@ spec:
 **下一步建议**：
 - 探索 [Konflux Hub](https://hub.konflux.io) 中的共享模板。
 - 阅读 [官方文档](https://docs.konflux.io) 了解高级功能（如多云部署）。
+
+---
+
+以下是一个完整的 **Konflux Demo 项目** 的逐步指南，包含代码示例、配置文件和操作命令，帮助您快速体验 Konflux 的 CI/CD 流程。
+
+---
+
+### **Konflux Demo 项目：Go 微服务自动化部署**
+#### **目标**：通过 Konflux 实现从代码提交到 OpenShift 的自动化构建、安全扫描和部署。
+
+---
+
+## **1. 环境准备**
+### **1.1 工具安装**
+```bash
+# 安装 Konflux CLI (MacOS)
+brew install konflux-cli
+
+# 安装 OpenShift 客户端 (oc)
+brew install openshift-cli
+
+# 登录 OpenShift 集群 (使用 CRC 或现有集群)
+oc login --server=https://api.crc.testing:6443 --username=developer --password=developer
+```
+
+### **1.2 代码仓库初始化**
+```bash
+mkdir konflux-demo && cd konflux-demo
+git init
+echo "# Konflux Demo" > README.md
+```
+
+---
+
+## **2. 项目结构**
+```
+konflux-demo/
+├── .konflux/            # Konflux 自动化配置
+│   ├── pipeline.yaml    # CI/CD 流水线
+│   └── policy.yaml      # 安全策略
+├── src/                 # 应用代码
+│   ├── main.go          # Go 示例应用
+│   └── go.mod          # Go 依赖
+├── Dockerfile           # 容器化配置
+└── .gitignore
+```
+
+---
+
+## **3. 文件内容**
+### **3.1 Go 应用代码 (`src/main.go`)**
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello from Konflux Demo!")
+}
+
+func main() {
+	http.HandleFunc("/", handler)
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+### **3.2 Dockerfile**
+```dockerfile
+FROM golang:1.19 as builder
+WORKDIR /app
+COPY src/ .
+RUN go build -o /app/server
+
+FROM alpine:3.15
+COPY --from=builder /app/server /server
+CMD ["/server"]
+```
+
+### **3.3 Konflux 流水线 (`./konflux/pipeline.yaml`)**
+```yaml
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: konflux-demo-pipeline
+spec:
+  tasks:
+    - name: build
+      taskRef:
+        name: kaniko-build
+      params:
+        - name: IMAGE
+          value: quay.io/yourusername/konflux-demo:latest
+
+    - name: deploy
+      runAfter: ["build"]
+      taskRef:
+        name: openshift-deploy
+      params:
+        - name: NAMESPACE
+          value: konflux-demo-dev
+        - name: MANIFESTS
+          value: |
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: konflux-demo
+            spec:
+              replicas: 1
+              template:
+                spec:
+                  containers:
+                    - name: app
+                      image: quay.io/yourusername/konflux-demo:latest
+```
+
+### **3.4 安全策略 (`./konflux/policy.yaml`)**
+```yaml
+apiVersion: policy.konflux.io/v1
+kind: Policy
+spec:
+  rules:
+    - name: no-critical-vulnerabilities
+      enforce: true
+      match:
+        - kind: "Image"
+      validate:
+        maxSeverity: "High"  # 阻断含高危漏洞的镜像
+```
+
+---
+
+## **4. 项目初始化与部署**
+### **4.1 初始化 Konflux 配置**
+```bash
+konflux init \
+  --name=konflux-demo \
+  --language=go \
+  --git-repo=https://github.com/yourusername/konflux-demo.git \
+  --output=.
+```
+
+### **4.2 链接镜像仓库**
+```bash
+konflux registry connect --quay --username=yourquayuser --token=yourquaytoken
+```
+
+### **4.3 推送代码并触发流水线**
+```bash
+git add .
+git commit -m "Initial commit with Konflux config"
+git remote add origin https://github.com/yourusername/konflux-demo.git
+git push -u origin main
+```
+
+---
+
+## **5. 监控与验证**
+### **5.1 查看流水线状态**
+```bash
+konflux pipeline logs --follow
+```
+输出示例：
+```
+[build] INFO: Building image quay.io/yourusername/konflux-demo:abc123
+[scan] INFO: Security scan passed (0 critical vulnerabilities)
+[deploy] SUCCESS: Deployed to namespace konflux-demo-dev
+```
+
+### **5.2 访问应用**
+```bash
+oc get route -n konflux-demo-dev
+```
+打开输出的 URL（如 `http://konflux-demo-konflux-demo-dev.apps-crc.testing`），应显示：
+```
+Hello from Konflux Demo!
+```
+
+### **5.3 检查安全报告**
+```bash
+konflux security report
+```
+输出示例：
+```
+IMAGE: quay.io/yourusername/konflux-demo:latest
+VULNERABILITIES:
+  - CVE-2023-1234 (Medium)
+POLICY CHECKS: PASSED
+```
+
+---
+
+## **6. 进阶操作**
+### **6.1 多环境部署**
+在 `.konflux/pipeline.yaml` 中添加 `prod` 环境任务：
+```yaml
+- name: deploy-prod
+  when:
+    - input: git.ref
+      operator: eq
+      values: ["refs/heads/main"]  # 仅 main 分支触发
+  taskRef:
+    name: openshift-deploy
+  params:
+    - name: NAMESPACE
+      value: konflux-demo-prod
+```
+
+### **6.2 自定义构建参数**
+通过 `konflux params` 覆盖默认值：
+```bash
+konflux params set BUILD_ARGS="--build-arg VERSION=1.0"
+```
+
+---
+
+## **7. 清理资源**
+```bash
+# 删除 OpenShift 资源
+oc delete project konflux-demo-dev
+
+# 删除镜像
+konflux registry delete quay.io/yourusername/konflux-demo
+```
+
+---
+
+## **总结**
+通过此 Demo，您已实现：
+1. **自动化构建**：代码推送触发镜像构建。
+2. **安全合规**：漏洞扫描和策略拦截。
+3. **一键部署**：GitOps 方式发布到 OpenShift。
+
+**扩展建议**：
+- 在 [Konflux Hub](https://hub.konflux.io) 探索更多模板（如 Java/Node.js）。
+- 参考 [官方文档](https://docs.konflux.io) 配置通知（如 Slack 告警）。
+
+---
+
