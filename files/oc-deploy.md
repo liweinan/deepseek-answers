@@ -35,30 +35,7 @@ crc config set https-proxy $HTTPS_PROXY
 crc config set no-proxy "$NO_PROXY"
 ```
 
-#### 1.2 配置集群代理
-
-编辑集群代理：
-
-```bash
-oc edit proxy cluster
-```
-
-更新 `spec`：
-
-```yaml
-spec:
-  httpProxy: http://squid.corp.redhat.com:3128
-  httpsProxy: http://squid.corp.redhat.com:3128
-  noProxy: .cluster.local,.svc,.testing,10.217.0.0/22,10.217.4.0/23,127.0.0.1,localhost,.crc.testing,.apps-crc.testing,api.crc.testing
-```
-
-保存并验证：
-
-```bash
-oc get proxy cluster -o yaml
-```
-
-#### 1.3 重启 CRC
+#### 1.2 重启 CRC
 
 ```bash
 crc stop
