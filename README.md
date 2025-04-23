@@ -127,7 +127,8 @@ Here are the topics:
 - [在 Kubernetes 集群中部署 Jenkins 的 **手把手完整教程**](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-jenkins.md)
 - [OpenShift Installer 详解](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-installer.md)
 - [Konflux CI介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/konflux-ci.md)
-
+- [在 OpenShift Local（CRC）环境中解决镜像拉取网络问题](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-proxy.md)
+- [在 OpenShift Local (CRC) 上部署一个简单 Service 使用 Docker Hub 公开镜像的完整步骤](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-deploy.md)
 
 ## HackerRank
 
