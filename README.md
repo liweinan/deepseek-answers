@@ -145,6 +145,7 @@ Here are the topics:
 ## TestDome
 
 - [React题 - Todo List](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-todolist.md)
+- [React - Focusable Input](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-focusable-input.md)
 
 ### CheatSheets
 
