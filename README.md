@@ -91,6 +91,7 @@ Here are the topics:
 - [**Tauri** 的架构解析和基本用法指南](https://github.com/liweinan/deepseek-answers/blob/main/files/tauri-intro.md)
 - [深入探讨 React 中的 `setState()`：同步与异步的奥秘](https://github.com/liweinan/deepseek-answers/blob/main/files/react-set-state.md)
 - [Next.js 手把手入门教程](https://github.com/liweinan/deepseek-answers/blob/main/files/nextjs.md)
+- [React中的`preventDefault`和`stopPropagation`](https://github.com/liweinan/deepseek-answers/blob/main/files/react-prevent.md)
 
 ### Backend Frameworks
 
@@ -138,6 +139,10 @@ Here are the topics:
 - [HackerRank - Item List Manager](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-itemlistmanager.md)
 - [HackerRank - CryptoRank Exchange](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-cryptorank-exchange.md)
 - [Solution to the "New Year Chaos" Problem on HackerRank](https://github.com/liweinan/deepseek-answers/blob/main/files/new-year-chaos.md)
+
+## TestDome
+
+- [React题 - Todo List](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-todolist.md)
 
 ### CheatSheets
 
