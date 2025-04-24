@@ -13,6 +13,7 @@ Here are the topics:
 
 - [全球AI - 区块链 -软件工具项目融资情况以及项目介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/ai-stat.md)
 - [数字人民币与DeFi的关系解析](https://github.com/liweinan/deepseek-answers/blob/main/files/rmb.md)
+- [few-shot learning](https://github.com/liweinan/deepseek-answers/blob/main/files/ai-fewshot.md)
 
 ### Tools
 
