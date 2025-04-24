@@ -48,6 +48,85 @@ This solution ensures the input is focused as required while keeping the code co
 
 ---
 
+Yes, you can solve the problem of automatically focusing an input element on the first render when the `shouldFocus`
+prop is true without using `useRef`. One alternative approach is to use the `autoFocus` attribute directly on the
+`<input>` element, which is a native HTML attribute that focuses the element when it mounts. You can conditionally apply
+`autoFocus` based on the `shouldFocus` prop.
+
+Here’s the solution:
+
+```jsx
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+
+const FocusableInput = ({shouldFocus}) => {
+    return <input autoFocus={shouldFocus}/>;
+};
+
+document.body.innerHTML = "<div id='root'></div>";
+const root = createRoot(document.getElementById("root"));
+root.render(<FocusableInput shouldFocus={true}/>);
+setTimeout(() => console.log(document.getElementById("root").innerHTML), 300);
+```
+
+### Explanation:
+
+1. **autoFocus Attribute**:
+    - The `autoFocus` attribute is a boolean HTML attribute that, when present and set to `true`, automatically focuses
+      the input element when it is rendered to the DOM.
+    - In React, you can pass `autoFocus` as a prop to the `<input>` element, and it will be applied as the native HTML
+      attribute.
+    - By setting `autoFocus={shouldFocus}`, the input will only receive focus if `shouldFocus` is `true`.
+
+2. **No useRef or useEffect Needed**:
+    - Unlike the `useRef` approach, which programmatically calls `.focus()` after rendering, `autoFocus` is handled by
+      the browser natively when the element is mounted.
+    - This eliminates the need for `useRef` to reference the DOM element and `useEffect` to trigger the focus.
+
+3. **Behavior**:
+    - When `shouldFocus={true}`, the `<input>` element will have the `autofocus` attribute in the DOM (e.g.,
+      `<input autofocus>`), and the browser will focus it immediately after rendering.
+    - When `shouldFocus={false}`, the `autoFocus` prop is omitted, and the input will not be focused.
+
+4. **Limitations**:
+    - The `autoFocus` attribute only works on the initial render when the element mounts. If `shouldFocus` changes
+      later (e.g., from `false` to `true`), the input won’t automatically focus because `autoFocus` doesn’t respond to
+      prop changes after mounting.
+    - If you need to dynamically focus the input on prop changes (not just the first render), the `useRef` and
+      `useEffect` approach is more flexible, as it can call `.focus()` whenever `shouldFocus` changes.
+
+5. **Why This Works for Your Case**:
+    - The problem specifies that the input should receive focus on the **first render** if `shouldFocus` is true. Since
+      `autoFocus` handles this exact scenario natively, it’s a perfect fit.
+    - The provided code renders `<FocusableInput shouldFocus={true} />` once, and the `setTimeout` logs the DOM content
+      after 300ms, which will show the input element (though focus itself isn’t visible in the HTML output).
+
+### Output:
+
+When `shouldFocus={true}`, the input will be focused immediately after rendering. The `console.log` in the `setTimeout`
+will output something like:
+
+```html
+<input>
+```
+
+The focus state isn’t reflected in the HTML, but the input will be active (e.g., with a cursor blinking) in the browser.
+
+### When to Avoid `autoFocus`:
+
+- If you need to focus the input conditionally after the initial render (e.g., in response to user actions or prop
+  changes), `autoFocus` won’t work, and you should use `useRef` with `useEffect`.
+- Overusing `autoFocus` in complex applications can lead to unexpected UX issues, as it may shift focus in ways that
+  confuse users or interfere with accessibility (e.g., screen readers). Use it judiciously.
+
+### Summary:
+
+By using the `autoFocus` attribute with `autoFocus={shouldFocus}`, you can solve the problem without `useRef` or
+`useEffect`. This approach is simpler and leverages native HTML behavior, making it ideal for focusing an input on the
+first render. However, for more dynamic focus control, the `useRef` and `useEffect` solution is more versatile.
+
+---
+
 The `useRef` hook in React is a versatile tool used to create a mutable reference that persists across renders of a
 functional component. It’s commonly used to access or manipulate DOM elements directly or to store any mutable value
 that doesn’t trigger a re-render when changed.
