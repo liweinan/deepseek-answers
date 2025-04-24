@@ -45,8 +45,9 @@ Here are the topics:
 - [Go 语言面试题卷（含答案）](https://github.com/liweinan/deepseek-answers/blob/main/files/go-exam.md)
 - [如何编写基于Go的单元测试](https://github.com/liweinan/deepseek-answers/blob/main/files/go-test.md)
 
-
 ### Java
+
+- [Java的并行Stream通过**Spliterator**和**Fork/Join框架**实现数据划分](https://github.com/liweinan/deepseek-answers/blob/main/files/java-spliterator.md)
 
 ### JavaScript / TypeScript
 
