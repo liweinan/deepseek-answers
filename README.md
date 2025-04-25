@@ -64,7 +64,7 @@ Here are the topics:
 - [ORM 框架比较: Diesel vs Hibernate vs MyBatis vs GORM](https://github.com/liweinan/deepseek-answers/blob/main/files/diesel-hibernate-mybatis-gorm.md)
 - [Rust Programming Interview Questions with Answers](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-exam.md)
 - [Rust 编程语言测试卷](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-exam2.md)
-
+- [Rust 生命周期和 Move 语义练习题](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-move-exam.md)
 ### Languages
 
 - [**Rust**、**Go** 和 **Java** 的详细对比](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-go-java.md)
