@@ -135,6 +135,7 @@ Here are the topics:
 - [Konflux CI介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/konflux-ci.md)
 - [在 OpenShift Local（CRC）环境中解决镜像拉取网络问题](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-proxy.md)
 - [在 OpenShift Local（CRC）上部署 Nginx 应用的简洁教程](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-deploy.md)
+- [**Prow**、**Konflux** 和 **Tekton** 各自的使用示例](https://github.com/liweinan/deepseek-answers/blob/main/files/prow-konflux-tekton.md)
 
 ## HackerRank
 
