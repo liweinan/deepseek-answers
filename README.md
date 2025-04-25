@@ -65,6 +65,8 @@ Here are the topics:
 - [Rust Programming Interview Questions with Answers](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-exam.md)
 - [Rust 中的所有权系统主要解决了什么问题？](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-exam2.md)
 - [Rust 生命周期和 Move 语义练习题](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-move-exam.md)
+- [Rust中的`Send` 和 `Sync`](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-send-sync.md)
+
 ### Languages
 
 - [**Rust**、**Go** 和 **Java** 的详细对比](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-go-java.md)
