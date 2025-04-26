@@ -240,3 +240,309 @@ graph TD
 
 - 该 Mermaid 代码可以在支持 Mermaid 的环境中渲染（如 Mermaid Live Editor 或支持 Mermaid 的 Markdown 渲染器）。
 - 如果需要调整图表样式或添加更多细节（例如具体副作用类型），请告诉我，我可以进一步优化！
+
+---
+
+`useEffect` 自身**不会直接触发下一次渲染**，但它内部执行的代码可能会导致状态或属性的变化，从而间接触发渲染。以下是详细分析：
+
+### 1. `useEffect` 的执行机制
+
+- `useEffect` 是在**组件渲染完成后**（DOM 更新和浏览器绘制后）异步执行的。
+- 它的主要作用是处理副作用（如数据获取、订阅、DOM 操作等），不直接影响组件的渲染流程。
+- `useEffect` 的回调函数运行时，React 的渲染阶段已经完成，因此它不会直接导致当前渲染周期的重新渲染。
+
+### 2. 间接触发渲染的情况
+
+尽管 `useEffect` 本身不触发渲染，但其回调函数中可能会执行以下操作，导致状态或属性变化，进而触发下一次渲染：
+
+- **更新状态（`setState`）**：
+  如果在 `useEffect` 中调用了状态更新函数（如 `setState`），React 会检测到状态变化并调度一次新的渲染。
+  ```jsx
+  useEffect(() => {
+    setCount(count + 1); // 更新状态，可能触发渲染
+  }, [count]);
+  ```
+    - **注意**：这种代码可能导致无限渲染循环，因为 `count` 变化会触发新的 `useEffect` 执行，除非有适当的依赖控制或条件逻辑。
+- **修改父组件传递的属性**：
+  如果 `useEffect` 通过回调函数或其他方式修改了父组件的状态，父组件可能会重新渲染，从而导致子组件重新渲染。
+  ```jsx
+  const Parent = () => {
+    const [value, setValue] = useState(0);
+    return <Child onUpdate={() => setValue(value + 1)} />;
+  };
+
+  const Child = ({ onUpdate }) => {
+    useEffect(() => {
+      onUpdate(); // 修改父组件状态，触发父组件重新渲染
+    }, [onUpdate]);
+    return <div>Child</div>;
+  };
+  ```
+- **外部数据变化**：
+  如果 `useEffect` 发起异步操作（如 API 请求），并在响应后更新状态，也会触发渲染。
+  ```jsx
+  useEffect(() => {
+    fetchData().then((data) => setData(data)); // 异步更新状态，触发渲染
+  }, []);
+  ```
+
+### 3. 不会触发渲染的情况
+
+如果 `useEffect` 的回调函数不修改状态、不影响父组件属性或不触发其他导致渲染的操作，它不会引发下一次渲染。例如：
+
+```jsx
+useEffect(() => {
+    console.log('Effect ran'); // 仅打印日志，不影响状态
+    document.title = 'Updated'; // 修改 DOM，不触发 React 渲染
+}, []);
+```
+
+- 这种情况下，`useEffect` 仅执行副作用，React 不会调度新的渲染。
+
+### 4. 避免无限渲染循环
+
+当 `useEffect` 可能触发状态更新时，需要小心管理依赖数组和逻辑，以避免无限循环。例如：
+
+```jsx
+useEffect(() => {
+    setCount(count + 1); // 错误：每次渲染后更新 count，导致无限循环
+}, [count]);
+```
+
+**解决方法**：
+
+- 使用条件逻辑：
+  ```jsx
+  useEffect(() => {
+    if (count < 5) {
+      setCount(count + 1); // 有限次更新
+    }
+  }, [count]);
+  ```
+- 移除不必要的依赖：
+  ```jsx
+  useEffect(() => {
+    setCount((prev) => prev + 1); // 仅在特定条件下运行
+  }, []); // 空依赖数组，运行一次
+  ```
+
+### 5. 对比 `useMemo`
+
+与 `useMemo` 相比，`useMemo` 是同步执行于渲染阶段，其结果直接用于当前渲染。如果 `useMemo`
+的计算中调用了状态更新函数，会导致立即重新渲染（通常是错误用法）。而 `useEffect` 的异步性质使其更适合处理可能触发状态更新的副作用。
+
+### 示例：明确是否触发渲染
+
+```jsx
+import {useState, useEffect} from 'react';
+
+const Example = () => {
+    const [count, setCount] = useState(0);
+
+    // 不会触发渲染
+    useEffect(() => {
+        console.log('Effect: No state update');
+        document.title = `Count: ${count}`;
+    }, [count]);
+
+    // 可能触发渲染
+    useEffect(() => {
+        if (count < 3) {
+            console.log('Effect: Updating state');
+            setCount(count + 1); // 触发渲染，直到 count >= 3
+        }
+    }, [count]);
+
+    console.log('Rendering');
+    return <div>Count: {count}</div>;
+};
+```
+
+**输出**：
+
+```
+Rendering
+Effect: No state update
+Effect: Updating state
+Rendering
+Effect: No state update
+Effect: Updating state
+Rendering
+Effect: No state update
+Effect: Updating state
+Rendering
+Effect: No state update
+```
+
+- 第一个 `useEffect` 不触发渲染，仅更新文档标题。
+- 第二个 `useEffect` 更新状态，导致多次渲染，直到 `count` 达到 3。
+
+### 总结
+
+- **`useEffect` 自身不触发渲染**，它只执行副作用。
+- **可能间接触发渲染**，如果其回调函数更新了状态、修改了父组件属性或引发其他导致重新渲染的操作。
+- **避免无限循环**：通过条件逻辑、正确的依赖数组或限制状态更新来控制 `useEffect` 的行为。
+- 如果需要进一步分析特定代码或场景，请提供代码，我可以帮你详细调试！
+
+---
+
+**`useMemo` 自身不会直接触发重复渲染**，它的作用是记忆计算结果以优化性能，避免在每次渲染时重复执行昂贵的计算。然而，
+`useMemo` 的使用方式或其回调函数中的逻辑可能间接导致状态或属性的变化，从而触发渲染。以下是详细分析：
+
+### 1. `useMemo` 的执行机制
+
+- `useMemo` 在**组件渲染阶段**同步执行，检查其依赖数组（`dependencies`）中的值是否变化。
+- 如果依赖数组中的值未变，`useMemo` 返回缓存的结果，不重新执行回调函数。
+- 如果依赖数组中的值发生变化，`useMemo` 重新执行回调函数，生成新的结果。
+- 它的主要目的是优化性能，避免重复计算，而不直接影响 React 的渲染调度。
+
+### 2. 不会触发重复渲染的典型情况
+
+在正常使用中，`useMemo` 仅返回一个值，供组件渲染使用，不会导致额外的渲染。例如：
+
+```jsx
+const memoizedValue = useMemo(() => {
+    console.log('useMemo executed');
+    return expensiveCalculation(propA, propB);
+}, [propA, propB]);
+```
+
+- 每次组件渲染时，`useMemo` 检查 `[propA, propB]` 是否变化：
+    - 如果未变，返回缓存值，不会重复执行 `expensiveCalculation`。
+    - 如果变化，重新计算并返回新值，但这仅影响当前渲染，不触发额外渲染。
+- 这种用法不会导致重复渲染，只是优化了当前渲染的性能。
+
+### 3. 可能间接触发渲染的情况
+
+尽管 `useMemo` 本身不触发渲染，其回调函数或返回值的使用可能导致状态/属性变化，间接触发渲染。以下是几种情况：
+
+#### (1) 回调函数中更新状态
+
+如果 `useMemo` 的回调函数直接或间接调用状态更新函数（如 `setState`），可能导致渲染：
+
+```jsx
+const [count, setCount] = useState(0);
+
+const memoizedValue = useMemo(() => {
+    setCount(count + 1); // 错误：直接在渲染阶段更新状态
+    return count * 2;
+}, [count]);
+```
+
+- **问题**：`setCount` 在渲染阶段（`useMemo` 执行时）触发状态更新，导致 React 重新渲染。
+- **结果**：可能引发无限渲染循环，因为 `count` 变化会触发新的 `useMemo` 执行。
+- **建议**：避免在 `useMemo` 中直接更新状态，这不符合其设计意图。状态更新通常应放在 `useEffect` 或事件处理函数中。
+
+#### (2) 返回值引发状态更新
+
+如果 `useMemo` 的返回值被用作触发状态更新的依据，也可能导致渲染：
+
+```jsx
+const [value, setValue] = useState(0);
+
+const memoizedResult = useMemo(() => {
+    return expensiveCalculation(propA);
+}, [propA]);
+
+useEffect(() => {
+    setValue(memoizedResult); // memoizedResult 变化触发状态更新
+}, [memoizedResult]);
+```
+
+- **分析**：`useMemo` 本身不触发渲染，但其结果（`memoizedResult`）变化时，`useEffect` 检测到依赖变化并更新状态，导致重新渲染。
+- **注意**：这是 `useEffect` 的行为导致的渲染，而非 `useMemo` 直接触发。
+
+#### (3) 依赖数组不稳定
+
+如果 `useMemo` 的依赖数组包含不稳定的引用（例如每次渲染都创建的新对象或函数），可能导致 `useMemo` 频繁重新计算，间接影响性能或触发渲染：
+
+```jsx
+const memoizedValue = useMemo(() => {
+    return someCalculation({data: propA}); // 对象每次渲染都是新引用
+}, [{data: propA}]); // 错误：依赖数组包含不稳定引用
+```
+
+- **问题**：依赖数组中的 `{ data: propA }` 每次渲染都是新对象，导致 `useMemo` 每次都重新执行。
+- **结果**：虽然不直接触发渲染，但频繁重新计算可能导致性能问题，或因返回值变化引发其他副作用（如 `useEffect` 触发状态更新）。
+- **解决**：确保依赖值稳定，或使用 `useCallback` 记忆函数，使用原始值（如 `propA`）作为依赖。
+
+### 4. 对比 `useEffect`
+
+- **`useEffect`**：异步执行，适合处理副作用，可能通过状态更新间接触发渲染（见前述问题）。
+- **`useMemo`**：同步执行于渲染阶段，旨在优化计算性能。如果在 `useMemo` 中更新状态，会立即影响当前渲染，可能导致错误或无限循环。
+- **关键区别**：
+    - `useMemo` 是渲染阶段的一部分，其结果直接用于当前渲染。
+    - `useEffect` 在渲染后运行，适合处理可能触发后续渲染的副作用。
+
+### 5. 示例：明确是否触发渲染
+
+以下示例对比 `useMemo` 的正常使用和错误使用：
+
+```jsx
+import {useState, useMemo} from 'react';
+
+const Example = () => {
+    const [count, setCount] = useState(0);
+    const [trigger, setTrigger] = useState(0);
+
+    // 正常使用：不会触发渲染
+    const memoizedValue = useMemo(() => {
+        console.log('useMemo executed');
+        return count * 2;
+    }, [count]);
+
+    // 错误使用：在 useMemo 中更新状态
+    const badMemoizedValue = useMemo(() => {
+        console.log('badMemoizedValue executed');
+        setCount(count + 1); // 错误：触发渲染，可能无限循环
+        return count * 3;
+    }, [count]);
+
+    console.log('Rendering');
+    return (
+        <div>
+            <p>Memoized Value: {memoizedValue}</p>
+            <p>Count: {count}</p>
+            <button onClick={() => setTrigger(trigger + 1)}>Trigger Render</button>
+        </div>
+    );
+};
+```
+
+**输出分析**：
+
+- **初始渲染**：
+  ```
+  Rendering
+  useMemo executed
+  badMemoizedValue executed
+  Rendering
+  useMemo executed
+  badMemoizedValue executed
+  ...
+  ```
+    - `badMemoizedValue` 的 `setCount` 触发无限渲染循环（需避免）。
+    - `memoizedValue` 正常计算，仅在 `count` 变化时重新执行。
+- **点击按钮（`trigger` 变化）**：
+  ```
+  Rendering
+  ```
+    - `memoizedValue` 不重新计算（依赖 `[count]` 未变），不触发额外渲染。
+    - `badMemoizedValue` 若未修复，会因 `count` 变化继续导致循环。
+
+### 6. 避免问题的建议
+
+- **不要在 `useMemo` 中更新状态**：状态更新应放在 `useEffect`、事件处理函数或其他适当位置。
+- **确保依赖数组正确**：使用稳定的依赖值，避免不必要的重新计算。
+- **检查返回值使用**：如果 `useMemo` 的结果触发 `useEffect` 或其他逻辑，确保这是预期的行为。
+- **使用 ESLint 插件**：`eslint-plugin-react-hooks` 可以检测 `useMemo` 的依赖数组问题。
+
+### 总结
+
+- **`useMemo` 自身不触发重复渲染**，它仅在渲染阶段计算并返回记忆值，优化性能。
+- **可能间接触发渲染**，如果：
+    - 回调函数中错误地更新状态（不推荐）。
+    - 返回值引发其他副作用（如 `useEffect` 检测到变化并更新状态）。
+    - 依赖数组不稳定，导致频繁重新计算。
+- **正确使用**：将 `useMemo` 限制于纯计算逻辑，确保依赖稳定，避免副作用。
+- 如果有具体代码或场景需要分析，请提供细节，我可以帮你进一步调试或优化！
