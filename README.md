@@ -97,6 +97,7 @@ Here are the topics:
 - [深入探讨 React 中的 `setState()`：同步与异步的奥秘](https://github.com/liweinan/deepseek-answers/blob/main/files/react-set-state.md)
 - [Next.js 手把手入门教程](https://github.com/liweinan/deepseek-answers/blob/main/files/nextjs.md)
 - [React中的`preventDefault`和`stopPropagation`](https://github.com/liweinan/deepseek-answers/blob/main/files/react-prevent.md)
+- [React中的`useMemo`和`useEffect`](https://github.com/liweinan/deepseek-answers/blob/main/files/react-usememo-useeffect.md)
 
 ### Backend Frameworks
 
