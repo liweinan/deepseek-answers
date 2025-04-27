@@ -150,6 +150,7 @@ Here are the topics:
 - [HackerRank - CryptoRank Exchange](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-cryptorank-exchange.md)
 - [Solution to the "New Year Chaos" Problem on HackerRank](https://github.com/liweinan/deepseek-answers/blob/main/files/new-year-chaos.md)
 - [Java题 - Sherlock and the Valid String](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-sherlock.md)
+- [Java题 - Compare the Triplets](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-compare-the-triplets.md)
 
 ## TestDome
 
