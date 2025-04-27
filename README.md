@@ -49,6 +49,7 @@ Here are the topics:
 ### Java
 
 - [Java的并行Stream通过**Spliterator**和**Fork/Join框架**实现数据划分](https://github.com/liweinan/deepseek-answers/blob/main/files/java-spliterator.md)
+- [To convert an `int` array to a `List<Integer>` in Java](https://github.com/liweinan/deepseek-answers/blob/main/files/java-int-array-to-list.md)
 
 ### JavaScript / TypeScript
 
@@ -66,6 +67,7 @@ Here are the topics:
 - [Rust 中的所有权系统主要解决了什么问题？](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-exam2.md)
 - [Rust 生命周期和 Move 语义练习题](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-move-exam.md)
 - [Rust中的`Send` 和 `Sync`](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-send-sync.md)
+- [Rust编程语言中的标记 trait](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-marker-traits.md)
 
 ### Languages
 
