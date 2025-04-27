@@ -140,7 +140,7 @@ Here are the topics:
 - [在 OpenShift Local（CRC）上部署 Nginx 应用的简洁教程](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-deploy.md)
 - [**Prow**、**Konflux** 和 **Tekton** 各自的使用示例](https://github.com/liweinan/deepseek-answers/blob/main/files/prow-konflux-tekton.md)
 - [OpenShift Route](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-route.md)
-- [Configuring an **Ingress Controller** to redirect traffic to multiple services running on different ports in a Kubernetes cluster.](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-route.md)
+- [Configuring an **Ingress Controller** to redirect traffic to multiple services running on different ports in a Kubernetes cluster.](https://github.com/liweinan/deepseek-answers/blob/main/files/ingress-multi-svc.md)
 
 ## HackerRank
 
