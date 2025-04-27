@@ -316,7 +316,6 @@ If you need to support non-standard ports (e.g., redirecting to services on port
 Here’s a complete YAML combining `nginx-service`, `other-service`, and a path-based Ingress:
 
 ```yaml
-```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -446,9 +445,8 @@ spec:
                   number: 9090
 ```
 
-```
-
 **Deploy**:
+
 ```bash
 kubectl apply -f multi-service-ingress.yaml
 ```
@@ -470,8 +468,7 @@ kubectl delete -f multi-service-ingress.yaml
 
 ### Handling Multiple Ports in a Single Service
 
-If a single Service exposes multiple ports (e.g., one app serving HTTP on 8080 and another protocol on 9090), you can
-define multiple ports in the Service and reference them in the Ingress.
+If a single Service exposes multiple ports (e.g., one app serving HTTP on 8080 and another protocol on 9090), you can define multiple ports in the Service and reference them in the Ingress.
 
 **Example Service with Multiple Ports**:
 
