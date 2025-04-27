@@ -37,6 +37,7 @@ The first method (using `Arrays.stream`) is the most concise and recommended for
 ---
 
 # 在 Java 中，初始化一个 `List` 并包含初始值有以下几种常用方法。以下以 `List<Integer>` 为例，展示如何初始化并包含初始值（如
+
 `[0, 0]`）：
 
 ### 1. **使用 `Arrays.asList`（适合固定初始值）**
