@@ -160,3 +160,4 @@ Here are the topics:
 - [Go 语言速查表 (Cheatsheet)](https://github.com/liweinan/deepseek-answers/blob/main/files/go-cheatsheet.md)
 - [Python Cheat Sheet](https://github.com/liweinan/deepseek-answers/blob/main/files/python-cheatsheet.md)
 - [TypeScript + JavaScript Cheatsheet](https://github.com/liweinan/deepseek-answers/blob/main/files/ts-js-cheatsheet.md)
+- [Rust 语言速查表（中文版）](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-cheatsheet.md)
