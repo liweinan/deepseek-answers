@@ -1008,7 +1008,6 @@ Since you're testing locally (based on your use of `192.168.1.200`), we'll inclu
 Below is the complete Kubernetes configuration, including the `Deployment`, `Service`, and `Ingress` resources. The `Ingress` is updated to use subdomains instead of paths. The `ConfigMap` and custom NGINX configuration are omitted, as they were removed in the previous fix.
 
 ```yaml
-```yaml
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1109,7 +1108,6 @@ spec:
                 name: other-service
                 port:
                   number: 9090
-```
 ```
 
 ### Explanation of Changes
