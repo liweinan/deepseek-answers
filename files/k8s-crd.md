@@ -514,7 +514,6 @@ func main() {
 创建 `Dockerfile` 用于构建控制器镜像：
 
 ```dockerfile
-```dockerfile
 FROM golang:1.20 AS builder
 WORKDIR /app
 COPY . .
@@ -525,7 +524,6 @@ WORKDIR /
 COPY --from=builder /app/simpleapp-controller .
 USER 65532:65532
 ENTRYPOINT ["/simpleapp-controller"]
-```
 ```
 
 **说明**：
