@@ -101,6 +101,8 @@ Here are the topics:
 - [Next.js 手把手入门教程](https://github.com/liweinan/deepseek-answers/blob/main/files/nextjs.md)
 - [React中的`preventDefault`和`stopPropagation`](https://github.com/liweinan/deepseek-answers/blob/main/files/react-prevent.md)
 - [React中的`useMemo`和`useEffect`](https://github.com/liweinan/deepseek-answers/blob/main/files/react-usememo-useeffect.md)
+- [在React中，你完全可以把多个组件放在一个JSX文件里](https://github.com/liweinan/deepseek-answers/blob/main/files/react-export.md)
+- [React.createContext](https://github.com/liweinan/deepseek-answers/blob/main/files/react-context.md)
 
 ### Backend Frameworks
 
