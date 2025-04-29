@@ -144,6 +144,7 @@ Here are the topics:
 - [**Prow**、**Konflux** 和 **Tekton** 各自的使用示例](https://github.com/liweinan/deepseek-answers/blob/main/files/prow-konflux-tekton.md)
 - [OpenShift Route](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-route.md)
 - [Configuring an **Ingress Controller** to redirect traffic to multiple services running on different ports in a Kubernetes cluster.](https://github.com/liweinan/deepseek-answers/blob/main/files/ingress-multi-svc.md)
+- [一个极简的 **Kubernetes Custom Resource Definition (CRD)** 教程](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-crd.md)
 
 ## HackerRank
 
