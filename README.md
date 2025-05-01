@@ -9,6 +9,7 @@ Here are the topics:
 - [高铁订票系统核心算法解析](https://github.com/liweinan/deepseek-answers/blob/main/files/gaotie.md)
 - [Raft 的并发性能限制](https://github.com/liweinan/deepseek-answers/blob/main/files/raft-perform.md)
 - [工厂模式（Factory Pattern）和策略模式](https://github.com/liweinan/deepseek-answers/blob/main/files/strategy_vs_factory_pattern.md)
+- [DTO（Data Transfer Object）类是一种设计模式](https://github.com/liweinan/deepseek-answers/blob/main/files/dto-class.md)
 
 ### AI / Machine Learning / BlockChain
 
