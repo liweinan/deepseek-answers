@@ -2,12 +2,13 @@ Collect the questions and the answers I interacted with DeepSeek. These answers 
 
 Here are the topics:
 
-### Algorithm
+### Algorithms & Design Patterns
 
 - [Circular Queue (Ring Buffer): Introduction and Advantages](https://github.com/liweinan/deepseek-answers/blob/main/files/ring-buffer.md)
 - [Spin Locks: A Low-Level Synchronization Primitive](https://github.com/liweinan/deepseek-answers/blob/main/files/spin-lock.md)
 - [高铁订票系统核心算法解析](https://github.com/liweinan/deepseek-answers/blob/main/files/gaotie.md)
 - [Raft 的并发性能限制](https://github.com/liweinan/deepseek-answers/blob/main/files/raft-perform.md)
+- [工厂模式（Factory Pattern）和策略模式](https://github.com/liweinan/deepseek-answers/blob/main/files/strategy_vs_factory_pattern.md)
 
 ### AI / Machine Learning / BlockChain
 
