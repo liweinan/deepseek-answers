@@ -114,6 +114,7 @@ Here are the topics:
 - [Ent Framework in Go: A Modern Entity Framework](https://github.com/liweinan/deepseek-answers/blob/main/files/go-ent.md)
 - [Comparison: `computed` in Vue vs `useEffect` in React](https://github.com/liweinan/deepseek-answers/blob/main/files/vue-computed-vs-react-useeffect.md)
 - [Redis 键空间通知（Keyspace Notifications）](https://github.com/liweinan/deepseek-answers/blob/main/files/redis-key.md)
+- [Manticore Search 支持的数据源和格式](https://github.com/liweinan/deepseek-answers/blob/main/files/manticoresearch-datasource.md)
 
 ### Cloud Native
 
