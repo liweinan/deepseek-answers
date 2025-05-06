@@ -184,17 +184,6 @@ graph TD
 
 ---
 
-抱歉，错误的原因是 Mermaid 图的代码块在教程中没有正确闭合，导致 Markdown 解析器将后续内容（`## 故障排除` 等）误认为是 Mermaid 语法的一部分，引发了语法错误。
-
-具体问题：
-- 在教程中，Mermaid 图的代码块使用 ```mermaid 开头，但没有正确闭合（缺少单独的 ``` 结束符）。
-- 后续的 Markdown 标题 `## 故障排除` 被误认为是 Mermaid 语法的一部分，导致解析错误。
-
-### 修正方法
-我将调整教程，确保 Mermaid 图的代码块正确闭合，并与后续 Markdown 内容分隔开。以下是修正后的教程，包含正确的 Mermaid 图代码块。
-
-
-
 # 在本地主机 Kubernetes 集群上部署 Prow（使用 Nginx 和 HTTPS）
 
 本教程指导你在本地主机 Kubernetes 集群上部署 Prow，使用公网 IP 和独立域名，通过 Nginx Ingress 控制器暴露服务，并启用 HTTPS。
