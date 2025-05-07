@@ -181,3 +181,4 @@ Here are the topics:
 - [Python Cheat Sheet](https://github.com/liweinan/deepseek-answers/blob/main/files/python-cheatsheet.md)
 - [TypeScript + JavaScript Cheatsheet](https://github.com/liweinan/deepseek-answers/blob/main/files/ts-js-cheatsheet.md)
 - [Rust 语言速查表（中文版）](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-cheatsheet.md)
+- [设计模式](https://github.com/liweinan/deepseek-answers/blob/main/files/design-pattern.md)
