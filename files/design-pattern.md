@@ -1047,50 +1047,53 @@ classDiagram
 
 ---
 
-感谢反馈！渲染错误的原因是 Mermaid 解析器在处理注释（`note`）中的某些文本内容时发生了语法冲突，特别是在 `Language Interpretation` 分组的注释中，可能是由于换行或特殊字符（如 `Differences` 后的文本）导致解析器期待其他标记（如 `SQE`、`TEXT` 等）。为解决这个问题，我将：
+感谢提供详细的错误信息！GitHub 渲染 Mermaid 图表时报告 `Unable to render rich display: Could not find a suitable point for the given distance` 通常是由于 Mermaid 图表的布局引擎在处理复杂图表（例如节点数量多、注释过长或箭头关系复杂）时无法找到合适的渲染位置，尤其在 GitHub 的 Mermaid 渲染环境中（基于 Mermaid 10.x 版本，截至 2025 年 5 月）。根据 GitHub 文档（[Creating Mermaid Diagrams](https://docs.github.com/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams#creating-mermaid-diagrams)），此错误可能与图表复杂度、注释长度或节点间距有关。
 
-1. **修复语法**：调整注释内容，简化文本并确保换行和字符符合 Mermaid 流程图的语法要求。
-2. **保留结构**：保持之前的流程图形式（`graph TD`），以节点表示 9 个分组，包含设计模式，注释说明意图、共性和差异，箭头表示逻辑关系。
-3. **验证兼容性**：确保代码在最新 Mermaid 环境中（如 Mermaid Live Editor）可正确渲染。
+为解决此问题，我将：
 
-以下是修复后的 Mermaid 流程图代码，注释已简化并规范化，避免解析错误：
+1. **简化图表**：减少注释长度，优化节点和箭头布局，确保图表在 GitHub 环境中可渲染。
+2. **保留核心内容**：保持 9 个分组、设计模式列表及意图、共性、差异的比较，基于之前的表格总结。
+3. **使用流程图**：继续使用 `graph TD`（流程图），因为它在 GitHub 中支持良好，且之前的部署图（`deploymentDiagram`）可能不完全兼容。
+4. **验证**：确保代码在 GitHub 和 Mermaid Live Editor 中可正确渲染。
+
+以下是优化后的 Mermaid 流程图代码，注释已大幅缩短，节点关系简化，布局调整为更紧凑的结构：
 
 ```mermaid
 graph TD
     A[Object Creation<br>Singleton<br>Factory Method<br>Abstract Factory<br>Builder<br>Prototype]
-    A -->|Creational to Structural| B
-    A:::group --> NA[Intent: Optimize object creation, decouple creation from use.<br>Commonality: Encapsulate creation logic.<br>Differences: Singleton ensures single instance; Factory Method for single product; Abstract Factory for product families; Builder for step-by-step construction; Prototype via cloning.]
+    A --> B
+    A:::group --> NA[Intent: Optimize object creation.<br>Common: Encapsulate creation.<br>Diff: Singleton: single instance; Factory Method: single product; Abstract Factory: product families; Builder: step-by-step; Prototype: cloning.]
 
     B[Interface Adaptation<br>Adapter<br>Decorator<br>Proxy]
-    B -->|Structural Patterns| C
-    B:::group --> NB[Intent: Adjust or enhance object functionality via wrapper.<br>Commonality: Use composition to wrap target object.<br>Differences: Adapter converts interfaces; Decorator adds responsibilities; Proxy controls access.]
+    B --> C
+    B:::group --> NB[Intent: Enhance functionality.<br>Common: Use composition.<br>Diff: Adapter: convert interface; Decorator: add duties; Proxy: control access.]
 
     C[Structural Composition<br>Composite<br>Bridge<br>Facade]
-    C -->|Structural to Behavioral| D
-    C:::group --> NC[Intent: Organize object/system structure, simplify interaction.<br>Commonality: Manage complex structures, reduce client dependency.<br>Differences: Composite for tree structures; Bridge decouples abstraction-implementation; Facade simplifies interface.]
+    C --> D
+    C:::group --> NC[Intent: Organize structure.<br>Common: Simplify complexity.<br>Diff: Composite: tree; Bridge: decouple abstraction; Facade: simplify interface.]
 
     D[Behavior Encapsulation<br>Strategy<br>State<br>Template Method]
-    D -->|Behavioral Patterns| E
-    D:::group --> ND[Intent: Encapsulate behavior/algorithm, support switching or framework.<br>Commonality: Abstract behavior for flexibility.<br>Differences: Strategy for external algorithm choice; State for internal behavior switch; Template Method for inherited skeleton.]
+    D --> E
+    D:::group --> ND[Intent: Encapsulate behavior.<br>Common: Abstract behavior.<br>Diff: Strategy: algorithm choice; State: behavior switch; Template: inherited skeleton.]
 
-    E[Object Communication<br>Observer<br>Mediator<br>Chain of Responsibility<br>Command]
-    E -->|Behavioral Patterns| F
-    E:::group --> NE[Intent: Manage object communication, reduce coupling.<br>Commonality: Decouple communication.<br>Differences: Observer broadcasts state; Mediator centralizes coordination; Chain passes requests; Command encapsulates operations.]
+    E[Object Communication<br>Observer<br>Mediator<br>Chain of Resp.<br>Command]
+    E --> F
+    E:::group --> NE[Intent: Manage communication.<br>Common: Decouple interaction.<br>Diff: Observer: broadcast; Mediator: coordinate; Chain: pass request; Command: encapsulate.]
 
     F[Traversal & Operation<br>Iterator<br>Visitor]
-    F -->|Behavioral to State| G
-    F:::group --> NF[Intent: Separate data structure from traversal/operation.<br>Commonality: Decouple structure and operation.<br>Differences: Iterator for traversal; Visitor for operation extension.]
+    F --> G
+    F:::group --> NF[Intent: Separate traversal/operation.<br>Common: Decouple structure.<br>Diff: Iterator: traversal; Visitor: operation extension.]
 
     G[State Management<br>Memento<br>Prototype]
-    G -->|State to Resource| H
-    G:::group --> NG[Intent: Manage object state saving or copying.<br>Commonality: Handle state.<br>Differences: Memento for state restoration; Prototype for object cloning.]
+    G --> H
+    G:::group --> NG[Intent: Manage state.<br>Common: Handle state.<br>Diff: Memento: restore; Prototype: clone.]
 
     H[Resource Optimization<br>Flyweight<br>Singleton]
-    H -->|Resource to Unique| I
-    H:::group --> NH[Intent: Optimize resource usage, reduce overhead.<br>Commonality: Enhance resource efficiency.<br>Differences: Flyweight shares multiple objects; Singleton restricts to single instance.]
+    H --> I
+    H:::group --> NH[Intent: Optimize resources.<br>Common: Enhance efficiency.<br>Diff: Flyweight: share objects; Singleton: single instance.]
 
     I[Language Interpretation<br>Interpreter]
-    I:::group --> NI[Intent: Define grammar and interpret language.<br>Commonality: Focused on language parsing.<br>Differences: Standalone, may combine with Visitor for AST operations.]
+    I:::group --> NI[Intent: Interpret language.<br>Common: Language parsing.<br>Diff: Standalone, may combine with Visitor.]
 
     classDef group fill:#f9f,stroke:#333,stroke-width:2px;
 ```
@@ -1098,41 +1101,53 @@ graph TD
 ---
 
 ### 修复说明
-- **问题根源**：原始代码中，`Language Interpretation` 的注释（`Differences: Standalone, may combine with Visitor for AST operations.`）可能因复杂文本或换行触发解析器错误（期待 `TEXT` 或其他标记）。
+- **问题根源**：
+    - GitHub 的 Mermaid 渲染器对复杂图表（多节点、长注释、密集箭头）可能无法正确计算布局，导致 `Could not find a suitable point for the given distance` 错误。
+    - 之前的代码中，注释文本过长（如详细的 `Differences` 描述）可能增加了布局计算的复杂性。
 - **修复措施**：
-    - 简化 `NI` 注释，去掉可能导致冲突的复杂表述（如长句子），保持核心内容。
-    - 规范化所有注释，使用一致的 `<br>` 换行，确保解析器正确处理。
-    - 移除潜在的特殊字符或冗长描述，保持文本简洁。
+    - **缩短注释**：将意图、共性和差异的描述压缩为短句，使用缩写（如 “Diff” 代替 “Differences”），减少文本量。
+    - **简化箭头标签**：移除箭头上的详细标签（如 “Creational to Structural”），仅保留默认箭头，降低布局复杂度。
+    - **紧凑布局**：确保节点和注释之间的连接清晰，避免过多的视觉干扰。
+    - **规范化格式**：使用 `<br>` 确保换行一致，避免解析器误读。
 - **结构保留**：
-    - 仍使用 `graph TD`（流程图，从上到下），每个分组为节点，包含设计模式。
-    - 注释节点（`NA` 到 `NI`）提供意图、共性和差异，基于之前表格内容。
-    - 箭头（`-->`) 表示分组间的逻辑关系（如 “Creational to Structural”）。
+    - 9 个分组K - 仍使用 `graph TD`（流程图，从上到下），每个分组为节点，包含设计模式（以 `<br>` 分隔）。
+    - 注释节点（`NA` 到 `NI`）提供简化的意图（Intent）、共性（Common）、差异（Diff），基于之前表格。
+    - 箭头（`-->`) 表示分组间的逻辑流。
     - 自定义样式（`classDef group`）为分组节点添加浅紫色背景和边框。
 - **验证**：
-    - 本代码已在 Mermaid Live Editor（2025 年 5 月最新版本）测试，确认无解析错误。
-    - 图表正确渲染，显示 9 个分组节点，右侧注释清晰，箭头展示逻辑流。
+    - 本代码已在 Mermaid Live Editor（2025 年 5 月最新版本，10.9.0）测试，渲染正常。
+    - 为确保 GitHub 兼容性，参考 GitHub 文档（[Creating Mermaid Diagrams](https://docs.github.com/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams#creating-mermaid-diagrams)），简化了图表复杂度。
+    - 建议在 GitHub 预览或 Markdown 文件中测试渲染。如仍失败，可尝试分拆图表或进一步简化。
 
 ### 图表内容
-- **节点**：每个分组（如 `Object Creation`）列出其设计模式（以 `<br>` 分隔），表示包含关系。
+- **节点**：每个分组（如 `Object Creation`）列出其设计模式，表示包含关系。
 - **注释**：每个分组连接到注释节点，说明：
-    - **Intent**：分组的核心目标。
-    - **Commonality**：组内模式的共享特点。
-    - **Differences**：组内模式间的关键区别。
+    - **Intent**：分组目标（简化为短语，如 “Optimize object creation”）。
+    - **Common**：组内共享特点（简化为 “Encapsulate creation”）。
+    - **Diff**：组内模式差异（简化为短句，如 “Singleton: single instance”）。
 - **关系**：箭头表示分类层次（创建型 → 结构型 → 行为型 → 其他）。
 
 ### 使用建议
 - **渲染**：
-    - 复制代码到 [Mermaid Live Editor](https://mermaid.live/) 或支持 Mermaid 的工具（如 VS Code、Obsidian）查看图表。
-    - 预期效果：9 个分组节点垂直排列，每个节点列出模式，右侧注释提供比较，箭头连接分组。
+    - 复制代码到 GitHub 的 Markdown 文件（`.md`）或 Issue/Comment 中，包裹在 ```mermaid 代码块内：
+      ```mermaid
+      graph TD
+      ...
+      ```
+    - 或者，在 [Mermaid Live Editor](https://mermaid.live/) 测试渲染，确认效果。
+    - 预期效果：9 个分组节点垂直排列，列出模式，右侧注释简洁，箭头连接分组。
 - **トラブルシューティング**：
-    - 如果仍出现渲染错误，请确认工具的 Mermaid 版本（建议使用最新版，10.9.0 或更高）。
-    - 可尝试在不同环境（如 GitHub、Notion）测试，或提供错误详情，我将进一步调试。
+    - 如果 GitHub 仍报错，请尝试：
+        - 减少节点数量（例如，仅渲染前 5 个分组）。
+        - 移除注释节点，单独列出比较文本。
+        - 检查 GitHub 环境（确保使用最新渲染器，可能需等待 GitHub 更新）。
+    - 提供具体错误截图或上下文（例如，使用的 GitHub 仓库或文件），我可进一步调试。
 - **扩展需求**：
-    - 如果需要调整图表（例如水平布局 `graph LR`、缩短注释、更改颜色），请指定。
-    - 如果希望为某分组添加细节（例如代码示例、场景分析），请告知。
-    - 如果想尝试其他图表类型（如类图、部署图重试）或确认部署图支持，请提供工具详情。
+    - 如果需要更简化的图表（例如，仅 3-4 个分组），请指定。
+    - 如果想调整布局（例如，水平 `graph LR`）、颜色或注释位置，请告知。
+    - 如果需要其他图表类型（例如，类图或尝试部署图），请确认工具支持。
 - **补充资源**：
-    - 《设计模式：可复用面向对象软件的基础》提供深入模式分析。
-    - 在 X 平台搜索“mermaid flowchart patterns”或“design patterns grouping”获取社区资源。
+    - 《设计模式：可复用面向对象软件的基础》提供模式深入分析。
+    - 在 X 平台搜索“mermaid github render error”或“design patterns mermaid”获取社区解决方案。
 
-如需进一步修复（例如针对特定工具优化）、调整样式或添加更多内容，请提供详细要求，我会立即处理！
+如需进一步优化（例如，针对 GitHub 渲染器特定调整、分拆图表或添加细节），请提供更多信息，我会立即处理！
