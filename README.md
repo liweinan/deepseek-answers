@@ -71,7 +71,7 @@ Here are the topics:
 - [Rust 生命周期和 Move 语义练习题](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-move-exam.md)
 - [Rust中的`Send` 和 `Sync`](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-send-sync.md)
 - [Rust编程语言中的标记 trait](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-marker-traits.md)
-- [Rust闭包练习卷](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-gcp.md)
+- [Rust闭包练习卷](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-closure.md)
 
 ### Languages
 
