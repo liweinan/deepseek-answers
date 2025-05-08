@@ -154,6 +154,7 @@ Here are the topics:
 - [Docker Network](https://github.com/liweinan/deepseek-answers/blob/main/files/docker-network.md)
 - [在本地主机 Kubernetes 集群上部署 Prow（使用 NodePort）](https://github.com/liweinan/deepseek-answers/blob/main/files/prow-tutorial.md)
 - [GitHub Webhook](https://github.com/liweinan/deepseek-answers/blob/main/files/github-webhook.md)
+- [简明教程：在 GCP 上安装 OpenShift Container Platform 4.18](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-gcp.md)
 
 ## HackerRank
 
