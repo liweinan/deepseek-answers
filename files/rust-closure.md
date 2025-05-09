@@ -1,5 +1,7 @@
 # Rust中的闭包（Closures）
 
+参考图：https://tinyurl.com/rustclosure
+
 ```mermaid
 classDiagram
     class Closure {
