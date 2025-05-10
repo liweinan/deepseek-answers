@@ -108,6 +108,7 @@ Here are the topics:
 - [React中的`useMemo`和`useEffect`](https://github.com/liweinan/deepseek-answers/blob/main/files/react-usememo-useeffect.md)
 - [在React中，你完全可以把多个组件放在一个JSX文件里](https://github.com/liweinan/deepseek-answers/blob/main/files/react-export.md)
 - [React.createContext](https://github.com/liweinan/deepseek-answers/blob/main/files/react-context.md)
+- [Vue的`v-model`和React中的数据双向绑定是前端框架中处理数据与视图同步的两种方式](https://github.com/liweinan/deepseek-answers/blob/main/files/2way-bind.md)
 
 ### Backend Frameworks
 
