@@ -73,6 +73,7 @@ Here are the topics:
 - [Rust编程语言中的标记 trait](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-marker-traits.md)
 - [Rust中的闭包（Closures）](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-closure.md)
 - [PartialEq](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-partial-eq.md)
+- [Rust中的Slice和Array](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-slice.md)
 
 ### Languages
 
