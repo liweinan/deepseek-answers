@@ -1,6 +1,7 @@
 # React题 - Patient Medical Records
 
 - https://www.hackerrank.com/challenges/patient-medical-records
+- https://github.com/liweinan/play-react/tree/main/src/hackerrank/patient
 
 以下是您提供的医疗记录中涉及的医学单词及术语的解释，涵盖了诊断、生命体征和其他相关术语：
 
