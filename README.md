@@ -47,6 +47,7 @@ Here are the topics:
 - [The Work-Stealing Model in Go (Golang)](https://github.com/liweinan/deepseek-answers/blob/main/files/gmp-in-go.md)
 - [Go 语言面试题卷（含答案）](https://github.com/liweinan/deepseek-answers/blob/main/files/go-exam.md)
 - [如何编写基于Go的单元测试](https://github.com/liweinan/deepseek-answers/blob/main/files/go-test.md)
+- [在 Go 编程语言中，`rune` 是一种内置类型](https://github.com/liweinan/deepseek-answers/blob/main/files/go-rune.md)
 
 ### Java
 
