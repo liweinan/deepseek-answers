@@ -46,7 +46,7 @@ I’ll modify the `canTravelTo` function to:
 ### Updated Code
 Here’s the corrected code, tailored to the boat’s movement pattern, with comments explaining the logic and ensuring test case correctness.
 
-```x-java-source
+```java
 public class Solution {
     // Define possible moves: up 1, down 1, left 1, right 1 or 2 steps
     private static final int[][] MOVES = {
