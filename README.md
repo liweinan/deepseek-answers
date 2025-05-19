@@ -182,6 +182,7 @@ Here are the topics:
 - [React题 - Todo List](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-todolist.md)
 - [React - Focusable Input](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-focusable-input.md)
 - [React题 - Logout Wrapper](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-logout-wrapper.md)
+- [TestDome - Boat Movements(Java)](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-boatmovement.md)
 
 ### CheatSheets
 
