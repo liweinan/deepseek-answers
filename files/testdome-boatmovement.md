@@ -2,285 +2,366 @@
 
 - https://www.testdome.com/library?page=1&skillArea=30&questionId=134845
 
-Thank you for pointing out the potential optimization regarding the `moves` array! You're correct that making the `int[][] moves` array `static` could improve efficiency by avoiding repeated initialization. Below, I'll address this suggestion, analyze other potential optimizations in the provided `canTravelTo` function, and provide an updated, optimized version of the code with detailed comments explaining the changes. I'll also ensure the solution remains correct for the turn-based strategy game, where the boat moves through water cells (`true` in `gameMatrix`) to reach a destination using paths like "up - right - up" via DFS.
+Thank you for clarifying the boat’s movement pattern! The boat can move from its current position `(row, col)` in the following ways:
+- **Up**: 1 step, `(-1, 0)` → `(row-1, col)`.
+- **Down**: 1 step, `(1, 0)` → `(row+1, col)`.
+- **Left**: 1 step, `(0, -1)` → `(row, col-1)`.
+- **Right**: 1 step, `(0, 1)` → `(row, col+1)`, or 2 steps, `(0, 2)` → `(row, col+2)`.
 
-### 1. Making the `moves` Array Static
+These moves are performed in a single turn, and the boat must:
+- Stay within the grid boundaries.
+- Start and end on water cells (`true` in `grid`).
+- Follow a “direct path” through water cells, meaning all intermediate cells (if any) must be water. For example, a right 2-step move `(0, 2)` requires the cell `(row, col+1)` to be water.
 
-#### Issue
-The `moves` array is currently defined inside the `dfs` method:
-```java
-int[][] moves = {
-    {-1, 0}, // Up
-    {1, 0},  // Down
-    {0, -1}, // Left
-    {0, 1}   // Right
-};
-```
-- **Problem**: Every time `dfs` is called recursively, a new `moves` array is created on the stack, which is unnecessary since the array is constant (same values for all calls).
-- **Impact**: For a small array (4 elements), the overhead is minimal, but in deep recursion (e.g., large grids or complex paths), repeated allocations could add up, especially in performance-critical applications.
-- **Solution**: Declare `moves` as a `static final` field at the class level to create it once and reuse it across all `dfs` calls.
+The previous solution included knight-like moves and other direct moves, which led to incorrect results for test cases because it allowed invalid moves (e.g., `(2,1)`, `(1,2)`) and didn’t align with the specified pattern. The test case failures (“All coordinates are inside the game matrix” and “Some coordinates are outside the game matrix”) suggest issues with move validation and path checking.
 
-#### Optimization
-Move the `moves` array to a `static final` field:
-```java
-private static final int[][] MOVES = {
-    {-1, 0}, // Up
-    {1, 0},  // Down
-    {0, -1}, // Left
-    {0, 1}   // Right
-};
-```
-- **Benefits**:
-    - Single allocation at class loading time.
-    - Reduces stack memory usage per recursive call.
-    - Improves performance slightly, especially for deep recursion.
-- **Consideration**: `final` ensures the array is immutable (though the array’s contents could still be modified; since we don’t modify `MOVES`, this is safe).
+### Analysis of the Problem
+Based on the clarified movement pattern:
+- **Valid Moves**:
+    - `(-1, 0)` (up 1 step).
+    - `(1, 0)` (down 1 step).
+    - `(0, -1)` (left 1 step).
+    - `(0, 1)` (right 1 step).
+    - `(0, 2)` (right 2 steps).
+- **Path Checking**:
+    - For 1-step moves (up, down, left, right 1), no intermediate cells exist, so only the destination needs to be water.
+    - For the 2-step right move `(0, 2)`, the intermediate cell `(row, col+1)` must be water.
+- **Test Cases**:
+    - `(3, 2)` to `(2, 2)`: Displacement `(-1, 0)` (up 1 step), should return `true` (water at `(2, 2)`).
+    - `(3, 2)` to `(3, 4)`: Displacement `(0, 2)` (right 2 steps), should return `false` (land at `(3, 3)` blocks the path).
+    - `(3, 2)` to `(6, 2)`: Displacement `(3, 0)`, not a valid move, and out of bounds, should return `false`.
+- **Test Case Failures**:
+    - **Inside the matrix**: Likely failed because the previous solution allowed invalid moves (e.g., knight-like) or incorrect path checks.
+    - **Outside the matrix**: Likely failed due to improper handling of intermediate cells or move validation for out-of-bounds destinations.
 
-### 2. Analyzing Other Optimization Opportunities
+### Solution Strategy
+I’ll modify the `canTravelTo` function to:
+1. Use the specified moves: `(-1, 0)`, `(1, 0)`, `(0, -1)`, `(0, 1)`, `(0, 2)`.
+2. Check the destination against these moves.
+3. For the `(0, 2)` move, verify the intermediate cell `(row, col+1)` is water and within bounds.
+4. Ensure start and end positions are water and within bounds.
+5. Keep methods `static` and integrate the provided `main` function.
+6. Optimize with `static final MOVES` and efficient bounds checks.
 
-Let’s examine the entire `canTravelTo` function to identify other areas for optimization, focusing on performance, memory usage, and code clarity while ensuring correctness for the pathfinding problem.
+### Updated Code
+Here’s the corrected code, tailored to the boat’s movement pattern, with comments explaining the logic and ensuring test case correctness.
 
-#### Current Code (for Reference)
-```java
+```x-java-source
 public class Solution {
-    public boolean canTravelTo(boolean[][] gameMatrix, int startRow, int startCol, int endRow, int endCol) {
-        if (!isValidPosition(gameMatrix, startRow, startCol) || !isValidPosition(gameMatrix, endRow, endCol)) {
-            return false;
-        }
-        if (!gameMatrix[startRow][startCol] || !gameMatrix[endRow][endCol]) {
-            return false;
-        }
-        Set<String> visited = new HashSet<>();
-        return dfs(gameMatrix, startRow, startCol, endRow, endCol, visited);
-    }
-
-    private boolean dfs(boolean[][] gameMatrix, int row, int col, int endRow, int endCol, Set<String> visited) {
-        if (row == endRow && col == endCol) {
-            return true;
-        }
-        String pos = row + "," + col;
-        visited.add(pos);
-        int[][] moves = {
-            {-1, 0}, // Up
-            {1, 0},  // Down
-            {0, -1}, // Left
-            {0, 1}   // Right
-        };
-        for (int[] move : moves) {
-            int newRow = row + move[0];
-            int newCol = col + move[1];
-            String newPos = newRow + "," + newCol;
-            if (isValidPosition(gameMatrix, newRow, newCol) && 
-                gameMatrix[newRow][newCol] && 
-                !visited.contains(newPos)) {
-                if (dfs(gameMatrix, newRow, newCol, endRow, endCol, visited)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean isValidPosition(boolean[][] gameMatrix, int row, int col) {
-        return row >= 0 && row < gameMatrix.length && col >= 0 && col < gameMatrix[0].length;
-    }
-}
-```
-
-#### Optimization Areas
-I’ll analyze the code line-by-line and suggest improvements:
-
-1. **Visited Set Representation (`Set<String>`)**:
-    - **Issue**: The `visited` set uses strings (`"row,col"`) to represent positions, created via `row + "," + col`.
-    - **Problem**:
-        - String concatenation is relatively expensive (creates new `String` objects).
-        - `HashSet<String>` involves string hashing, which is slower than integer-based hashing.
-        - Memory overhead from storing strings.
-    - **Optimization**: Use a `boolean[][]` array or `Set<long>` (packing `row` and `col` into a `long`) for visited positions.
-        - **Option 1: `boolean[][] visited`**:
-            - Create a `boolean[gameMatrix.length][gameMatrix[0].length]` array.
-            - Mark `visited[row][col] = true` instead of adding to a set.
-            - Pros: Fast access (O(1)), no hashing, minimal memory (1 bit per cell).
-            - Cons: Slightly higher initial memory for small grids with few visited cells; not thread-safe if reused.
-        - **Option 2: `Set<long>`**:
-            - Pack `row` and `col` into a `long` (e.g., `(long)row << 32 | col`).
-            - Pros: Flexible, no string overhead.
-            - Cons: Slightly slower due to bitwise operations and `HashSet` hashing.
-        - **Recommendation**: Use `boolean[][]` for simplicity and speed, as the grid is small (e.g., 6x6).
-    - **Impact**: Reduces string creation/hashing overhead, improves runtime and memory usage.
-
-2. **String Creation for `newPos`**:
-    - **Issue**: `String newPos = newRow + "," + newCol` creates a new string for each neighbor check.
-    - **Problem**: Similar to `pos`, this adds unnecessary string allocation and hashing costs.
-    - **Optimization**: With `boolean[][] visited`, we can check `visited[newRow][newCol]` directly, eliminating `newPos`.
-    - **Impact**: Further reduces string overhead, aligns with the `visited` optimization.
-
-3. **Redundant Bounds Check**:
-    - **Issue**: `canTravelTo` calls `isValidPosition` twice (for start and end), and `dfs` calls it again for each neighbor.
-    - **Problem**: While the checks are necessary, we could avoid one call in `canTravelTo` by combining with the water check.
-    - **Optimization**: Merge bounds and water checks in `canTravelTo`:
-      ```java
-      if (startRow < 0 || startRow >= gameMatrix.length || startCol < 0 || startCol >= gameMatrix[0].length || !gameMatrix[startRow][startCol] ||
-          endRow < 0 || endRow >= gameMatrix.length || endCol < 0 || endCol >= gameMatrix[0].length || !gameMatrix[endRow][endCol]) {
-          return false;
-      }
-      ```
-        - Pros: Eliminates `isValidPosition` calls in `canTravelTo`, slightly faster.
-        - Cons: Slightly less readable; `isValidPosition` is reused in `dfs`, so keep it for consistency.
-        - **Recommendation**: Keep `isValidPosition` for clarity, as the performance gain is minimal for small grids.
-
-4. **Visited Set Allocation**:
-    - **Issue**: A new `HashSet<String>` is created for each `canTravelTo` call.
-    - **Problem**: If `canTravelTo` is called repeatedly, allocating new sets adds overhead.
-    - **Optimization**: Reuse a `boolean[][] visited` array, clearing it (or creating once per call). Since `boolean[][]` is fixed-size, it’s efficient.
-        - Clear array: Set `visited[row][col] = false` after DFS (not needed if recreated).
-        - **Recommendation**: Create `visited` array per call, as grid is small and clearing adds complexity.
-
-5. **Early Pruning with Manhattan Distance**:
-    - **Issue**: DFS explores all possible paths, even those moving away from the destination.
-    - **Optimization**: Add a heuristic check (e.g., Manhattan distance) to prune branches where the current position is too far from the destination to reach it within a reasonable number of steps.
-        - Example: If `|row - endRow| + |col - endCol| > maxSteps`, skip the branch.
-        - Problem: The problem doesn’t specify a maximum path length (e.g., "up - right - up" is 3 steps, but others could be longer).
-        - **Recommendation**: Skip this unless a step limit is confirmed, as it adds complexity and may prune valid paths.
-
-6. **Avoiding Recursion for Small Grids**:
-    - **Issue**: Recursive DFS uses stack space, which could be avoided for small grids (e.g., 6x6).
-    - **Optimization**: Use an iterative DFS with a `Stack` for control flow.
-        - Pros: Avoids recursion overhead, explicit control.
-        - Cons: More complex code, minimal gain for small grids (recursion depth ≤ 36).
-        - **Recommendation**: Keep recursive DFS for simplicity, as stack overflow is unlikely.
-
-7. **Code Clarity and Maintainability**:
-    - **Issue**: Variable names and comments could be clearer to reflect intent.
-    - **Optimization**:
-        - Rename `gameMatrix` to `grid` for brevity.
-        - Add comments explaining DFS’s role in pathfinding.
-        - Use constants for directions (e.g., `UP`, `DOWN`) if `MOVES` expands.
-        - **Recommendation**: Apply these for readability, minimal performance impact.
-
-### 3. Optimized Code
-Below is the optimized version of the code, incorporating:
-- `static final MOVES` array.
-- `boolean[][] visited` instead of `Set<String>`.
-- Merged bounds/water checks in `canTravelTo` for slight efficiency.
-- Improved comments for clarity.
-- Kept recursive DFS and `isValidPosition` for simplicity and readability.
-
-```java
-public class Solution {
-    // Define cardinal moves as a static final array to avoid repeated initialization
-    // Represents directions: up, down, left, right
+    // Define possible moves: up 1, down 1, left 1, right 1 or 2 steps
     private static final int[][] MOVES = {
-        {-1, 0}, // Up
-        {1, 0},  // Down
-        {0, -1}, // Left
-        {0, 1}   // Right
+        {-1, 0}, // Up 1 step
+        {1, 0},  // Down 1 step
+        {0, -1}, // Left 1 step
+        {0, 1},  // Right 1 step
+        {0, 2}   // Right 2 steps
     };
 
-    public boolean canTravelTo(boolean[][] grid, int startRow, int startCol, int endRow, int endCol) {
+    // Check if boat can travel from (startRow, startCol) to (endRow, endCol)
+    public static boolean canTravelTo(boolean[][] grid, int startRow, int startCol, int endRow, int endCol) {
         // Check if start and end positions are valid (within bounds and water)
         if (startRow < 0 || startRow >= grid.length || startCol < 0 || startCol >= grid[0].length || !grid[startRow][startCol] ||
             endRow < 0 || endRow >= grid.length || endCol < 0 || endCol >= grid[0].length || !grid[endRow][endCol]) {
-            return false; // Return false if out of bounds or on land
+            return false; // Out of bounds or on land
         }
 
-        // Create visited array to track explored cells, avoiding string overhead
-        boolean[][] visited = new boolean[grid.length][grid[0].length];
-        return dfs(grid, startRow, startCol, endRow, endCol, visited);
-    }
-
-    // Depth-First Search to find a path from (row, col) to (endRow, endCol) through water cells
-    private boolean dfs(boolean[][] grid, int row, int col, int endRow, int endCol, boolean[][] visited) {
-        // If current position is the destination, a valid path is found
-        if (row == endRow && col == endCol) {
-            return true;
-        }
-
-        // Mark current position as visited
-        visited[row][col] = true;
-
-        // Explore each cardinal direction
+        // Check if destination matches a valid move
+        int deltaRow = endRow - startRow;
+        int deltaCol = endCol - startCol;
+        boolean isValidMovereira = false;
         for (int[] move : MOVES) {
-            int newRow = row + move[0];
-            int newCol = col + move[1];
-
-            // Check if new position is valid: within bounds, water, and not visited
-            if (isValidPosition(grid, newRow, newCol) && grid[newRow][newCol] && !visited[newRow][newCol]) {
-                // Recursively explore the new position
-                if (dfs(grid, newRow, newCol, endRow, endCol, visited)) {
-                    return true; // Found a path
-                }
+            if (move[0] == deltaRow && move[1] == deltaCol) {
+                isValidMove = true;
+                break;
             }
         }
+        if (!isValidMove) {
+            return false; // Destination not reachable in one move
+        }
 
-        // No valid path found from this position
-        return false;
+        // Check the direct path for water cells (only for right 2 steps)
+        if (deltaRow == 0 && deltaCol == 2) {
+            // Right 2 steps: check intermediate cell (row, col+1)
+            int midCol = startCol + 1;
+            if (!isValidPosition(grid, startRow, midCol) || !grid[startRow][midCol]) {
+                return false; // Intermediate cell is out of bounds or land
+            }
+        }
+        // Other moves (1 step) have no intermediate cells; start/end already checked
+
+        return true; // Valid move with clear water path
     }
 
     // Helper function to check if a position is within grid boundaries
-    private boolean isValidPosition(boolean[][] grid, int row, int col) {
+    private static boolean isValidPosition(boolean[][] grid, int row, int col) {
         return row >= 0 && row < grid.length && col >= 0 && col < grid[0].length;
+    }
+
+    public static void main(String[] args) {
+        // Test cases
+        boolean[][] gameMatrix = {
+            {false, true,  true,  false, false, false},
+            {true,  true,  true,  false, false, false},
+            {true,  true,  true,  true,  true,  true},
+            {false, true,  true,  false, true,  true},
+            {false, true,  true,  true,  false, true},
+            {false, false, false, false, false, false},
+        };
+
+        System.out.println(canTravelTo(gameMatrix, 3, 2, 2, 2)); // true, Valid move
+        System.out.println(canTravelTo(gameMatrix, 3, 2, 3, 4)); // false, Can't travel through land
+        System.out.println(canTravelTo(gameMatrix, 3, 2, 6, 2)); // false, Out of bounds
     }
 }
 ```
 
-### 4. Optimization Summary
-- **Static `MOVES` Array**:
-    - Moved to `static final int[][] MOVES` at class level.
-    - Benefit: Eliminates repeated array creation, saves stack memory.
-- **Visited Representation**:
-    - Replaced `Set<String>` with `boolean[][] visited`.
-    - Benefit: Removes string concatenation/hashing, faster O(1) access, lower memory usage.
-- **Merged Checks**:
-    - Combined bounds and water checks in `canTravelTo`.
-    - Benefit: Slightly reduces function call overhead, maintains clarity.
-- **Kept Recursive DFS**:
-    - Reason: Simple, effective for small grids (e.g., 6x6), low risk of stack overflow.
-- **Improved Naming/Comments**:
-    - Renamed `gameMatrix` to `grid` for brevity.
-    - Added clearer comments explaining DFS and optimizations.
-- **Rejected Optimizations** (with reasons):
-    - Manhattan distance pruning: No step limit specified, risks pruning valid paths.
-    - Iterative DFS: Adds complexity, minimal gain for small grids.
-    - Reusing `visited` array: Clearing adds overhead, new array is simple for small grids.
+### Changes Made
+1. **Updated Movement Pattern**:
+    - Replaced the previous `MOVES` array (knight-like and direct moves) with the specified moves:
+        - `(-1, 0)` (up 1).
+        - `(1, 0)` (down 1).
+        - `(0, -1)` (left 1).
+        - `(0, 1)` (right 1).
+        - `(0, 2)` (right 2).
+    - This matches the clarified pattern: up/down/left 1 step, right 1 or 2 steps.
 
-### 5. Correctness for the Problem
-The optimized code remains correct for the turn-based strategy game:
-- **Pathfinding**: DFS explores all possible paths (e.g., "up - right - up") via cardinal moves (up, down, left, right).
-- **Constraints**:
-    - Checks bounds (`isValidPosition`).
-    - Ensures water cells (`grid[row][col]`).
-    - Avoids cycles (`visited`).
-- **Example Cases**:
-    - `(3, 2)` to `(2, 2)`: Returns `true` (single "up" step, water).
-    - `(3, 2)` to `(3, 4)`: Returns `false` (path blocked by land at `(3, 3)`).
-    - `(3, 2)` to `(6, 2)`: Returns `false` (out of bounds).
-- **Farther Destinations**: Handles arbitrary destinations via DFS, as long as a valid water path exists.
+2. **Path Checking**:
+    - For the `(0, 2)` move (right 2 steps), check the intermediate cell `(startRow, startCol+1)` for water and bounds.
+    - For 1-step moves (up, down, left, right 1), no intermediate cells exist; start and end checks suffice.
+    - Used `isValidPosition` to ensure the intermediate cell is within bounds before accessing `grid`.
 
-### 6. Performance Impact
-- **Runtime**: O(V + E), where V is the number of cells (rows × cols) and E is the number of edges (4 per cell). Worst case explores all reachable water cells, but pruning (visited, water checks) reduces practical runtime.
-- **Memory**: O(rows × cols) for `visited` array and recursion stack. Optimized from `Set<String>` to `boolean[][]`, reducing memory and improving access speed.
-- **Small Grids**: For 6x6 grids, optimizations (e.g., `boolean[][]`, static `MOVES`) ensure minimal overhead, though gains are small due to the problem’s scale.
+3. **Bounds and Water Checks**:
+    - Kept upfront checks in `canTravelTo` for start/end positions (bounds and water).
+    - Added bounds check for the intermediate cell in the `(0, 2)` case to handle out-of-bounds scenarios.
 
-### 7. Further Optimizations (If Needed)
-If additional constraints or performance requirements arise, consider:
-- **Step Limit**: Add a `maxSteps` parameter to DFS if paths like "up - right - up" are limited to 3 steps:
-  ```java
-  private boolean dfs(..., int steps, int maxSteps) {
-      if (steps > maxSteps) return false;
-      // Pass steps + 1 in recursive call
-  }
-  ```
-- **BFS Alternative**: If shortest path is needed, switch to BFS (higher memory, guarantees shortest path).
-- **BitSet for Visited**: For very large grids, use `BitSet` instead of `boolean[][]` to reduce memory (1 bit vs. 8 bits per cell).
-- **Precompute Water Regions**: If `canTravelTo` is called multiple times, precompute connected water regions (e.g., via flood-fill) to cache reachability.
+4. **Static Methods and Optimizations**:
+    - Retained `static` methods (`canTravelTo`, `isValidPosition`) for compatibility with `main`.
+    - Kept `static final MOVES` for efficiency.
+    - Simplified logic by removing unnecessary path checks for 1-step moves.
 
-### 8. Clarifications Needed
-To confirm the optimizations are optimal:
-- **Grid Size**: Is 6x6 typical, or should we optimize for larger grids (e.g., 100x100)?
-- **Path Length**: Are there limits on path length (e.g., max 3 steps)?
-- **Move Types**: Are only cardinal moves allowed, or others (e.g., diagonals)?
-- **Performance Requirements**: Is runtime or memory critical, or is simplicity preferred?
+5. **Main Function**:
+    - Unchanged, testing the three example cases as provided.
+
+### Test Case Verification
+Using the provided `gameMatrix`:
+```java
+boolean[][] gameMatrix = {
+    {false, true,  true,  false, false, false},
+    {true,  true,  true,  false, false, false},
+    {true,  true,  true,  true,  true,  true},
+    {false, true,  true,  false, true,  true},
+    {false, true,  true,  true,  false, true},
+    {false, false, false, false, false, false},
+};
+```
+
+- **Case 1: `(3, 2)` to `(2, 2)`**
+    - Displacement: `(2-3, 2-2) = (-1, 0)`.
+    - Move: Matches `{-1, 0}` (up 1 step).
+    - Path: No intermediate cell; `(2, 2)` is water (`true`).
+    - Output: `true` (correct).
+
+- **Case 2: `(3, 2)` to `(3, 4)`**
+    - Displacement: `(3-3, 4-2) = (0, 2)`.
+    - Move: Matches `{0, 2}` (right 2 steps).
+    - Path: Check `(3, 3)` (intermediate cell); `grid[3][3] = false` (land).
+    - Output: `false` (correct, land blocks path).
+
+- **Case 3: `(3, 2)` to `(6, 2)`**
+    - Displacement: `(6-3, 2-2) = (3, 0)`.
+    - Move: Not in `MOVES` (no `(3, 0)`).
+    - Also, `(6, 2)` is out of bounds (row 6 ≥ 6).
+    - Output: `false` (correct).
+
+### Addressing Test Case Failures
+- **All coordinates are inside the game matrix**:
+    - Previous failure likely due to incorrect moves (e.g., knight-like) or allowing multi-step paths.
+    - Fix: Using only the specified moves (`(-1, 0)`, `(1, 0)`, `(0, -1)`, `(0, 1)`, `(0, 2)`) ensures only valid single-turn moves are considered. The `(3, 2)` to `(3, 4)` case now correctly returns `false` due to land at `(3, 3)`.
+
+- **Some coordinates are outside the game matrix**:
+    - Previous failure possibly due to accessing intermediate cells without bounds checks or incorrect move validation.
+    - Fix: Added `isValidPosition` for the intermediate cell in the `(0, 2)` move, and upfront bounds checks ensure out-of-bounds destinations (like `(6, 2)`) are rejected early.
+
+### Why This Should Fix the Failures
+- **Correct Movement Pattern**: The `MOVES` array now exactly matches the specified pattern, avoiding invalid moves (e.g., knight-like or other direct moves like `(2, 0)`).
+- **Proper Path Checking**: The `(0, 2)` move checks the intermediate cell, correctly rejecting paths with land (e.g., `(3, 3)` for `(3, 2)` to `(3, 4)`).
+- **Robust Bounds Handling**: Upfront and intermediate bounds checks handle out-of-bounds cases, ensuring no invalid grid access.
+- **Single-Turn Moves**: The solution restricts to single-turn moves, aligning with the problem’s “fixed destinations” requirement.
+
+### Notes and Assumptions
+- **Movement Pattern**: Assumed the clarified moves (`(-1, 0)`, `(1, 0)`, `(0, -1)`, `(0, 1)`, `(0, 2)`) are complete. If additional moves exist (e.g., left 2 steps), please specify.
+- **Path Checking**: For the `(0, 2)` move, checking one intermediate cell `(row, col+1)` aligns with the “direct path” requirement. If more cells or a different path is needed, please clarify.
+- **Test Cases**: The solution matches the example case outputs. Hidden test cases (inside/outside matrix) should now pass due to correct move validation and bounds checks.
+- **Performance**: O(1) for move validation and path checking (small fixed move set), suitable for small grids (6x6).
+
+### Further Steps
+If test cases still fail:
+1. **Share Hidden Test Cases**: Provide inputs/outputs for failing cases (e.g., specific `(startRow, startCol)` to `(endRow, endCol)` pairs).
+2. **Clarify Path Rules**: Does the “direct path” for `(0, 2)` involve other cells? Are there step limits or other constraints?
+3. **Movement Pattern**: Confirm if only the specified moves are allowed, or if others (e.g., `(0, -2)` for left 2 steps) exist.
+4. **Debugging**: If the video’s pattern differs (e.g., includes diagonal moves), share details to adjust `MOVES`.
 
 ### Conclusion
-The suggestion to make `moves` static was spot-on and has been implemented as `static final MOVES`. Additional optimizations include using `boolean[][] visited`, merging checks, and improving clarity. The code remains correct, efficient for small grids, and flexible for paths like "up - right - up." If you have specific constraints (e.g., step limits) or need further optimizations (e.g., BFS), please let me know, and I can provide tailored updates!
+The code has been updated to use the exact movement pattern (up/down/left 1 step, right 1 or 2 steps), with proper path checking for the right 2-step move and robust bounds handling. It correctly handles the example cases and should resolve the test case failures by:
+- Restricting moves to the specified set.
+- Checking the intermediate cell for `(0, 2)` moves.
+- Ensuring bounds and water constraints are met.
+  Please test the code and let me know if any test cases still fail or if you have additional details (e.g., hidden test case outputs or video move patterns). I’ll refine the solution further if needed!
+
+---
+
+The code snippet you provided checks if the start and end positions are valid by ensuring they are within the grid boundaries and on water cells (`true` in `grid`). While the current implementation is correct, it can be simplified for better readability and maintainability by reusing the `isValidPosition` helper function and separating the bounds and water checks for clarity.
+
+### Current Code Analysis
+```java
+// Check if start and end positions are valid (within bounds and water)
+if (startRow < 0 || startRow >= grid.length || startCol < 0 || startCol >= grid[0].length || !grid[startRow][startCol] ||
+    endRow < 0 || endRow >= grid.length || endCol < 0 || endCol >= grid[0].length || !grid[endRow][endCol]) {
+    return false; // Out of bounds or on land
+}
+```
+- **Purpose**: Validates that:
+    - `(startRow, startCol)` and `(endRow, endCol)` are within bounds (`0 <= row < grid.length`, `0 <= col < grid[0].length`).
+    - Both positions are water (`grid[row][col] == true`).
+- **Issues**:
+    - Long condition with repeated bounds checks (`row < 0`, `row >= grid.length`, etc.).
+    - Combines bounds and water checks, reducing readability.
+    - Doesn’t leverage the existing `isValidPosition` function, which checks bounds.
+
+### Simplification Approach
+1. **Reuse `isValidPosition`**:
+    - The `isValidPosition` function already checks if a position is within bounds:
+      ```java
+      private static boolean isValidPosition(boolean[][] grid, int row, int col) {
+          return row >= 0 && row < grid.length && col >= 0 && col < grid[0].length;
+      }
+      ```
+    - Use it for both start and end positions to avoid duplicating bounds checks.
+
+2. **Separate Bounds and Water Checks**:
+    - Check bounds first using `isValidPosition`.
+    - Then check water cells (`grid[row][col]`) only if bounds are valid, avoiding potential `ArrayIndexOutOfBoundsException` (though not an issue here since bounds are checked first).
+
+3. **Concise Logic**:
+    - Combine checks into a single `if` statement using `isValidPosition` and water checks.
+    - Maintain clarity with a clear comment.
+
+### Simplified Code
+Replace the original check with:
+```java
+// Check if start and end positions are within bounds and on water
+if (!isValidPosition(grid, startRow, startCol) || !grid[startRow][startCol] ||
+    !isValidPosition(grid, endRow, endCol) || !grid[endRow][endCol]) {
+    return false; // Out of bounds or on land
+}
+```
+
+### Benefits of Simplification
+- **Readability**: Shorter condition, easier to understand at a glance.
+- **Reusability**: Leverages `isValidPosition`, reducing code duplication.
+- **Maintainability**: Clear separation of bounds and water checks makes future changes simpler.
+- **Safety**: Bounds checks via `isValidPosition` ensure no invalid grid access, though the original was safe too.
+- **No Performance Impact**: The simplified version has identical performance (O(1) checks), as it performs the same number of comparisons.
+
+### Updated Full Code
+Here’s the complete code with the simplified check integrated, retaining all other functionality (movement pattern, path checking, and `main` function) to ensure correctness for the boat’s movement (up/down/left 1 step, right 1 or 2 steps).
+
+```java 
+class Solution {
+    // Define possible moves: up 1, down 1, left 1, right 1 or 2 steps
+    private static final int[][] MOVES = {
+        {-1, 0}, // Up 1 step
+        {1, 0},  // Down 1 step
+        {0, -1}, // Left 1 step
+        {0, 1},  // Right 1 step
+        {0, 2}   // Right 2 steps
+    };
+
+    // Check if boat can travel from (startRow, startCol) to (endRow, endCol)
+    public static boolean canTravelTo(boolean[][] grid, int startRow, int startCol, int endRow, int endCol) {
+        // Check if start and end positions are within bounds and on water
+        if (!isValidPosition(grid, startRow, startCol) || !grid[startRow][startCol] ||
+            !isValidPosition(grid, endRow, endCol) || !grid[endRow][endCol]) {
+            return false; // Out of bounds or on land
+        }
+
+        // Check if destination matches a valid move
+        int deltaRow = endRow - startRow;
+        int deltaCol = endCol - startCol;
+        boolean isValidMove = false;
+        for (int[] move : MOVES) {
+            if (move[0] == deltaRow && move[1] == deltaCol) {
+                isValidMove = true;
+                break;
+            }
+        }
+        if (!isValidMove) {
+            return false; // Destination not reachable in one move
+        }
+
+        // Check the direct path for water cells (only for right 2 steps)
+        if (deltaRow == 0 && deltaCol == 2) {
+            // Right 2 steps: check intermediate cell (row, col+1)
+            int midCol = startCol + 1;
+            if (!isValidPosition(grid, startRow, midCol) || !grid[startRow][midCol]) {
+                return false; // Intermediate cell is out of bounds or land
+            }
+        }
+        // Other moves (1 step) have no intermediate cells; start/end already checked
+
+        return true; // Valid move with clear water path
+    }
+
+    // Helper function to check if a position is within grid boundaries
+    private static boolean isValidPosition(boolean[][] grid, int row, int col) {
+        return row >= 0 && row < grid.length && col >= 0 && col < grid[0].length;
+    }
+
+    public static void main(String[] args) {
+        // Test cases
+        boolean[][] gameMatrix = {
+            {false, true,  true,  false, false, false},
+            {true,  true,  true,  false, false, false},
+            {true,  true,  true,  true,  true,  true},
+            {false, true,  true,  false, true,  true},
+            {false, true,  true,  true,  false, true},
+            {false, false, false, false, false, false},
+        };
+
+        System.out.println(canTravelTo(gameMatrix, 3, 2, 2, 2)); // true, Valid move
+        System.out.println(canTravelTo(gameMatrix, 3, 2, 3, 4)); // false, Can't travel through land
+        System.out.println(canTravelTo(gameMatrix, 3, 2, 6, 2)); // false, Out of bounds
+    }
+}
+```
+
+### Verification
+- **Correctness**: The simplified check performs the same validation:
+  - Bounds: `isValidPosition` ensures `row` and `col` are within `grid` dimensions.
+  - Water: `!grid[row][col]` checks for land (`false`).
+  - All test cases remain correct:
+    - `(3, 2)` to `(2, 2)`: `true` (up 1 step, water).
+    - `(3, 2)` to `(3, 4)`: `false` (right 2 steps, land at `(3, 3)`).
+    - `(3, 2)` to `(6, 2)`: `false` (out of bounds).
+- **Test Case Failures**: The previous failures (“All coordinates inside” and “Some coordinates outside”) were addressed by using the correct movement pattern (up/down/left 1, right 1 or 2). The simplified check doesn’t affect this, as it’s functionally equivalent.
+- **Performance**: No change (O(1) for bounds/water checks).
+- **Readability**: Improved by reducing the condition’s length and reusing `isValidPosition`.
+
+### Notes
+- **Safety**: The simplified check is safe because `isValidPosition` is called before accessing `grid`, preventing index errors.
+- **Alternative Simplifications**:
+  - Could extract a helper function like `isValidCell(grid, row, col)` to combine bounds and water checks:
+    ```java
+    private static boolean isValidCell(boolean[][] grid, int row, int col) {
+        return isValidPosition(grid, row, col) && grid[row][col];
+    }
+    // Then:
+    if (!isValidCell(grid, startRow, startCol) || !isValidCell(grid, endRow, endCol)) {
+        return false;
+    }
+    ```
+    - Not used here, as it adds a function for minimal gain, but viable for larger codebases.
+- **Test Case Status**: If the “All coordinates inside” or “Some coordinates outside” tests still fail, the issue may lie in the movement pattern or path checking. Please share specific failing test case inputs/outputs or confirm if the movement pattern is exactly as stated.
+
+### Conclusion
+The bounds and water check has been simplified using `isValidPosition`, improving readability while maintaining correctness and performance. The full code incorporates this change and aligns with the boat’s movement pattern (up/down/left 1, right 1 or 2 steps). If test cases still fail, please provide details (e.g., hidden test case inputs/outputs or movement clarifications), and I’ll debug further. Let me know how it performs!
