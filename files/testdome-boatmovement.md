@@ -166,7 +166,7 @@ Below is the optimized version of the code, incorporating:
 - Improved comments for clarity.
 - Kept recursive DFS and `isValidPosition` for simplicity and readability.
 
-```x-java-source
+```java
 public class Solution {
     // Define cardinal moves as a static final array to avoid repeated initialization
     // Represents directions: up, down, left, right
