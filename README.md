@@ -84,7 +84,7 @@ Here are the topics:
 - [**Rust**、**Go** 和 **Java** 的详细对比](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-go-java.md)
 - [JavaScript (JS) 与 TypeScript (TS) 全面比较](https://github.com/liweinan/deepseek-answers/blob/main/files/ts-js-java.md)
 
-### Linux Administration
+### Linux Administration & DevOps
 
 - [Disable SELinux On Ubuntu](https://github.com/liweinan/deepseek-answers/blob/main/files/disable-selinux.md)
 - [Enable SSH login on Ubuntu](https://github.com/liweinan/deepseek-answers/blob/main/files/enable-ssh-login-in-ubuntu.md)
@@ -92,6 +92,7 @@ Here are the topics:
 - [How to Run sshd in Debug Mode](https://github.com/liweinan/deepseek-answers/blob/main/files/ssh-in-debug-mode.md)
 - [What Does "receive packet: type 51" Mean in SSH?](https://github.com/liweinan/deepseek-answers/blob/main/files/what-does-type-51-mean-in-ssh.md)
 - [What is gcr-ssh-agent?](https://github.com/liweinan/deepseek-answers/blob/main/files/what-is-gcr-ssh-agent.md)
+- [NixOS介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/nixos.md)
 
 ### Testing
 
