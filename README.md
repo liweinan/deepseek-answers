@@ -12,6 +12,7 @@ Here are the topics:
 - [DTO（Data Transfer Object）类是一种设计模式](https://github.com/liweinan/deepseek-answers/blob/main/files/dto-class.md)
 - [回溯算法和递归](https://github.com/liweinan/deepseek-answers/blob/main/files/backtracing.md)
 - [PathFinding](https://github.com/liweinan/deepseek-answers/blob/main/files/pathfinding.md)
+- [Nested Hell（嵌套地狱）](https://github.com/liweinan/deepseek-answers/blob/main/files/nested-hell.md)
 
 ### AI / Machine Learning / BlockChain
 
