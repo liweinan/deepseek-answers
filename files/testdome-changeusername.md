@@ -169,7 +169,7 @@ function App() {
   const inputRef = useRef(null);
   const usernameRef = useRef(null);
 
-  functioned clickHandler() {
+  function clickHandler() {
     if (inputRef.current && usernameRef.current) {
       usernameRef.current.changeValue(inputRef.current.value);
     }
