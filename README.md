@@ -62,6 +62,7 @@ Here are the topics:
 ### JavaScript / TypeScript
 
 - [Collection of some JavaScript quiz](https://github.com/liweinan/deepseek-answers/blob/main/files/js-quiz.md)
+- [ES6 Import](https://github.com/liweinan/deepseek-answers/blob/main/files/es-import.md)
 
 ### Bash Scripting
 
@@ -84,6 +85,8 @@ Here are the topics:
 
 - [**Rust**、**Go** 和 **Java** 的详细对比](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-go-java.md)
 - [JavaScript (JS) 与 TypeScript (TS) 全面比较](https://github.com/liweinan/deepseek-answers/blob/main/files/ts-js-java.md)
+- [`async/await` 是一种异步编程模式](https://github.com/liweinan/deepseek-answers/blob/main/files/async.md)
+- [Stream API 的出现时间和在不同编程语言中的发展可以从以下几个方面来分析](https://github.com/liweinan/deepseek-answers/blob/main/files/stream-api.md)
 
 ### Linux Administration & DevOps
 
@@ -115,6 +118,7 @@ Here are the topics:
 - [在React中，你完全可以把多个组件放在一个JSX文件里](https://github.com/liweinan/deepseek-answers/blob/main/files/react-export.md)
 - [React.createContext](https://github.com/liweinan/deepseek-answers/blob/main/files/react-context.md)
 - [Vue的`v-model`和React中的数据双向绑定是前端框架中处理数据与视图同步的两种方式](https://github.com/liweinan/deepseek-answers/blob/main/files/2way-bind.md)
+
 
 ### Backend Frameworks
 
