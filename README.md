@@ -171,6 +171,7 @@ Here are the topics:
 - [GitHub Webhook](https://github.com/liweinan/deepseek-answers/blob/main/files/github-webhook.md)
 - [简明教程：在 GCP 上安装 OpenShift Container Platform 4.18](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-gcp.md)
 - [Jenkins, Prow, and Tekton](https://github.com/liweinan/deepseek-answers/blob/main/files/jenkins-prow-tekton.md)
+- [OpenShift Operator 和 Kubernetes Controller Manager 是 Kubernetes 生态系统中两个相关但功能不同的组件](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-operator.md)
 
 ## HackerRank
 
