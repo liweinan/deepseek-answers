@@ -305,17 +305,17 @@ rules:
 
 ```mermaid
 graph TD
-    A[用户] -->|1. 创建 MySQL CR| B(Kubernetes API Server)
-    B -->|2. 存储 CR| C[MySQL CR]
-    D[MySQL Operator] -->|3. 监控 CR 变化| B
-    D -->|4. 读取 CR Spec| C
-    D -->|5. 创建/更新资源| E[StatefulSet]
-    D -->|6. 创建备份任务| F[CronJob]
-    E -->|7. 部署 MySQL Pods| G[MySQL Pods]
-    D -->|8. 更新 CR Status| C
-    B -->|9. 通知状态变化| A
+    A[User] -->|Create MySQL CR| B(Kubernetes API Server)
+    B -->|Store CR| C[MySQL CR]
+    D[MySQL Operator] -->|Monitor CR| B
+    D -->|Read CR Spec| C
+    D -->|Create/Update| E[StatefulSet]
+    D -->|Create Backup| F[CronJob]
+    E -->|Deploy| G[MySQL Pods]
+    D -->|Update Status| C
+    B -->|Notify Status| A
 
-    subgraph Kubernetes 集群
+    subgraph Kubernetes Cluster
         B
         C
         D
