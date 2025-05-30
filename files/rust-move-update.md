@@ -220,7 +220,7 @@ classDiagram
     }
 
     class Move_NonCopy_Consume {
-        +行为: 消耗转移变量
+        +行为: 消耗变量
         +原始变量: 不可用
         +Trait: FnOnce
     }
@@ -233,7 +233,8 @@ classDiagram
     Move_NonCopy --> Move_NonCopy_Modify
     Move_NonCopy --> Move_NonCopy_Consume
 
-    note for NonMove "借用原始变量，修改影响外部，Copy和非Copy行为一致"
-    note for Move_Copy "捕获副本，原始变量可用，仅限Copy类型"
-    note for Move_NonCopy "转移所有权，原始变量不可用，仅限非Copy类型\n消耗（如drop）导致FnOnce"
+    note for NonMove "借用原始变量，修改影响外部，Copy类型和非Copy类型行为一致"
+    note for Move_Copy "捕获副本，原始变量可用，仅适用于Copy类型"
+    note for Move_NonCopy "转移所有权，原始变量不可用，仅限非Copy类型"
+    note for Move_NonCopy_Consume "消耗变量（如drop）导致FnOnce，仅限非Copy类型"
 ```
