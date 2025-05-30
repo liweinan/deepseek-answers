@@ -1,5 +1,110 @@
 # 修订Rust闭包捕获行为速查表
 
+```mermaid
+classDiagram
+    class Closure {
+        +CaptureEnvironment()
+        +Fn: 只读，多次调用
+        +FnMut: 读写，多次调用
+        +FnOnce: 消耗，单次调用
+    }
+
+    class CaptureMode {
+        +NonMove: 借用 (&T 或 &mut T)
+        +Move: 副本或所有权转移 (T)
+    }
+
+    class Type {
+        +Copy: i32, f64 等
+        +NonCopy: String, Vec 等
+    }
+
+    class Access {
+        +ReadOnly: &T 或 x
+        +Modify: &mut T 或 x
+        +Consume: drop(x)
+    }
+
+    Closure --> CaptureMode : 使用
+    Closure --> Type : 捕获
+    CaptureMode --> Access : 操作
+
+    class NonMove {
+        +只读 (&T): 读取原始变量
+        +修改 (&mut T): 修改原始变量
+    }
+
+    class Move_Copy {
+        +只读 (T): 读取副本
+        +修改 (T): 修改副本
+    }
+
+    class Move_NonCopy {
+        +只读 (T): 读取转移变量
+        +修改 (T): 修改转移变量
+        +消耗 (T): 消耗变量
+    }
+
+    CaptureMode --> NonMove : 包含
+    CaptureMode --> Move_Copy : 包含
+    CaptureMode --> Move_NonCopy : 包含
+
+    class NonMove_ReadOnly {
+        +行为: 读取原始变量
+        +原始变量: 可用
+        +Trait: Fn
+    }
+
+    class NonMove_Modify {
+        +行为: 修改原始变量
+        +原始变量: 可用
+        +Trait: FnMut
+    }
+
+    class Move_Copy_ReadOnly {
+        +行为: 读取副本
+        +原始变量: 可用
+        +Trait: Fn
+    }
+
+    class Move_Copy_Modify {
+        +行为: 修改副本
+        +原始变量: 可用
+        +Trait: FnMut
+    }
+
+    class Move_NonCopy_ReadOnly {
+        +行为: 读取转移变量
+        +原始变量: 不可用
+        +Trait: Fn
+    }
+
+    class Move_NonCopy_Modify {
+        +行为: 修改转移变量
+        +原始变量: 不可用
+        +Trait: FnMut
+    }
+
+    class Move_NonCopy_Consume {
+        +行为: 消耗变量
+        +原始变量: 不可用
+        +Trait: FnOnce
+    }
+
+    NonMove --> NonMove_ReadOnly
+    NonMove --> NonMove_Modify
+    Move_Copy --> Move_Copy_ReadOnly
+    Move_Copy --> Move_Copy_Modify
+    Move_NonCopy --> Move_NonCopy_ReadOnly
+    Move_NonCopy --> Move_NonCopy_Modify
+    Move_NonCopy --> Move_NonCopy_Consume
+
+    note for NonMove "借用原始变量，修改影响外部，Copy类型和非Copy类型行为一致"
+    note for Move_Copy "捕获副本，原始变量可用，仅适用于Copy类型"
+    note for Move_NonCopy "转移所有权，原始变量不可用，仅限非Copy类型"
+    note for Move_NonCopy_Consume "消耗变量（如drop）导致FnOnce，仅限非Copy类型"
+```
+
 ## 1. 分析现有速查表的不足
 
 ### 1.1 缺失的分类
@@ -134,107 +239,3 @@
 
 ---
 
-```mermaid
-classDiagram
-    class Closure {
-        +CaptureEnvironment()
-        +Fn: 只读，多次调用
-        +FnMut: 读写，多次调用
-        +FnOnce: 消耗，单次调用
-    }
-
-    class CaptureMode {
-        +NonMove: 借用 (&T 或 &mut T)
-        +Move: 副本或所有权转移 (T)
-    }
-
-    class Type {
-        +Copy: i32, f64 等
-        +NonCopy: String, Vec 等
-    }
-
-    class Access {
-        +ReadOnly: &T 或 x
-        +Modify: &mut T 或 x
-        +Consume: drop(x)
-    }
-
-    Closure --> CaptureMode : 使用
-    Closure --> Type : 捕获
-    CaptureMode --> Access : 操作
-
-    class NonMove {
-        +只读 (&T): 读取原始变量
-        +修改 (&mut T): 修改原始变量
-    }
-
-    class Move_Copy {
-        +只读 (T): 读取副本
-        +修改 (T): 修改副本
-    }
-
-    class Move_NonCopy {
-        +只读 (T): 读取转移变量
-        +修改 (T): 修改转移变量
-        +消耗 (T): 消耗变量
-    }
-
-    CaptureMode --> NonMove : 包含
-    CaptureMode --> Move_Copy : 包含
-    CaptureMode --> Move_NonCopy : 包含
-
-    class NonMove_ReadOnly {
-        +行为: 读取原始变量
-        +原始变量: 可用
-        +Trait: Fn
-    }
-
-    class NonMove_Modify {
-        +行为: 修改原始变量
-        +原始变量: 可用
-        +Trait: FnMut
-    }
-
-    class Move_Copy_ReadOnly {
-        +行为: 读取副本
-        +原始变量: 可用
-        +Trait: Fn
-    }
-
-    class Move_Copy_Modify {
-        +行为: 修改副本
-        +原始变量: 可用
-        +Trait: FnMut
-    }
-
-    class Move_NonCopy_ReadOnly {
-        +行为: 读取转移变量
-        +原始变量: 不可用
-        +Trait: Fn
-    }
-
-    class Move_NonCopy_Modify {
-        +行为: 修改转移变量
-        +原始变量: 不可用
-        +Trait: FnMut
-    }
-
-    class Move_NonCopy_Consume {
-        +行为: 消耗变量
-        +原始变量: 不可用
-        +Trait: FnOnce
-    }
-
-    NonMove --> NonMove_ReadOnly
-    NonMove --> NonMove_Modify
-    Move_Copy --> Move_Copy_ReadOnly
-    Move_Copy --> Move_Copy_Modify
-    Move_NonCopy --> Move_NonCopy_ReadOnly
-    Move_NonCopy --> Move_NonCopy_Modify
-    Move_NonCopy --> Move_NonCopy_Consume
-
-    note for NonMove "借用原始变量，修改影响外部，Copy类型和非Copy类型行为一致"
-    note for Move_Copy "捕获副本，原始变量可用，仅适用于Copy类型"
-    note for Move_NonCopy "转移所有权，原始变量不可用，仅限非Copy类型"
-    note for Move_NonCopy_Consume "消耗变量（如drop）导致FnOnce，仅限非Copy类型"
-```
