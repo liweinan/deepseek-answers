@@ -85,6 +85,7 @@ Here are the topics:
 - [PartialEq](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-partial-eq.md)
 - [Rust中的Slice和Array](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-slice.md)
 - [一份详细的Rust闭包（Closures）介绍文档](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-move.md)
+- [修订Rust闭包捕获行为速查表](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-move-update.md)
 
 ### Languages
 
