@@ -87,6 +87,7 @@ Here are the topics:
 - [一份详细的Rust闭包（Closures）介绍文档](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-move.md)
 - [修订Rust闭包捕获行为速查表](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-move-update.md)
 - [Rust闭包中Move与引用的统一指南](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-ref.md)
+- [在 Rust 中，`Copy` trait 是一个标记 trait](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-copy.md)
 
 ### Languages
 
