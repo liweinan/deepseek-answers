@@ -23,6 +23,7 @@ Here are the topics:
 ### Tools
 
 - [比较 **TraeAI** 和 **Cursor**](https://github.com/liweinan/deepseek-answers/blob/main/files/cursor-vs-trae.md)
+- [在GDB中，你可以快速计算整数值、查看其二进制表示，甚至进行位操作调试](https://github.com/liweinan/deepseek-answers/blob/main/files/gdb-bin.md)
 
 ### C / C++
 
