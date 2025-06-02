@@ -181,6 +181,7 @@ Here are the topics:
 - [简明教程：在 GCP 上安装 OpenShift Container Platform 4.18](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-gcp.md)
 - [Jenkins, Prow, and Tekton](https://github.com/liweinan/deepseek-answers/blob/main/files/jenkins-prow-tekton.md)
 - [OpenShift Operator 和 Kubernetes Controller Manager 是 Kubernetes 生态系统中两个相关但功能不同的组件](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-operator.md)
+- [我将分析这两个 Kubebuilder 项目中 `main.go` 文件的实现差异](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-webhook.md)
 
 ## HackerRank
 
