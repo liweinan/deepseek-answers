@@ -89,6 +89,7 @@ Here are the topics:
 - [修订Rust闭包捕获行为速查表](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-move-update.md)
 - [Rust闭包中Move与引用的统一指南](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-ref.md)
 - [在 Rust 中，`Copy` trait 是一个标记 trait](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-copy.md)
+- [在 Rust 中，一个 `struct` 是否可以实现 `Copy` trait 取决于其所有字段的类型是否都实现了 `Copy` trait。](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-copy2.md)
 
 ### Languages
 
