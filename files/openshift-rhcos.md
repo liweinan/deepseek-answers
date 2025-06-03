@@ -70,3 +70,52 @@ OpenShift 高度依赖 RHCOS，特别是在其核心功能和默认部署中。R
 
 ### 总结
 不可变基础设施通过将基础设施视为不可修改的、版本化的组件，实现了更高的可靠性、一致性和自动化能力。在 OpenShift 和 RHCOS 中，这种理念通过只读镜像、原子更新和声明式配置得以实现，使集群管理更高效、安全。如果你有具体场景（如如何在 OpenShift 中实现不可变部署或处理持久化数据），可以进一步讨论！
+
+---
+
+以下是使用 Mermaid 语法绘制的时序图，展示 OpenShift 集群结合 RHCOS 在云主机上进行更新的过程。图中包括主要参与者（如 OpenShift 集群、MachineConfig Operator、RHCOS 节点和云主机）以及更新流程的关键步骤。
+
+```mermaid
+sequenceDiagram
+    participant User as User/Admin
+    participant OCP as OpenShift Cluster
+    participant MCO as MachineConfig Operator
+    participant RHCOS as RHCOS Node
+    participant Cloud as Cloud Host
+
+    User->>OCP: Initiate cluster upgrade (e.g., oc adm upgrade)
+    OCP->>MCO: Detect new MachineConfig (new RHCOS image version)
+    MCO->>RHCOS: Apply new MachineConfig (schedule update)
+    RHCOS->>RHCOS: Download new RHCOS image (via OSTree)
+    Note over RHCOS: Verify image integrity
+    RHCOS->>MCO: Report image download complete
+    MCO->>RHCOS: Trigger node drain (move workloads)
+    RHCOS->>OCP: Node marked unschedulable
+    OCP->>Cloud: Scale up new node (optional, for availability)
+    Cloud-->>OCP: New node ready (with new RHCOS image)
+    MCO->>RHCOS: Reboot node to apply new image
+    RHCOS->>RHCOS: Apply new image (via OSTree pivot)
+    RHCOS->>MCO: Report node ready with new image
+    MCO->>OCP: Mark node schedulable
+    OCP->>Cloud: Terminate old node (if replaced)
+    OCP->>User: Report upgrade complete
+```
+
+### 说明
+- **参与者**：
+    - **User/Admin**：发起更新的管理员。
+    - **OpenShift Cluster (OCP)**：OpenShift 控制平面，协调升级。
+    - **MachineConfig Operator (MCO)**：管理节点配置和 RHCOS 更新。
+    - **RHCOS Node**：运行 RHCOS 的节点，执行镜像更新。
+    - **Cloud Host**：云平台，提供主机实例。
+- **流程**：
+    1. 用户通过命令（如 `oc adm upgrade`）触发集群升级。
+    2. MCO 检测到新的 MachineConfig（包含新 RHCOS 镜像版本）。
+    3. RHCOS 节点下载新镜像（通过 OSTree），验证完整性。
+    4. MCO 协调节点排水（editorialNote: The node is drained (workloads moved) and marked unschedulable.
+    5. 可选：为保证高可用性，集群可能在云上启动新节点。
+    6. 节点重启，应用新 RHCOS 镜像（OSTree pivot）。
+    7. 更新完成后，节点重新变为可调度状态，旧节点（若替换）被终止。
+    8. 升级完成，用户收到通知。
+
+此图展示了 OpenShift 集群和 RHCOS 在云主机上更新的典型流程，强调了不可变基础设施的特性（节点通过替换新镜像更新，而非修改）。如果需要更详细的步骤或特定场景的调整，请告诉我！
