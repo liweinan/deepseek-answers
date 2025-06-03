@@ -185,6 +185,7 @@ Here are the topics:
 - [我将分析这两个 Kubebuilder 项目中 `main.go` 文件的实现差异](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-webhook.md)
 - [解析 Kubernetes 准入 Webhook 的标准、与 Kubernetes API 服务器的区别](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-api.md)
 - [Amazon EKS、Azure AKS 和 Google GKE 是三大云服务提供商](https://github.com/liweinan/deepseek-answers/blob/main/files/aws-terms.md)
+- [OpenShift 在其核心架构中依赖于 Red Hat CoreOS (RHCOS)](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-rhcos.md)
 
 ## HackerRank
 
