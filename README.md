@@ -186,6 +186,7 @@ Here are the topics:
 - [解析 Kubernetes 准入 Webhook 的标准、与 Kubernetes API 服务器的区别](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-api.md)
 - [Amazon EKS、Azure AKS 和 Google GKE 是三大云服务提供商](https://github.com/liweinan/deepseek-answers/blob/main/files/aws-terms.md)
 - [OpenShift 在其核心架构中依赖于 Red Hat CoreOS (RHCOS)](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-rhcos.md)
+- [在 OpenShift 中，Route 是一种用于将外部流量路由到集群内部服务的机制](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-route2.md)
 
 ## HackerRank
 
