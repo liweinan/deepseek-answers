@@ -140,6 +140,7 @@ Here are the topics:
 - [Comparison: `computed` in Vue vs `useEffect` in React](https://github.com/liweinan/deepseek-answers/blob/main/files/vue-computed-vs-react-useeffect.md)
 - [Redis 键空间通知（Keyspace Notifications）](https://github.com/liweinan/deepseek-answers/blob/main/files/redis-key.md)
 - [Manticore Search 支持的数据源和格式](https://github.com/liweinan/deepseek-answers/blob/main/files/manticoresearch-datasource.md)
+- [SmallRye 是一个开源项目](https://github.com/liweinan/deepseek-answers/blob/main/files/smallrye.md)
 
 ### Cloud Native
 
