@@ -90,6 +90,7 @@ Here are the topics:
 - [Rust闭包中Move与引用的统一指南](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-ref.md)
 - [在 Rust 中，`Copy` trait 是一个标记 trait](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-copy.md)
 - [在 Rust 中，一个 `struct` 是否可以实现 `Copy` trait 取决于其所有字段的类型是否都实现了 `Copy` trait。](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-copy2.md)
+- [在 Rust 中，是否需要在比较或操作时使用星号（`*`）解引用](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-deref.md)
 
 ### Languages
 
@@ -129,7 +130,6 @@ Here are the topics:
 - [React.createContext](https://github.com/liweinan/deepseek-answers/blob/main/files/react-context.md)
 - [Vue的`v-model`和React中的数据双向绑定是前端框架中处理数据与视图同步的两种方式](https://github.com/liweinan/deepseek-answers/blob/main/files/2way-bind.md)
 - [React的条件渲染](https://github.com/liweinan/deepseek-answers/blob/main/files/react-if-render.md)
-
 
 ### Backend Frameworks
 
