@@ -190,6 +190,7 @@ Here are the topics:
 - [在 OpenShift 中，Route 是一种用于将外部流量路由到集群内部服务的机制](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-route2.md)
 - [KubeVirt介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/kubevirt.md)
 - [Terraform Usage In OpenShift Installer](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-terraform.md)
+- [OpenShift AWS Installation Flow](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-aws-install-flow.md)
 
 ## HackerRank
 
