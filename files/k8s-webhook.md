@@ -725,9 +725,12 @@ sequenceDiagram
     participant User
     participant K8sAPI
     participant WebhookServer
+    participant Controller
 
     User->>K8sAPI: Send Resource Request (e.g., CREATE Foo)
     K8sAPI->>WebhookServer: POST AdmissionReview Request
+    WebhookServer->>Controller: Process Request (e.g., Validate or Mutate)
+    Controller-->>WebhookServer: Return Decision (allowed/patch)
     WebhookServer-->>K8sAPI: Return AdmissionReview Response (allowed/patch)
     alt allowed = true
         K8sAPI->>K8sAPI: Persist Resource
