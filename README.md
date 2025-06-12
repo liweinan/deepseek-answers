@@ -191,6 +191,7 @@ Here are the topics:
 - [KubeVirt介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/kubevirt.md)
 - [Terraform Usage In OpenShift Installer](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-terraform.md)
 - [OpenShift AWS Installation Flow](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-aws-install-flow.md)
+- [oVirt 是一个免费的开源虚拟化管理平台，用于集中管理虚拟机、计算、存储和网络资源。](https://github.com/liweinan/deepseek-answers/blob/main/files/ovirt.md)
 
 ## HackerRank
 
