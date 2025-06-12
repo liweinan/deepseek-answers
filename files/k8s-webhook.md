@@ -1,5 +1,7 @@
 # 使用 `kubebuilder` 创建的项目可以通过启用 Webhook 功能来实现自定义资源的验证（ValidatingWebhook）或变更（MutatingWebhook）。Webhook 的数据内容通常是 Kubernetes API Server 发送给 Webhook 服务器的 `AdmissionReview` 请求，以及 Webhook 服务器返回的 `AdmissionReview` 响应。以下是一个典型的 Webhook 数据内容样例，包括请求和响应的结构。
 
+![image](https://github.com/user-attachments/assets/dd00a804-3c7e-45ea-9420-4b4e8e309b18)
+
 ### 1. **AdmissionReview 请求样例**
 Kubernetes API Server 向 Webhook 服务器发送的 `AdmissionReview` 请求包含了待验证或变更的资源信息。以下是一个 JSON 格式的请求样例：
 
