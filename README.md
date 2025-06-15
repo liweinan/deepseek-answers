@@ -19,6 +19,9 @@ Here are the topics:
 - [全球AI - 区块链 -软件工具项目融资情况以及项目介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/ai-stat.md)
 - [数字人民币与DeFi的关系解析](https://github.com/liweinan/deepseek-answers/blob/main/files/rmb.md)
 - [few-shot learning](https://github.com/liweinan/deepseek-answers/blob/main/files/ai-fewshot.md)
+- [推理模型介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/models-intro.md)
+- [LangChain4j的使用](https://github.com/liweinan/deepseek-answers/blob/main/files/langchain4j-use.md)
+- [**Cursor** 支持类似 **Trae** 的规则（Rules）功能](https://github.com/liweinan/deepseek-answers/blob/main/files/trae-rules.md)
 
 ### Tools
 
@@ -141,6 +144,7 @@ Here are the topics:
 - [Redis 键空间通知（Keyspace Notifications）](https://github.com/liweinan/deepseek-answers/blob/main/files/redis-key.md)
 - [Manticore Search 支持的数据源和格式](https://github.com/liweinan/deepseek-answers/blob/main/files/manticoresearch-datasource.md)
 - [SmallRye 是一个开源项目](https://github.com/liweinan/deepseek-answers/blob/main/files/smallrye.md)
+- [在Quarkus REST 中的`Multi<String>`]((https://github.com/liweinan/deepseek-answers/blob/main/files/quarkus-multi.md))
 
 ### Cloud Native
 
