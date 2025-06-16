@@ -60,6 +60,7 @@ Here are the topics:
 ### Java
 
 - [Java的并行Stream通过**Spliterator**和**Fork/Join框架**实现数据划分](https://github.com/liweinan/deepseek-answers/blob/main/files/java-spliterator.md)
+- [Java的包私有接口](https://github.com/liweinan/deepseek-answers/blob/main/files/package-private.md)
 - [To convert an `int` array to a `List<Integer>` in Java](https://github.com/liweinan/deepseek-answers/blob/main/files/java-int-array-to-list.md)
 - [Java面经 - 如何处理1万个`if-else`语句](https://github.com/liweinan/deepseek-answers/blob/main/files/java-if-else.md)
 
