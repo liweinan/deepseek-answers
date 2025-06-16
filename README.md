@@ -199,6 +199,7 @@ Here are the topics:
 - [oVirt 是一个免费的开源虚拟化管理平台，用于集中管理虚拟机、计算、存储和网络资源。](https://github.com/liweinan/deepseek-answers/blob/main/files/ovirt.md)
 - [什么是 OpenShift 的 SNO 模式？](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-sno.md)
 - [OpenShift Release Project Structure Analysis](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-release-intro.md)
+- [CI Tools - pj-rehearse](https://github.com/liweinan/deepseek-answers/blob/main/files/ci-tools-job.md)
 
 ## HackerRank
 
