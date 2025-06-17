@@ -17,43 +17,26 @@ A private cluster on AWS restricts network access to internal networks and creat
 
 ### VPC and Subnet Setup
 
-The private cluster requires a VPC with both private and public subnets. Here's the Terraform configuration:
+The private cluster requires a VPC with both private and public subnets. Here's the Terraform configuration from `upi/aws/cloudformation/01_vpc_99_subnet.yaml`:
 
-```hcl
-# VPC Configuration
-resource "aws_vpc" "cluster_vpc" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
+```yaml
+# File: upi/aws/cloudformation/01_vpc_99_subnet.yaml
+Resources:
+  PrivateSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref VpcId
+      CidrBlock: !Ref PrivateSubnetCidr
+      AvailabilityZone: !Ref ZoneName
+      Tags:
+      - Key: Name
+        Value: !Join ['-', [!Ref ClusterName, "private", !Ref ZoneName]]
 
-  tags = {
-    Name = "${var.cluster_id}-vpc"
-  }
-}
-
-# Private Subnets
-resource "aws_subnet" "private" {
-  count             = 3
-  vpc_id            = aws_vpc.cluster_vpc.id
-  cidr_block        = "10.0.${count.index}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  tags = {
-    Name = "${var.cluster_id}-private-${count.index}"
-  }
-}
-
-# Public Subnets
-resource "aws_subnet" "public" {
-  count             = 3
-  vpc_id            = aws_vpc.cluster_vpc.id
-  cidr_block        = "10.0.${count.index + 3}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  tags = {
-    Name = "${var.cluster_id}-public-${count.index}"
-  }
-}
+  PrivateSubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref PrivateRouteTableId
 ```
 
 ### Route Tables and NAT Gateway
@@ -88,21 +71,29 @@ resource "aws_route_table" "private" {
 
 ### Private Hosted Zone
 
-```go
-// Create private hosted zone for the cluster
-res, err := client.CreateHostedZone(ctx, &awsconfig.HostedZoneInput{
-    InfraID:  in.InfraID,
-    VpcID:    vpcID,
-    Region:   awsCluster.Spec.Region,
-    Name:     in.InstallConfig.Config.ClusterDomain(),
-    Role:     in.InstallConfig.Config.AWS.HostedZoneRole,
-    UserTags: awsCluster.Spec.AdditionalTags,
-})
-```
-
-### DNS Records
+From `pkg/infrastructure/aws/clusterapi/aws.go`:
 
 ```go
+// File: pkg/infrastructure/aws/clusterapi/aws.go (lines 146-228)
+phzID := in.InstallConfig.Config.AWS.HostedZone
+if len(phzID) == 0 {
+    logrus.Debugln("Creating private Hosted Zone")
+
+    res, err := client.CreateHostedZone(ctx, &awsconfig.HostedZoneInput{
+        InfraID:  in.InfraID,
+        VpcID:    vpcID,
+        Region:   awsCluster.Spec.Region,
+        Name:     in.InstallConfig.Config.ClusterDomain(),
+        Role:     in.InstallConfig.Config.AWS.HostedZoneRole,
+        UserTags: awsCluster.Spec.AdditionalTags,
+    })
+    if err != nil {
+        return fmt.Errorf("failed to create private hosted zone: %w", err)
+    }
+    phzID = aws.StringValue(res.Id)
+    logrus.Infoln("Created private Hosted Zone")
+}
+
 // Create API records in private zone
 if err := client.CreateOrUpdateRecord(ctx, &awsconfig.CreateRecordInput{
     Name:           apiName,
@@ -120,21 +111,28 @@ if err := client.CreateOrUpdateRecord(ctx, &awsconfig.CreateRecordInput{
 
 ### Internal Load Balancer
 
+From `upi/aws/cloudformation/05_cluster_master_nodes.yaml`:
+
 ```yaml
-# CloudFormation template for internal load balancer
+# File: upi/aws/cloudformation/05_cluster_master_nodes.yaml
 Resources:
-  InternalApiLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+  Master0:
+    Type: AWS::EC2::Instance
     Properties:
-      Scheme: internal
-      Type: network
-      Subnets: 
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
-        - !Ref PrivateSubnet3
-      Tags:
-        - Key: Name
-          Value: !Sub ${InfrastructureName}-int
+      ImageId: !Ref RhcosAmi
+      BlockDeviceMappings:
+      - DeviceName: /dev/xvda
+        Ebs:
+          VolumeSize: "120"
+          VolumeType: "gp2"
+      IamInstanceProfile: !Ref MasterInstanceProfileName
+      InstanceType: !Ref MasterInstanceType
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: "false"
+        DeviceIndex: "0"
+        GroupSet:
+        - !Ref "MasterSecurityGroupId"
+        SubnetId: !Ref "Master0Subnet"
 ```
 
 ## Security Groups
@@ -167,6 +165,7 @@ resource "aws_security_group" "master" {
 1. **Create install-config.yaml**
 
 ```yaml
+# File: install-config.yaml
 apiVersion: v1
 baseDomain: example.com
 metadata:
@@ -183,13 +182,16 @@ publish: Internal
 2. **Generate Ignition Configs**
 
 ```bash
+# Command to generate ignition configs
 openshift-install create ignition-configs
 ```
 
 3. **Create Bootstrap Node**
 
+From `upi/aws/cloudformation/05_cluster_master_nodes.yaml`:
+
 ```yaml
-# CloudFormation template for bootstrap node
+# File: upi/aws/cloudformation/05_cluster_master_nodes.yaml
 Resources:
   BootstrapNode:
     Type: AWS::EC2::Instance
@@ -236,18 +238,18 @@ dig api.private-cluster.example.com
 2. **Configure Private Registry Access**
 
 ```yaml
-# ConfigMap for private registry
+# File: registry-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: registry-config
+   name: registry-config
 data:
-  registry.conf: |
-    [[registry]]
-      prefix = "private-registry.example.com"
-      location = "private-registry.example.com"
-      mirror-by-digest-only = true
-      insecure = true
+   registry.conf: |
+      [[registry]]
+        prefix = "private-registry.example.com"
+        location = "private-registry.example.com"
+        mirror-by-digest-only = true
+        insecure = true
 ```
 
 ## Troubleshooting
