@@ -145,7 +145,7 @@ Here are the topics:
 - [Redis 键空间通知（Keyspace Notifications）](https://github.com/liweinan/deepseek-answers/blob/main/files/redis-key.md)
 - [Manticore Search 支持的数据源和格式](https://github.com/liweinan/deepseek-answers/blob/main/files/manticoresearch-datasource.md)
 - [SmallRye 是一个开源项目](https://github.com/liweinan/deepseek-answers/blob/main/files/smallrye.md)
-- [在Quarkus REST 中的`Multi<String>`]((https://github.com/liweinan/deepseek-answers/blob/main/files/quarkus-multi.md))
+- [在Quarkus REST 中的`Multi<String>`](https://github.com/liweinan/deepseek-answers/blob/main/files/quarkus-multi.md)
 
 ### Cloud Native
 
@@ -200,6 +200,7 @@ Here are the topics:
 - [什么是 OpenShift 的 SNO 模式？](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-sno.md)
 - [OpenShift Release Project Structure Analysis](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-release-intro.md)
 - [CI Tools - pj-rehearse](https://github.com/liweinan/deepseek-answers/blob/main/files/ci-tools-job.md)
+- [MetalLB与Ingress Controller](https://github.com/liweinan/deepseek-answers/blob/main/files/metallb-more.md)
 
 ## HackerRank
 
