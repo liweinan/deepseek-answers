@@ -202,6 +202,7 @@ Here are the topics:
 - [CI Tools - pj-rehearse](https://github.com/liweinan/deepseek-answers/blob/main/files/ci-tools-job.md)
 - [MetalLB与Ingress Controller](https://github.com/liweinan/deepseek-answers/blob/main/files/metallb-more.md)
 - [以下是对 OpenShift Container Platform 4.12 在 AWS 上部署的 **公共集群（Public Cluster）**、**私有集群（Private Cluster）** 和 **断网集群（Disconnected Cluster）** 网络结构的详细讲解，重点分析它们的区别](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-clusters.md)
+- [AWS Private Cluster Installation Guide](https://github.com/liweinan/deepseek-answers/blob/main/files/aws_private_cluster_installation.md)
 
 ## HackerRank
 
