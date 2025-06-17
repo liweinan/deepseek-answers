@@ -77,57 +77,170 @@ resource "aws_route_table" "private" {
 
 ## DNS Configuration
 
-### Private Hosted Zone
+### Route53 Integration
 
-From `pkg/infrastructure/aws/clusterapi/aws.go`:
+The private cluster requires proper DNS configuration in Route53. Here's how to set it up:
 
-```go
-// File: pkg/infrastructure/aws/clusterapi/aws.go (lines 146-228)
-// Get the hosted zone ID from the install config or create a new one
-phzID := in.InstallConfig.Config.AWS.HostedZone
-if len(phzID) == 0 {
-    logrus.Debugln("Creating private Hosted Zone")
+1. **Create Private Hosted Zone**
 
-    // Create a new private hosted zone for the cluster
-    res, err := client.CreateHostedZone(ctx, &awsconfig.HostedZoneInput{
-        // Unique identifier for the infrastructure
-        InfraID:  in.InfraID,
-        // VPC where the hosted zone will be associated
-        VpcID:    vpcID,
-        // AWS region for the hosted zone
-        Region:   awsCluster.Spec.Region,
-        // Domain name for the cluster
-        Name:     in.InstallConfig.Config.ClusterDomain(),
-        // IAM role for the hosted zone (if using cross-account)
-        Role:     in.InstallConfig.Config.AWS.HostedZoneRole,
-        // Additional tags for resource management
-        UserTags: awsCluster.Spec.AdditionalTags,
-    })
-    if err != nil {
-        return fmt.Errorf("failed to create private hosted zone: %w", err)
-    }
-    phzID = aws.StringValue(res.Id)
-    logrus.Infoln("Created private Hosted Zone")
-}
+```yaml
+# File: upi/aws/cloudformation/02_route53.yaml
+Resources:
+  # Define the private hosted zone for the cluster
+  PrivateHostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      # Domain name for the cluster
+      Name: !Ref ClusterDomain
+      # VPC association for private DNS
+      VPCs:
+        - VPCId: !Ref VpcId
+          VPCRegion: !Ref AWS::Region
+      # Tags for resource management
+      HostedZoneTags:
+        - Key: Name
+          Value: !Sub "${ClusterName}-private-zone"
+        - Key: kubernetes.io/cluster/${ClusterName}
+          Value: owned
 
-// Create DNS records for the API server in the private zone
-if err := client.CreateOrUpdateRecord(ctx, &awsconfig.CreateRecordInput{
-    // API server DNS name
-    Name:           apiName,
-    // AWS region for the record
-    Region:         awsCluster.Spec.Region,
-    // Target for the DNS record (load balancer)
-    DNSTarget:      awsCluster.Spec.ControlPlaneEndpoint.Host,
-    // ID of the private hosted zone
-    ZoneID:         phzID,
-    // ID of the load balancer's hosted zone
-    AliasZoneID:    aliasZoneID,
-    // IAM role for cross-account access
-    HostedZoneRole: in.InstallConfig.Config.AWS.HostedZoneRole,
-}); err != nil {
-    return fmt.Errorf("failed to create records for api in private zone: %w", err)
-}
+  # Create DNS records for the API server
+  ApiServerRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      # Reference to the private hosted zone
+      HostedZoneId: !Ref PrivateHostedZone
+      # API server DNS name
+      Name: !Sub "api.${ClusterDomain}"
+      # Record type (A record for IPv4)
+      Type: A
+      # TTL for the record
+      TTL: 300
+      # Alias target (internal load balancer)
+      AliasTarget:
+        # DNS name of the internal load balancer
+        DNSName: !GetAtt InternalLoadBalancer.DNSName
+        # Hosted zone ID of the load balancer
+        HostedZoneId: !GetAtt InternalLoadBalancer.CanonicalHostedZoneID
+        # Evaluate target health
+        EvaluateTargetHealth: true
+
+  # Create DNS records for the internal API server
+  InternalApiServerRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref PrivateHostedZone
+      Name: !Sub "api-int.${ClusterDomain}"
+      Type: A
+      TTL: 300
+      AliasTarget:
+        DNSName: !GetAtt InternalLoadBalancer.DNSName
+        HostedZoneId: !GetAtt InternalLoadBalancer.CanonicalHostedZoneID
+        EvaluateTargetHealth: true
 ```
+
+2. **Route53 Health Checks**
+
+```yaml
+# File: upi/aws/cloudformation/02_route53.yaml
+  # Health check for the API server
+  ApiServerHealthCheck:
+    Type: AWS::Route53::HealthCheck
+    Properties:
+      # Health check configuration
+      HealthCheckConfig:
+        # Type of health check
+        Type: HTTPS
+        # Port to check
+        Port: 6443
+        # Resource path to check
+        ResourcePath: /healthz
+        # Fully qualified domain name to check
+        FullyQualifiedDomainName: !Sub "api.${ClusterDomain}"
+        # Request interval in seconds
+        RequestInterval: 30
+        # Failure threshold
+        FailureThreshold: 3
+        # Enable SSL verification
+        EnableSNI: true
+      # Tags for the health check
+      HealthCheckTags:
+        - Key: Name
+          Value: !Sub "${ClusterName}-api-health-check"
+```
+
+3. **Route53 IAM Permissions**
+
+```yaml
+# File: upi/aws/cloudformation/03_iam.yaml
+  # IAM policy for Route53 access
+  Route53Policy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub "${ClusterName}-route53-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - route53:GetHostedZone
+              - route53:ListHostedZones
+              - route53:CreateHostedZone
+              - route53:DeleteHostedZone
+              - route53:ChangeResourceRecordSets
+              - route53:ListResourceRecordSets
+              - route53:GetHealthCheck
+              - route53:CreateHealthCheck
+              - route53:DeleteHealthCheck
+            Resource: "*"
+      Roles:
+        - !Ref MasterInstanceRole
+        - !Ref WorkerInstanceRole
+```
+
+### Route53 Integration Best Practices
+
+1. **DNS Record Management**
+   - Use alias records for load balancers to avoid IP changes
+   - Set appropriate TTL values for different record types
+   - Use health checks for critical services
+   - Implement DNS failover for high availability
+
+2. **Security Considerations**
+   - Use private hosted zones for internal DNS
+   - Implement proper IAM permissions
+   - Enable VPC DNS resolution
+   - Use SSL/TLS for API server endpoints
+
+3. **Monitoring and Maintenance**
+   - Monitor DNS query metrics
+   - Set up CloudWatch alarms for health checks
+   - Regularly review and update DNS records
+   - Implement DNS logging for troubleshooting
+
+4. **Troubleshooting Route53 Issues**
+
+```bash
+# Check DNS resolution from within the VPC
+dig +short api.private-cluster.example.com
+
+# Verify health check status
+aws route53 get-health-check-status --health-check-id <health-check-id>
+
+# List all records in the hosted zone
+aws route53 list-resource-record-sets --hosted-zone-id <hosted-zone-id>
+
+# Test DNS resolution from different VPCs
+aws route53 test-dns-answer --hosted-zone-id <hosted-zone-id> --record-name api.private-cluster.example.com --record-type A
+```
+
+5. **Common Route53 Issues and Solutions**
+
+| Issue | Possible Cause | Solution |
+|-------|----------------|----------|
+| DNS resolution fails | VPC DNS settings | Enable VPC DNS resolution |
+| Health check failures | Security group rules | Update security groups to allow health check traffic |
+| Alias record issues | Load balancer configuration | Verify load balancer DNS name and hosted zone ID |
+| Cross-account access | IAM permissions | Update IAM roles with proper Route53 permissions |
 
 ## Load Balancer Configuration
 
