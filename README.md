@@ -204,6 +204,7 @@ Here are the topics:
 - [以下是对 OpenShift Container Platform 4.12 在 AWS 上部署的 **公共集群（Public Cluster）**、**私有集群（Private Cluster）** 和 **断网集群（Disconnected Cluster）** 网络结构的详细讲解，重点分析它们的区别](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-clusters.md)
 - [AWS Private Cluster Installation Guide](https://github.com/liweinan/deepseek-answers/blob/main/files/aws_private_cluster_installation.md)
 - [AWS CloudFormation 是亚马逊云服务（AWS）提供的一种基础设施即代码（IaC）服务](https://github.com/liweinan/deepseek-answers/blob/main/files/aws-cloudformation.md)
+- [kube-proxy 和 CNI（容器网络接口）是 Kubernetes 网络生态中的两个不同组件](https://github.com/liweinan/deepseek-answers/blob/main/files/kube-proxy-cni.md)
 
 ## HackerRank
 
