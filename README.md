@@ -207,6 +207,7 @@ Here are the topics:
 - [AWS CloudFormation 是亚马逊云服务（AWS）提供的一种基础设施即代码（IaC）服务](https://github.com/liweinan/deepseek-answers/blob/main/files/aws-cloudformation.md)
 - [kube-proxy 和 CNI（容器网络接口）是 Kubernetes 网络生态中的两个不同组件](https://github.com/liweinan/deepseek-answers/blob/main/files/kube-proxy-cni.md)
 - [CI-Tools vs Release 项目分析报告](https://github.com/liweinan/deepseek-answers/blob/main/files/ci-tools-vs-release.md)
+- [Bastion Host Creation in OpenShift CI Operator](https://github.com/liweinan/deepseek-answers/blob/main/files/bastion-create-delete.md)
 
 ## HackerRank
 
