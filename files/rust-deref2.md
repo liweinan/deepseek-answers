@@ -885,6 +885,37 @@ graph TD
     style D fill:#FFDAB9,stroke:#000
 ```
 
+```mermaid
+graph LR
+    A[Rust 解引用分类] --> B[可以自动解引用<br>实现Deref/DerefMut]
+    A --> C[完全不可自动解引用<br>必须显式*]
+    A --> D[不可解引用<br>无任何解引用]
+    
+    B --> B1[&T<br>目标: T<br>示例: r.len]
+    B --> B2[&mut T<br>目标: T<br>示例: r.push]
+    B --> B3[Box<T><br>目标: T<br>示例: b.abs]
+    B --> B4[Rc<T><br>目标: T<br>示例: rc.abs]
+    B --> B5[Arc<T><br>目标: T<br>示例: arc.abs]
+    B --> B6[Ref<T><br>目标: T<br>示例: r.abs]
+    B --> B7[RefMut<T><br>目标: T<br>示例: r.push]
+    B --> B8[Pin<T><br>目标: 取决于T<br>示例: p.push]
+    B --> B9[NonNull<T><br>目标: T<br>示例: nn.as_ref.abs]
+    
+    C --> C1[*const T<br>示例: unsafe *p]
+    C --> C2[*mut T<br>示例: unsafe *p]
+    C --> C3[ManuallyDrop<T><br>示例: *md]
+    
+    D --> D1[Cell<T><br>替代: c.get]
+    D --> D2[UnsafeCell<T><br>替代: unsafe *uc.get]
+    D --> D3[Unique<T><br>替代: 不稳定, unsafe]
+    D --> D4[Shared<T><br>替代: 不稳定, unsafe]
+    D --> D5[自定义结构体/枚举<br>替代: s.0]
+    
+    style B fill:#90EE90,stroke:#000
+    style C fill:#FFB6C1,stroke:#000
+    style D fill:#FFDAB9,stroke:#000
+```
+
 ## 说明
 - **可以自动解引用**：
     - 这些类型实现`Deref`或`DerefMut`，编译器在方法调用（如`r.len`、`b.abs`）或字段访问时自动解引用。
