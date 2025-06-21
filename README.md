@@ -96,6 +96,7 @@ Here are the topics:
 - [在 Rust 中，`Copy` trait 是一个标记 trait](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-copy.md)
 - [在 Rust 中，一个 `struct` 是否可以实现 `Copy` trait 取决于其所有字段的类型是否都实现了 `Copy` trait。](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-copy2.md)
 - [在 Rust 中，是否需要在比较或操作时使用星号（`*`）解引用](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-deref.md)
+- [Rust解引用补充说明](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-deref2.md)
 
 ### Languages
 
