@@ -187,14 +187,14 @@ classDiagram
 
     class useState {
         +Hook函数: useState
-        +触发条件: 调用 setState 更新状态，新值与旧值不同
-        +样例代码: const [count, setCount] = useState(0); setCount(count + 1);
+        +触发条件: 调用 setState 更新状态 新值与旧值不同
+        +样例代码: const [count setCount] = useState(0); setCount(count + 1);
     }
 
     class useReducer {
         +Hook函数: useReducer
-        +触发条件: 通过 dispatch 触发状态更新，新状态不同
-        +样例代码: const [state, dispatch] = useReducer(reducer, initialState); dispatch({ type: 'INCREMENT' });
+        +触发条件: 通过 dispatch 触发状态更新 新状态不同
+        +样例代码: const [state dispatch] = useReducer(reducer initialState); dispatch(type: INCREMENT);
     }
 
     class useContext {
@@ -206,19 +206,19 @@ classDiagram
     class useEffect {
         +Hook函数: useEffect
         +触发条件: 内部调用状态更新函数
-        +样例代码: useEffect(() => { setCount(count + 1); }, []);
+        +样例代码: useEffect(() => setCount(count + 1); []);
     }
 
     class useLayoutEffect {
         +Hook函数: useLayoutEffect
         +触发条件: 内部调用状态更新函数
-        +样例代码: useLayoutEffect(() => { setValue(newValue); }, []);
+        +样例代码: useLayoutEffect(() => setValue(newValue); []);
     }
 
     class useTransition {
         +Hook函数: useTransition
         +触发条件: startTransition 内的状态更新
-        +样例代码: const [isPending, startTransition] = useTransition(); startTransition(() => setValue(newValue));
+        +样例代码: const [isPending startTransition] = useTransition(); startTransition(() => setValue(newValue));
     }
 
     class useDeferredValue {
