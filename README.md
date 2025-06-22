@@ -137,6 +137,7 @@ Here are the topics:
 - [Vue的`v-model`和React中的数据双向绑定是前端框架中处理数据与视图同步的两种方式](https://github.com/liweinan/deepseek-answers/blob/main/files/2way-bind.md)
 - [React的条件渲染](https://github.com/liweinan/deepseek-answers/blob/main/files/react-if-render.md)
 - [React Components以及函数学习汇总](https://github.com/liweinan/deepseek-answers/blob/main/files/react-components.md)
+- [React的Re-render](https://github.com/liweinan/deepseek-answers/blob/main/files/react-rerender.md)
 
 ### Backend Frameworks
 

@@ -2,7 +2,6 @@
 
 - [TestDome - React - Focus](https://www.testdome.com/library?page=1&skillArea=48&questionId=104185)
 - https://github.com/liweinan/deepseek-answers/blob/main/files/react-usememo-useeffect.md#hook-%E6%89%A7%E8%A1%8C%E8%AF%B4%E6%98%8E
-- 
 
 The requirements are:
 1. When the component mounts, if the `focused` prop is `true`, the input should receive focus.
