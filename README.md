@@ -136,6 +136,7 @@ Here are the topics:
 - [React.createContext](https://github.com/liweinan/deepseek-answers/blob/main/files/react-context.md)
 - [Vue的`v-model`和React中的数据双向绑定是前端框架中处理数据与视图同步的两种方式](https://github.com/liweinan/deepseek-answers/blob/main/files/2way-bind.md)
 - [React的条件渲染](https://github.com/liweinan/deepseek-answers/blob/main/files/react-if-render.md)
+- [React Components以及函数学习汇总](https://github.com/liweinan/deepseek-answers/blob/main/files/react-components.md)
 
 ### Backend Frameworks
 
@@ -231,6 +232,7 @@ Here are the topics:
 - [React题 - Logout Wrapper](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-logout-wrapper.md)
 - [TestDome - Boat Movements(Java)](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-boatmovement.md)
 - [TestDome React题 / Change Username](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-changeusername.md)
+- [TestDome - React - Focus](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-react-focus.md)
 
 ### CheatSheets
 
