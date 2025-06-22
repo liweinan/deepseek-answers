@@ -23,6 +23,7 @@ Here are the topics:
 - [LangChain4j的使用](https://github.com/liweinan/deepseek-answers/blob/main/files/langchain4j-use.md)
 - [**Cursor** 支持类似 **Trae** 的规则（Rules）功能](https://github.com/liweinan/deepseek-answers/blob/main/files/trae-rules.md)
 - [对比分析 Cursor 的**跨目录工作区**和**在两个独立窗口中打开项目并将另一个项目的目录拖拽到 AI 窗口作为上下文**这两种方式](https://github.com/liweinan/deepseek-answers/blob/main/files/cursor-cross-workspace-drag.md)
+- [未来程序员的发展前景](https://github.com/liweinan/deepseek-answers/blob/main/files/programmer.md)
 
 ### Tools
 
