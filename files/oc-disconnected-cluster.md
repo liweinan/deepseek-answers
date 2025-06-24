@@ -533,3 +533,228 @@ sequenceDiagram
 - Configure offline monitoring
 - Plan for offline upgrades
 - Maintain local security patches 
+
+---
+
+你说得对！从时序图中确实没有充分展示CCO在Disconnected Cluster中的具体使用过程。让我详细解释一下CCO在Disconnected Cluster安装中的关键作用：
+
+## CCO在Disconnected Cluster中的使用过程
+
+### 1. **CCO模式配置**
+在Disconnected Cluster中，CCO必须使用**Manual模式**，因为：
+- 集群无法访问互联网来动态创建云平台凭证
+- 需要预先创建的静态IAM用户/服务账户
+
+### 2. **具体使用步骤**
+
+#### **步骤1: 提取CredentialsRequest**
+```bash
+# 从OpenShift release镜像中提取凭证请求
+oc adm release extract --credentials-requests --cloud=aws ${RELEASE_IMAGE}
+```
+
+#### **步骤2: 创建静态IAM用户**
+```bash
+# 为每个CredentialsRequest创建对应的IAM策略和用户
+# 例如：openshift-image-registry-installer-cloud-credentials
+# 例如：openshift-ingress-operator-cloud-credentials
+```
+
+#### **步骤3: 生成Kubernetes Secret**
+```yaml
+# 为每个组件生成对应的Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: installer-cloud-credentials
+  namespace: openshift-image-registry
+data:
+  aws_access_key_id: <base64-encoded-key>
+  aws_secret_access_key: <base64-encoded-secret>
+```
+
+#### **步骤4: 应用凭证配置**
+```bash
+# 在集群安装过程中应用这些Secret
+oc apply -f manifests/
+```
+
+### 3. **CCO在时序图中的缺失部分**
+
+在Disconnected Cluster时序图中，应该更详细地展示：
+
+```mermaid
+sequenceDiagram
+    participant Admin as Administrator
+    participant CCO as Cloud Credential Operator
+    participant AWS as AWS IAM
+    participant Cluster as OpenShift Cluster
+
+    Admin->>CCO: 1. Extract CredentialsRequest from release image
+    CCO-->>Admin: CredentialsRequest manifests
+    
+    Admin->>AWS: 2. Create IAM policies for each component
+    AWS-->>Admin: IAM policies created
+    
+    Admin->>AWS: 3. Create IAM users with minimal permissions
+    AWS-->>Admin: IAM users created
+    
+    Admin->>CCO: 4. Generate Kubernetes Secret manifests
+    CCO-->>Admin: Secret manifests ready
+    
+    Admin->>Cluster: 5. Apply Secret manifests during installation
+    Cluster-->>Admin: Secrets applied
+    
+    Note over Admin,Cluster: CCO operates in Manual mode
+```
+
+### 4. **CCO的关键差异**
+
+| 方面 | Private Cluster | Disconnected Cluster |
+|------|----------------|---------------------|
+| **CCO模式** | Mint/Manual | Manual only |
+| **凭证创建** | 动态创建 | 静态预创建 |
+| **权限管理** | 自动管理 | 手动管理 |
+| **互联网依赖** | 需要访问IAM API | 无需互联网访问 |
+
+### 5. **为什么Disconnected Cluster需要Manual模式**
+
+1. **网络隔离**: 集群无法访问AWS IAM API
+2. **安全要求**: 企业安全策略要求手动管理凭证
+3. **审计需求**: 需要明确的凭证创建记录
+4. **权限控制**: 确保最小权限原则
+
+### 6. **CCO配置示例**
+
+```yaml
+# install-config.yaml
+credentialsMode: Manual  # 强制使用Manual模式
+
+# 对应的IAM策略示例
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeRegions"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+你说得对，时序图中确实没有充分展示CCO的具体工作流程。在实际的Disconnected Cluster安装中，CCO的Manual模式配置是一个关键步骤，需要预先准备所有必要的云平台凭证，而不是依赖动态创建。
+
+---
+
+好的，我来输出包含CCO详细步骤的Disconnected Cluster安装时序图的mermaid内容：
+
+```mermaid
+sequenceDiagram
+    participant Admin as Administrator
+    participant Bastion as Bastion Host
+    participant Mirror as Mirror Registry
+    participant Installer as OpenShift Installer
+    participant Cloud as Cloud Platform
+    participant DNS as DNS Service
+    participant Cluster as OpenShift Cluster
+    participant CCO as Cloud Credential Operator
+    participant IAM as AWS IAM
+
+    Note over Admin,Cluster: Disconnected Cluster Installation Process
+
+    Admin->>Bastion: 1. Provision bastion host<br/>(with internet access)
+    Bastion-->>Admin: Bastion host ready
+
+    Admin->>Bastion: 2. Install oc-mirror tool
+    Bastion-->>Admin: oc-mirror installed
+
+    Admin->>Bastion: 3. Create ImageSetConfiguration
+    Bastion-->>Admin: Configuration created
+
+    Admin->>Bastion: 4. Mirror OpenShift images<br/>to local registry
+    Bastion->>Mirror: 4.1. Download images from Red Hat
+    Mirror-->>Bastion: 4.2. Images stored locally
+    Bastion-->>Admin: 4.3. Mirroring complete
+
+    Admin->>Bastion: 5. Mirror operator catalogs
+    Bastion->>Mirror: 5.1. Download operator catalogs
+    Mirror-->>Bastion: 5.2. Catalogs stored locally
+    Bastion-->>Admin: 5.3. Catalog mirroring complete
+
+    Admin->>CCO: 6. Extract CredentialsRequest<br/>from release image
+    CCO-->>Admin: CredentialsRequest manifests
+
+    Admin->>IAM: 7. Create IAM policies<br/>for each component
+    IAM-->>Admin: IAM policies created
+
+    Admin->>IAM: 8. Create IAM users<br/>with minimal permissions
+    IAM-->>Admin: IAM users created
+
+    Admin->>CCO: 9. Generate Kubernetes<br/>Secret manifests
+    CCO-->>Admin: Secret manifests ready
+
+    Admin->>Installer: 10. Create install-config.yaml<br/>(with mirror registry config)
+    Admin->>Installer: 11. Configure disconnected settings<br/>(credentialsMode: Manual)
+
+    Installer->>Cloud: 12. Create VPC with private subnets
+    Cloud-->>Installer: VPC created
+
+    Installer->>Cloud: 13. Create private DNS zone
+    Cloud-->>Installer: Private DNS zone created
+
+    Installer->>Cloud: 14. Create load balancers (internal)
+    Cloud-->>Installer: Internal load balancers created
+
+    Installer->>Cloud: 15. Create compute instances
+    Cloud-->>Installer: Instances created
+
+    Installer->>Mirror: 16. Pull OpenShift images<br/>(from local mirror)
+    Mirror-->>Installer: Images downloaded
+
+    Installer->>Cluster: 17. Deploy control plane
+    Cluster-->>Installer: Control plane ready
+
+    Installer->>Cluster: 18. Deploy worker nodes
+    Cluster-->>Installer: Worker nodes ready
+
+    Installer->>DNS: 19. Configure private DNS records
+    DNS-->>Installer: DNS records created
+
+    Installer->>Cluster: 20. Configure internal registry
+    Cluster-->>Installer: Internal registry ready
+
+    Installer->>Cluster: 21. Apply Secret manifests<br/>(static IAM credentials)
+    Cluster-->>Installer: Secrets applied
+
+    Installer->>Cluster: 22. Apply ImageContentSourcePolicy<br/>(point to mirror registry)
+    Cluster-->>Installer: Image policy applied
+
+    Installer->>Cluster: 23. Deploy local catalog sources
+    Cluster-->>Installer: Local catalogs ready
+
+    Installer->>Cluster: 24. Configure CCO in Manual mode
+    Cluster-->>Installer: CCO configured
+
+    Installer-->>Admin: 25. Installation complete<br/>(Fully disconnected)
+
+    Note over Admin,Cluster: Cluster operates completely offline<br/>with static cloud credentials
+```
+
+这个更新后的时序图包含了CCO在Disconnected Cluster安装中的完整流程：
+
+1. **步骤6-9**: 展示了CCO的凭证准备过程
+    - 提取CredentialsRequest
+    - 创建IAM策略和用户
+    - 生成Kubernetes Secret清单
+
+2. **步骤11**: 明确配置credentialsMode为Manual
+
+3. **步骤21**: 应用静态凭证Secret
+
+4. **步骤24**: 配置CCO为Manual模式
+
+这样更完整地展示了Disconnected Cluster安装过程中CCO的关键作用和使用方式。
