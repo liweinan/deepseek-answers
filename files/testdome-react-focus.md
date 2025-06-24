@@ -478,3 +478,169 @@ const Component = ({
 ```
 
 这种语法让代码更简洁，同时避免了命名冲突，是 React 组件中常用的模式。
+
+---
+
+`Component` 和 `PureComponent` 的主要区别在于 **性能优化机制**，具体体现在 `shouldComponentUpdate` 的实现上：
+
+## 核心区别
+
+### 1. **Component**
+```jsx
+class MyComponent extends React.Component {
+    // 默认的 shouldComponentUpdate 总是返回 true
+    // 意味着每次父组件重新渲染时，子组件都会重新渲染
+}
+```
+
+### 2. **PureComponent**
+```jsx
+class MyComponent extends React.PureComponent {
+    // 自动实现了 shouldComponentUpdate
+    // 进行浅比较（shallow comparison）来决定是否重新渲染
+}
+```
+
+## 浅比较机制
+
+`PureComponent` 的 `shouldComponentUpdate` 会自动比较：
+
+### **Props 比较**
+```jsx
+// 比较 this.props 和 nextProps
+// 只进行浅比较，不进行深度比较
+```
+
+### **State 比较**
+```jsx
+// 比较 this.state 和 nextState
+// 只进行浅比较，不进行深度比较
+```
+
+## 具体例子
+
+### **使用 Component**
+```jsx
+class Counter extends React.Component {
+    state = { count: 0 };
+    
+    render() {
+        console.log('Counter 重新渲染了');
+        return <div>{this.state.count}</div>;
+    }
+}
+
+class Parent extends React.Component {
+    state = { name: 'John' };
+    
+    render() {
+        return (
+            <div>
+                <h1>{this.state.name}</h1>
+                <Counter /> {/* 每次 Parent 重新渲染，Counter 也会重新渲染 */}
+            </div>
+        );
+    }
+}
+```
+
+### **使用 PureComponent**
+```jsx
+class Counter extends React.PureComponent {
+    state = { count: 0 };
+    
+    render() {
+        console.log('Counter 重新渲染了');
+        return <div>{this.state.count}</div>;
+    }
+}
+
+class Parent extends React.Component {
+    state = { name: 'John' };
+    
+    render() {
+        return (
+            <div>
+                <h1>{this.state.name}</h1>
+                <Counter /> {/* 只有当 Counter 的 props 或 state 真正改变时才重新渲染 */}
+            </div>
+        );
+    }
+}
+```
+
+## 浅比较的限制
+
+### **对象和数组的问题**
+```jsx
+class MyComponent extends React.PureComponent {
+    render() {
+        return <div>{this.props.user.name}</div>;
+    }
+}
+
+// 问题：即使 user.name 没有改变，组件也会重新渲染
+<MyComponent user={{ name: 'John' }} /> // 每次都是新对象
+<MyComponent user={{ name: 'John' }} /> // 浅比较认为不同
+```
+
+### **函数的问题**
+```jsx
+class MyComponent extends React.PureComponent {
+    render() {
+        return <button onClick={this.props.onClick}>Click</button>;
+    }
+}
+
+// 问题：每次都是新的函数引用
+<MyComponent onClick={() => console.log('click')} />
+```
+
+## 最佳实践
+
+### **何时使用 PureComponent**
+```jsx
+// ✅ 适合使用 PureComponent
+class UserList extends React.PureComponent {
+    render() {
+        return (
+            <ul>
+                {this.props.users.map(user => (
+                    <li key={user.id}>{user.name}</li>
+                ))}
+            </ul>
+        );
+    }
+}
+```
+
+### **何时使用 Component**
+```jsx
+// ✅ 适合使用 Component
+class UserForm extends React.Component {
+    render() {
+        return (
+            <form onSubmit={this.props.onSubmit}>
+                <input onChange={this.props.onChange} />
+            </form>
+        );
+    }
+}
+```
+
+## 性能对比
+
+| 场景 | Component | PureComponent |
+|------|-----------|---------------|
+| 父组件频繁更新 | 总是重新渲染 | 可能跳过渲染 |
+| 简单数据类型 | 总是重新渲染 | 智能跳过渲染 |
+| 复杂对象/数组 | 总是重新渲染 | 可能误判（浅比较） |
+| 函数 props | 总是重新渲染 | 可能误判（浅比较） |
+
+## 总结
+
+- **Component**: 简单直接，总是重新渲染
+- **PureComponent**: 性能优化，但需要理解浅比较的限制
+- **现代推荐**: 使用函数组件 + `React.memo` 或 `useMemo` 进行优化
+
+`PureComponent` 是一个性能优化工具，但需要谨慎使用，确保理解其浅比较机制。
