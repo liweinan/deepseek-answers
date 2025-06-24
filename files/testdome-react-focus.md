@@ -384,3 +384,97 @@ useEffect(() => {
 - 通过**返回清理函数** 实现 `componentWillUnmount`
 
 这种设计让函数组件的生命周期管理更加灵活和统一。
+
+---
+
+这行代码使用了 **ES6 的解构赋值** 和 **参数重命名** 的语法，让我详细解释：
+
+## 语法分解
+
+```jsx
+const Focus2 = ({ focused: initialFocused = false }) => {
+```
+
+### 1. **解构赋值**
+```jsx
+{ focused } = props
+```
+- 从传入的 `props` 对象中提取 `focused` 属性
+
+### 2. **参数重命名**
+```jsx
+focused: initialFocused
+```
+- 将解构出来的 `focused` 属性重命名为 `initialFocused`
+- 这样在组件内部使用 `initialFocused` 而不是 `focused`
+
+### 3. **默认值**
+```jsx
+= false
+```
+- 如果 `props.focused` 是 `undefined`，则使用 `false` 作为默认值
+
+## 等价的传统写法
+
+```jsx
+// 传统写法
+const Focus2 = (props) => {
+    const initialFocused = props.focused !== undefined ? props.focused : false;
+    // ...
+}
+
+// 或者
+const Focus2 = (props) => {
+    const initialFocused = props.focused || false;
+    // ...
+}
+```
+
+## 为什么需要重命名？
+
+在这个组件中，重命名是必要的，因为：
+
+1. **避免命名冲突**：
+   ```jsx
+   const [focused, setFocused] = useState(initialFocused);
+   ```
+   - 组件内部使用 `focused` 作为状态名
+   - 如果 props 也叫 `focused`，会造成混淆
+
+2. **语义清晰**：
+   - `initialFocused` 明确表示这是初始值
+   - `focused` 表示当前的状态值
+
+## 完整的数据流
+
+```jsx
+// 父组件调用
+<Focus2 focused={true} />
+
+// 组件内部
+const Focus2 = ({ focused: initialFocused = false }) => {
+    const [focused, setFocused] = useState(initialFocused);
+    // initialFocused = true (来自 props)
+    // focused = true (当前状态)
+}
+```
+
+## 其他类似的语法例子
+
+```jsx
+// 重命名 + 默认值
+const Component = ({ name: displayName = 'Guest' }) => {}
+
+// 多个重命名
+const Component = ({ 
+    title: pageTitle = 'Home',
+    content: pageContent = ''
+}) => {}
+
+// 嵌套解构重命名
+const Component = ({ 
+    user: { name: userName, age: userAge } = {}
+}) => {}
+```
+
+这种语法让代码更简洁，同时避免了命名冲突，是 React 组件中常用的模式。
