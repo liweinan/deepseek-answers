@@ -758,3 +758,120 @@ sequenceDiagram
 4. **步骤24**: 配置CCO为Manual模式
 
 这样更完整地展示了Disconnected Cluster安装过程中CCO的关键作用和使用方式。
+
+---
+
+这是一个很好的问题！虽然Disconnected Cluster是完全离线的，但创建IAM用户仍然非常重要，原因如下：
+
+## 为什么Disconnected Cluster仍然需要IAM用户
+
+### 1. **云平台资源管理**
+即使集群离线，它仍然需要管理云平台上的资源：
+- **存储卷**: EBS卷的创建、删除、快照
+- **负载均衡器**: 内部负载均衡器的管理
+- **网络资源**: 安全组、路由表等
+- **镜像仓库**: 如果使用云平台的容器仓库
+
+### 2. **OpenShift组件需要云平台访问**
+
+#### **Image Registry Operator**
+```yaml
+# 需要访问S3存储桶来存储镜像
+apiVersion: v1
+kind: Secret
+metadata:
+  name: installer-cloud-credentials
+  namespace: openshift-image-registry
+data:
+  aws_access_key_id: <base64-encoded>
+  aws_secret_access_key: <base64-encoded>
+```
+
+#### **Ingress Operator**
+```yaml
+# 需要管理AWS负载均衡器
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloud-credentials
+  namespace: openshift-ingress-operator
+```
+
+#### **Machine API Operator**
+```yaml
+# 需要管理EC2实例（扩缩容时）
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-cloud-credentials
+  namespace: openshift-machine-api
+```
+
+### 3. **"离线"的真正含义**
+
+Disconnected Cluster的"离线"指的是：
+- **无法访问互联网**（拉取镜像、软件包）
+- **无法访问外部服务**（Red Hat服务、更新服务器）
+
+但**不是**指：
+- 无法访问云平台API
+- 无法管理云平台资源
+
+### 4. **实际使用场景**
+
+```bash
+# 集群运行时，这些操作仍然需要云平台访问：
+
+# 1. 创建新的持久卷
+oc create -f pvc.yaml  # 需要创建EBS卷
+
+# 2. 扩展节点
+oc scale machineset/worker-0 --replicas=3  # 需要创建EC2实例
+
+# 3. 配置负载均衡器
+oc create route edge myapp  # 需要创建ALB/NLB
+
+# 4. 存储镜像到云仓库
+podman push image to AWS ECR  # 需要访问ECR
+```
+
+### 5. **权限最小化原则**
+
+IAM用户只获得**最小必要权限**：
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeRegions",
+        "ec2:CreateVolume",
+        "ec2:DeleteVolume",
+        "elasticloadbalancing:DescribeLoadBalancers"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+### 6. **与Private Cluster的区别**
+
+| 方面 | Private Cluster | Disconnected Cluster |
+|------|----------------|---------------------|
+| **互联网访问** | 有（拉取镜像） | 无 |
+| **云平台访问** | 有（动态创建） | 有（静态用户） |
+| **CCO模式** | Mint/Manual | Manual only |
+| **凭证管理** | 自动/手动 | 完全手动 |
+
+### 7. **总结**
+
+Disconnected Cluster的"离线"是**网络层面的隔离**，不是**云平台层面的隔离**。集群仍然需要：
+- 管理云平台资源
+- 访问云平台API
+- 使用云平台服务
+
+因此，IAM用户是必需的，只是创建方式从动态变为静态，从自动变为手动。这确保了在完全网络隔离的环境中，集群仍然能够正常管理其云平台资源。
