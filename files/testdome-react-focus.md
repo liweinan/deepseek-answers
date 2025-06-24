@@ -301,3 +301,86 @@ Focus2 (直接包含 input)
 `Focus.jsx` 更复杂是因为它展示了 React 中更高级的概念，特别是 **ref 转发** 和 **组件组合** 模式。这种设计在需要将 ref 传递给深层嵌套组件时很有用，但在这个简单场景下显得过度设计。
 
 `Focus2.jsx` 使用了现代 React Hooks，代码更简洁、更易理解，是当前 React 开发的最佳实践。
+
+---
+
+`useEffect` 在函数组件中同时扮演了 `componentDidMount` 和 `componentDidUpdate` 的角色，具体位置取决于依赖数组的设置：
+
+## useEffect 的不同行为
+
+### 1. **componentDidMount 等价**
+```jsx
+useEffect(() => {
+    // 只在组件挂载时执行一次
+    console.log('组件挂载完成');
+}, []); // 空依赖数组
+```
+
+### 2. **componentDidUpdate 等价**
+```jsx
+useEffect(() => {
+    // 每次依赖项变化时执行
+    console.log('组件更新了');
+}, [someState, someProp]); // 有依赖项
+```
+
+### 3. **componentDidMount + componentDidUpdate 等价**
+```jsx
+useEffect(() => {
+    // 组件挂载时执行，之后每次渲染都执行
+    console.log('组件挂载或更新了');
+}); // 没有依赖数组
+```
+
+## 在 Focus2.jsx 中的具体例子
+
+```jsx
+useEffect(() => {
+    if (focused && document.activeElement !== inputRef.current) {
+        inputRef.current.focus();
+    }
+}, [focused]); // 依赖 focused 状态
+```
+
+这个 `useEffect` 的行为：
+- **首次挂载时**：如果 `focused` 初始值为 `true`，会执行 focus 逻辑
+- **后续更新时**：每当 `focused` 状态改变时，都会执行 focus 逻辑
+
+## 对比 Class 组件的生命周期
+
+**Class 组件**：
+```jsx
+componentDidMount() {
+    // 只在挂载时执行
+    if (this.state.focused) {
+        this.ref.current.focus();
+    }
+}
+
+componentDidUpdate(prevProps, prevState) {
+    // 每次更新时执行
+    if (!prevState.focused && this.state.focused) {
+        this.ref.current.focus();
+    }
+}
+```
+
+**函数组件**：
+```jsx
+useEffect(() => {
+    // 挂载时 + focused 变化时都执行
+    if (focused && document.activeElement !== inputRef.current) {
+        inputRef.current.focus();
+    }
+}, [focused]);
+```
+
+## 总结
+
+`useEffect` 是一个**统一的生命周期 Hook**，它：
+- 通过**空依赖数组 `[]`** 实现 `componentDidMount`
+- 通过**有依赖数组 `[dep1, dep2]`** 实现 `componentDidUpdate`
+- 通过**无依赖数组** 实现每次渲染都执行
+- 通过**返回清理函数** 实现 `componentWillUnmount`
+
+这种设计让函数组件的生命周期管理更加灵活和统一。
