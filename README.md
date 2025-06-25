@@ -58,6 +58,7 @@ Here are the topics:
 - [如何编写基于Go的单元测试](https://github.com/liweinan/deepseek-answers/blob/main/files/go-test.md)
 - [在 Go 编程语言中，`rune` 是一种内置类型](https://github.com/liweinan/deepseek-answers/blob/main/files/go-rune.md)
 - [Go 语言支持函数返回多个值](https://github.com/liweinan/deepseek-answers/blob/main/files/go-err.md)
+- [Go的DeepCopy](https://github.com/liweinan/deepseek-answers/blob/main/files/go-deepcopy.md)
 
 ### Java
 
