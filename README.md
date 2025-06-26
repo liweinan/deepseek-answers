@@ -106,6 +106,7 @@ Here are the topics:
 - [JavaScript (JS) 与 TypeScript (TS) 全面比较](https://github.com/liweinan/deepseek-answers/blob/main/files/ts-js-java.md)
 - [`async/await` 是一种异步编程模式](https://github.com/liweinan/deepseek-answers/blob/main/files/async.md)
 - [Stream API 的出现时间和在不同编程语言中的发展可以从以下几个方面来分析](https://github.com/liweinan/deepseek-answers/blob/main/files/stream-api.md)
+- [深拷贝与浅拷贝的区别](https://github.com/liweinan/deepseek-answers/blob/main/files/shallow-copy.md)
 
 ### Linux Administration & DevOps
 
