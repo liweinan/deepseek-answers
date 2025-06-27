@@ -942,3 +942,63 @@ p3: {Name: Alice, Address: {City: Chicago}}
   - 复杂结构体：评估 `copier` 或自定义逻辑。
 
 如果有特定场景（如性能要求、复杂结构体）或需要进一步对比，请提供更多细节，我可以深入分析！
+
+---
+
+The error `E0502` occurs because Rust's borrow checker prevents simultaneous mutable and immutable borrows of the same value. In your code, `p1` is mutably borrowed by `p3` (via `&mut p1`), and then you attempt to immutably borrow `p1` in the `println!("p1: {:?}", p1);` statement while the mutable borrow is still active. This violates Rust's borrowing rules.
+
+To fix this and continue using `p1`, you need to ensure the mutable borrow (`p3`) is no longer in scope or used after the modification, so you can safely access `p1` again. Here's the corrected code:
+
+```rust
+#[derive(Clone, Debug)]
+struct Address {
+    city: String,
+}
+
+#[derive(Clone, Debug)]
+struct Person {
+    name: String,
+    address: Address,
+}
+
+fn main() {
+    let mut p1 = Person {
+        name: String::from("Alice"),
+        address: Address { city: String::from("New York") },
+    };
+
+    // 可变引用
+    {
+        let p3 = &mut p1; // No need for `mut` on `p3` since we don't reassign it
+        println!("Before modification (reference):");
+        println!("p3: {:?}", p3);
+        p3.address.city = String::from("Boston");
+        println!("After modifying p3.address.city:");
+        println!("p3: {:?}", p3);
+    } // `p3` goes out of scope here, ending the mutable borrow
+
+    println!("p1: {:?}", p1); // Now safe to access `p1`
+}
+```
+
+### Changes Made:
+1. **Scoped the mutable borrow**: By wrapping the `p3` usage in a block `{ ... }`, the mutable borrow ends when `p3` goes out of scope, allowing `p1` to be used afterward.
+2. **Removed unnecessary `mut`**: The warning indicated that `mut p3` was unnecessary because `p3` itself isn't reassigned. I kept it as `let p3` for clarity, but you could also explicitly follow the warning and use `let p3 = &mut p1;`.
+3. **Order of operations**: Ensured `println!("p1: {:?}", p1);` happens after the mutable borrow is released.
+
+### Output:
+Running this code will produce something like:
+```
+Before modification (reference):
+p3: Person { name: "Alice", address: Address { city: "New York" } }
+After modifying p3.address.city:
+p3: Person { name: "Alice", address: Address { city: "Boston" } }
+p1: Person { name: "Alice", address: Address { city: "Boston" } }
+```
+
+### Explanation:
+- The mutable reference `p3` allows modifying `p1.address.city`.
+- By limiting the scope of `p3`, we ensure the mutable borrow ends before accessing `p1` directly.
+- This satisfies Rust's borrow checker, which enforces that there can only be one mutable borrow or multiple immutable borrows at a time, but not both.
+
+If you want to keep using `p1` and `p3` simultaneously, you could consider cloning `p1` to create an independent copy, but that depends on your use case. Let me know if you need an alternative approach or further clarification!
