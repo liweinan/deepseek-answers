@@ -217,7 +217,7 @@ Here are the topics:
 - [AWS 基础设施如何支持 OpenShift 集群的公共 IP 分配，与 MetalLB 的对比，以及与 OpenShift 的 Route 和 Ingress Controller 的集成](https://github.com/liweinan/deepseek-answers/blob/main/files/metallb-vs-aws-elb.md)
 - [OpenShift Disconnected Cluster](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-disconnected-cluster.md)
 - [以下是对“disconnected cluster”和“shared network”两种网络配置的比较](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-disconnected-cluster.md)
-- [Disconnected Cluster Creation](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-disconnected-cluster2.md)
+- [Disconnected Cluster Creation](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-disconnected2.md)
 
 ## HackerRank
 
