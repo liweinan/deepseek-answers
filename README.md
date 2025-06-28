@@ -254,6 +254,7 @@ Here are the topics:
 - [设计模式](https://github.com/liweinan/deepseek-answers/blob/main/files/design-pattern.md)
 - [oc and kubectl Cheatsheet](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-cheatsheet.md)
 - [高效刷LeetCode（力扣）算法题](https://github.com/liweinan/deepseek-answers/blob/main/files/leetcode-cheatsheet.md)
+- [Rust 解引用 Cheatsheet](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-deref-cheatsheet.md)
 
 ### 面试题
 
