@@ -102,6 +102,7 @@ Here are the topics:
 - [在 Rust 中，引用（`&`）和解引用（`*`）在设计上具有一定的对称性，但并非完全对称。](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-deref3.md) 
 - [Rust Deref进阶](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-deref4.md)
 - [Rust Deref进阶️二](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-deref5.md)
+- [在 Rust 中，`Box<T>` 是一个智能指针，它会在堆（heap）上分配内存来存储类型 `T` 的值。](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-deref6.md)
 
 ### Languages
 
