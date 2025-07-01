@@ -36,7 +36,7 @@ fn main() {
     
     // takes_string(&pass_s); // not work: moved already.
     
-    // takes_string3(**&pass_s); // not work: can move with shared ref.
+    // takes_string3(**&pass_s); // not work: can't move with shared ref.
     
     let pass_num = Box::new(42);
     
