@@ -17,38 +17,35 @@ fn takes_num(num: i32) {
     println!("Value: {}", num);
 }
 
-
 fn main() {
-    
     let pass_s = Box::new(String::from("dog"));
-    
+
     // deref() called
     takes_string(&pass_s); // auto deref
-    
+
     // deref() called
     takes_string(&*pass_s); // same with above
-    
+
     // deref() not called
     takes_string2(&pass_s); // still work, ownership not moved out
-    
+
     // // deref() called
     takes_string3(*pass_s); // ownership moved.
-    
-    // takes_string(&pass_s); // not work: moved already.
-    
-    // takes_string3(**&pass_s); // not work: can't move with shared ref.
-    
-    let pass_num = Box::new(42);
-    
-    // deref() called
-    takes_num(*pass_num); // ownership moved out.
-    
-    // deref() called
-    takes_num(**&pass_num); // copy happens.
-    
-    println!("-> {}", *pass_num);
-}
 
+    // takes_string(&pass_s); // not work: moved already.
+
+    // takes_string3(**&pass_s); // not work: can't move with shared ref.
+
+    let pass_num = Box::new(42);
+
+    // deref() called
+    takes_num(*pass_num); // ownership moved out. copy happens.
+
+    // deref() called
+    takes_num(**&pass_num); // copy happens again.
+
+    println!("-> {}", *pass_num); // still can be used.
+}
 ```
 
 
