@@ -1,5 +1,57 @@
 # 在 Rust 中，`&pass_s` 和 `*pass_s` 的行为涉及解引用和 `Deref` trait，但它们是否触发 `deref` 方法需要具体分析。让我们以你的例子 `let pass_s = Box::new(42);` 为基础，详细探讨这两种情况。
 
+```rust
+fn takes_string(s: &String) {
+    println!("Value: {}", s);
+}
+
+fn takes_string2(s: &Box<String>) {
+    println!("Value: {}", s);
+}
+
+fn takes_string3(s: String) {
+    println!("Value: {}", s);
+}
+
+fn takes_num(num: i32) {
+    println!("Value: {}", num);
+}
+
+
+fn main() {
+    
+    let pass_s = Box::new(String::from("dog"));
+    
+    // deref() called
+    takes_string(&pass_s); // auto deref
+    
+    // deref() called
+    takes_string(&*pass_s); // same with above
+    
+    // deref() not called
+    takes_string2(&pass_s); // still work, ownership not moved out
+    
+    // // deref() called
+    takes_string3(*pass_s); // ownership moved.
+    
+    // takes_string(&pass_s); // not work: moved already.
+    
+    // takes_string3(**&pass_s); // not work: can move with shared ref.
+    
+    let pass_num = Box::new(42);
+    
+    // deref() called
+    takes_num(*pass_num); // ownership moved out.
+    
+    // deref() called
+    takes_num(**&pass_num); // copy happens.
+    
+    println!("-> {}", *pass_num);
+}
+
+```
+
+
 ### 背景知识
 - `pass_s` 的类型是 `Box<i32>`，它是一个智能指针，实现了 `Deref` 和 `DerefMut` trait。
 - `Deref` trait 提供了 `deref` 方法，允许 `Box<i32>` 在解引用时返回 `&i32`（不可变引用）。
