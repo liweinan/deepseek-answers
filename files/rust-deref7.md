@@ -45,6 +45,8 @@ fn main() {
     takes_num(**&pass_num); // copy happens again.
 
     println!("-> {}", *pass_num); // still can be used.
+    println!("-> {}", pass_num); // auto deref.
+    println!("-> {}", &pass_num); // okay.
 }
 ```
 
@@ -585,3 +587,283 @@ fn main() {
 - 如果函数需要引用，必须显式借用（`&*pass_s`）或利用解引用强制转换（`&pass_s`）。
 
 如果你有更多疑问或需要进一步澄清，请告诉我！
+
+---
+
+# 感谢你提供了具体的代码和运行结果，这让我能够更准确地分析问题。你的代码和输出表明，`println!` 的行为以及 Rust 的类型系统和解引用机制在其中起到了关键作用。让我们详细分析 `println!` 本身的行为，以及为什么所有打印语句的输出看起来都是 `"dog"`（除了第一个语句的 `"ca-> dog"` 可能是输入错误或环境特定输出）。
+
+---
+
+### 1. 代码和输出回顾
+
+#### 代码
+```rust
+fn main() {
+    let pass_s = Box::new(String::from("dog"));
+    println!("-> {}", *pass_s);
+    println!("-> {}", *pass_s);
+    println!("-> {}", &pass_s);
+    println!("-> {}", &pass_s);
+    println!("-> {}", pass_s);
+    println!("-> {}", pass_s);
+}
+```
+
+#### 输出
+```
+ca-> dog
+-> dog
+-> dog
+-> dog
+-> dog
+-> dog
+-> dog
+ca
+```
+
+- **观察**：
+    - 所有 `println!("-> {}", ...)` 的输出都是 `"dog"`，前面带有 `->` 前缀。
+    - 第一行 `"ca-> dog"` 和最后一行 `"ca"` 可能与你的终端环境、输入错误或额外的调试输出有关（例如，`ca` 可能是一个提示符或误输入的字符）。
+    - 核心问题：为什么 `*pass_s`、`&pass_s` 和 `pass_s` 在 `println!("-> {}", ...)` 中都输出了 `"dog"`？
+
+---
+
+### 2. `println!` 宏的分析
+
+`println!` 是一个 Rust 宏，用于格式化并打印到标准输出。它使用格式字符串（例如 `"-> {}"`）和占位符（`{}`）来决定如何显示参数。以下是 `println!` 的关键特性：
+
+- **格式化占位符**：
+    - `{}` 默认调用 `Display` trait 来格式化参数。
+    - `{:?}` 调用 `Debug` trait（你在之前的代码中用过），用于调试输出。
+    - 在你的代码中，使用了 `{}`，因此需要参数实现 `Display`。
+
+- **自动引用和解引用**：
+    - `println!` 自动为参数添加引用（`&T`），以避免所有权转移。
+    - Rust 的 **解引用强制转换（deref coercion）** 会根据 `Deref` trait 自动将引用转换为更合适的类型（例如 `&Box<T>` 到 `&T`）。
+
+- **类型要求**：
+    - 参数必须实现 `Display`，否则会编译错误。
+    - `Box<T>` 本身没有直接实现 `Display`，但可以通过 `Deref` 访问内部类型（如果该类型实现了 `Display`）。
+
+---
+
+### 3. 每种写法的行为分析
+
+#### a. `println!("-> {}", *pass_s)`
+- **解引用**：`*pass_s` 解引用 `Box<String>`，得到 `String`。
+- **类型**：`*pass_s` 是 `String`，但 `println!` 自动借用为 `&String`。
+- **格式化**：`String` 实现了 `Display`，`{}` 会调用 `String` 的 `Display` 实现，输出其内容 `"dog"`。
+- **输出**：`"-> dog"`（`->` 来自格式字符串，`dog` 来自 `String`）。
+- **所有权**：`*pass_s` 解引用会移动 `String`，但 `println!` 自动借用为 `&String`，因此 `pass_s` 仍然有效。
+
+#### b. `println!("-> {}", &pass_s)`
+- **借用**：`&pass_s` 生成 `&Box<String>`。
+- **解引用强制转换**：
+    - `Box<String>` 实现了 `Deref<Target=String>`，因此 `&Box<String>` 自动转换为 `&String`。
+    - `String` 实现了 `Deref<Target=str>`，因此 `&String` 进一步转换为 `&str`。
+- **格式化**：`&str` 实现了 `Display`，`{}` 输出其内容 `"dog"`。
+- **输出**：`"-> dog"`。
+- **所有权**：仅借用，不影响 `pass_s`。
+
+#### c. `println!("-> {}", pass_s)`
+- **直接使用**：`pass_s` 是 `Box<String>`。
+- **解引用强制转换**：
+    - `Box<String>` 实现了 `Deref<Target=String>`，因此 `Box<String>` 可以被视为 `String`。
+    - 进一步，`String` 可以通过 `Deref` 转换为 `str`。
+    - `println!` 自动为 `pass_s` 添加引用（`&Box<String>`），然后通过 `Deref` 链转换为 `&str`。
+- **格式化**：`&str` 实现了 `Display`，输出 `"dog"`。
+- **输出**：`"-> dog"`。
+- **所有权**：仅借用，不移动。
+
+---
+
+### 4. 为什么输出都相同？
+
+所有 `println!("-> {}", ...)` 的输出都是 `"-> dog"`，原因如下：
+
+- **统一的 `Display` 实现**：
+    - `*pass_s`（`&String`）和 `&pass_s`（`&str`）最终都被转换为 `&str`，而 `&str` 的 `Display` 实现直接输出其内容 `"dog"`。
+    - `pass_s`（`Box<String>`）通过 `Deref` 链（`Box<String>` -> `String` -> `str`）也被转换为 `&str`，同样输出 `"dog"`。
+
+- **自动解引用和借用**：
+    - `println!` 自动为参数添加引用，并利用 `Deref` trait 的解引用强制转换。
+    - 无论传入 `*pass_s`（`String`）、`&pass_s`（`&Box<String>`）还是 `pass_s`（`Box<String>`），Rust 都会通过 `Deref` 链解析到 `&str`，因为 `&str` 是 `Display` 的常见目标类型。
+
+- **`Box<T>` 的透明性**：
+    - `Box<T>` 设计为一个透明的智能指针，其 `Deref` 实现允许直接访问 `T`（这里是 `String`），而 `String` 进一步解引用为 `str`。
+    - 这使得 `Box<String>` 在 `Display` 上下文中表现得像 `str`，导致输出一致。
+
+- **编译器优化**：
+    - Rust 编译器在格式化时会优化 `Deref` 链，确保所有路径最终指向 `&str` 的 `Display` 实现。
+
+---
+
+### 5. 关于 `"ca-> dog"` 和 `"ca"`
+
+- **`"ca-> dog"`**：
+    - 你的输出第一行是 `"ca-> dog"`，而不是预期的 `"-> dog"`。这可能与以下情况有关：
+        - **输入错误**：你可能在代码中误写了 `println!("ca-> {}", *pass_s)`，但 `cat test.rs` 显示的代码没有这个修改，可能是手动运行时的输入错误。
+        - **环境影响**：某些终端或 shell（如 `weli@192`）可能在输出前添加了提示符或前缀（如 `ca` 表示当前上下文），但这通常不应该影响 `println!` 的输出。
+        - **调试输出**：可能是调试工具或 IDE 插入了额外信息。
+
+- **`"ca"`**：
+    - 最后一行 `"ca"` 可能是一个 shell 提示符（例如 `weli@192 ~/Desktop ca` 的部分），而不是代码的输出。
+    - 检查你的终端历史记录或运行环境，确认是否与 `println!` 无关。
+
+- **建议**：
+    - 运行 `cargo run`（如果使用 Cargo）或直接 `./test`，并检查输出是否一致。
+    - 如果问题持续，分享完整的运行环境信息（Rust 版本、终端类型等）。
+
+假设 `"ca-> dog"` 是输入错误，正确的输出应该是所有行都是 `"-> dog"`，这与分析一致。
+
+---
+
+### 6. 与 `{:?}` 的对比
+
+在之前的代码中，你使用了 `{:?}`（`Debug` 格式），输出可能因 `Box<String>` 的 `Debug` 实现而有所不同（可能显示 `Box { ... }` 或 `"dog"`）。而现在使用 `{}`（`Display` 格式），要求更严格的类型匹配，`Deref` 链到 `&str` 是唯一可行的路径，因此输出统一为 `"dog"`。
+
+---
+
+### 7. 结论
+
+- **为什么打印都一样？**
+    - 所有写法（`*pass_s`、`&pass_s`、`pass_s`）通过 `Deref` 链（`Box<String>` -> `String` -> `str`）被转换为 `&str`，而 `&str` 的 `Display` 实现输出 `"dog"`。
+    - `println!` 的自动引用和解引用机制确保了类型一致性。
+
+- **验证方法**：
+    - 使用 `{:p}` 打印地址，或 `{:?}` 打印调试信息，可以区分 `*pass_s`（`&String`）、`&pass_s`（`&Box<String>`）和 `pass_s`（`Box<String>`）的差异。
+    - 示例：
+      ```rust
+      println!("-> {:p}", &*pass_s); // &String 地址
+      println!("-> {:p}", &pass_s);  // &Box<String> 地址
+      println!("-> {:p}", &pass_s);  // 相同地址
+      ```
+
+- **推荐写法**：
+    - `println!("-> {}", &pass_s)` 是最简洁且惯用的方式，利用了 `Deref` 自动转换。
+
+- **关于 `"ca-> dog"` 和 `"ca"`**：
+    - 可能是输入错误或环境影响，建议重新运行并确认代码输出。
+
+如果你仍有疑问或需要进一步调试（例如提供 Rust 版本或完整终端日志），请告诉我，我可以继续协助！
+
+---
+
+`println!` 宏在 Rust 中能够自动借用其参数，这一行为是其设计和底层实现的核心特性，旨在确保所有权安全性和代码简洁性。以下是 `println!` 为什么会自动借用以及其实现机制的详细分析：
+
+---
+
+### 1. 为什么 `println!` 会自动借用？
+
+- **所有权安全性**：
+    - Rust 的所有权系统要求每个值有单一所有者，传递值给函数通常会转移所有权（move）。如果 `println!` 直接接收所有权，参数值会被消耗，后续代码将无法再次使用它。
+    - 自动借用（即接受 `&T` 而非 `T`）避免了所有权转移，允许参数在调用后仍然有效，这与 `println!` 的预期行为（仅打印而不拥有数据）一致。
+
+- **通用性**：
+    - 许多类型（如 `String`、`Vec<T>`）实现 `Display` 或 `Debug` 时，通常通过引用（`&T`）工作。自动借用使 `println!` 能够处理任意实现了这些 trait 的类型，而无需开发者显式添加 `&`。
+
+- **用户体验**：
+    - 手动为每个参数添加 `&` 会增加代码冗余，尤其是在打印多个参数时。自动借用简化了语法，让 `println!("{} {}", x, y)` 更直观。
+
+- **与格式化宏的兼容性**：
+    - `println!` 是基于 `format!` 宏构建的，`format!` 也依赖自动借用来构建字符串。`println!` 继承了这一机制，确保一致性。
+
+---
+
+### 2. 如何实现的？
+
+`println!` 的自动借用是通过 Rust 宏系统和标准库的格式化框架（`std::fmt`）实现的，具体机制如下：
+
+#### a. 宏扩展
+- `println!` 是一个语法扩展宏，定义在 `std::macros` 中。其实现会解析格式字符串和参数，并生成相应的代码。
+- 宏的底层依赖 `write!` 或 `print!` 函数，最终调用 `std::io::stdout().write_fmt` 来执行格式化输出。
+- 在宏扩展过程中，`println!` 为每个参数自动应用借用（`&`），并将它们传递给格式化器。
+
+#### b. 格式化框架（`std::fmt`）
+- `println!` 使用 `std::fmt` 模块中的格式化 trait（如 `Display` 和 `Debug`）来处理参数。
+- `Display` 和 `Debug` 的实现通常接受 `&self`（即引用），而不是 `self`（所有权转移）。例如：
+    - `impl Display for String { fn fmt(&self, f: &mut Formatter) -> Result<(), Error> { ... } }`
+    - 这意味着格式化器期望一个引用，而不是值。
+- 为了匹配这一签名，`println!` 必须确保参数以引用的形式传递。
+
+#### c. 自动引用（`AsRef` 或 `Borrow` 机制）
+- `println!` 的实现利用 Rust 的类型推断和 trait 约束，自动将参数转换为可接受的引用类型。
+- 具体来说，`println!` 使用 `Arguments` 结构（由 `format_args!` 生成）来传递格式化数据。`Arguments` 内部通过 `Argument` 结构处理每个参数，并应用自动引用。
+- Rust 的编译器会插入隐式 `&` 操作，确保参数符合 `fmt` 所需的 `&T` 类型。例如：
+    - 如果参数是 `String`，`println!("{}", x)` 会被视为 `println!("{}", &x)`。
+    - 如果参数是 `&str`，则保持不变。
+
+#### d. 解引用强制转换（`Deref` 集成）
+- 当参数是智能指针（如 `Box<T>`）时，`println!` 利用 `Deref` trait 的解引用强制转换。
+- 例如，`&Box<String>` 会被自动解引用为 `&String`，再解引用为 `&str`，因为 `Box<T>` 和 `String` 都实现了 `Deref`。
+- 这种机制由 `std::fmt` 的格式化器在运行时动态处理，确保最终类型（通常是 `&str` 或其他 `Display` 实现）被正确格式化。
+
+#### e. 源码片段（简化版）
+虽然 `println!` 的完整实现是宏和库函数的组合，但其核心逻辑可以简化为：
+```rust
+macro_rules! println {
+    ($fmt:expr $(, $arg:expr)*) => ({
+        use std::io::Write;
+        let stdout = std::io::stdout();
+        let mut handle = stdout.lock();
+        write!(&mut handle, $fmt $(, $arg)*).unwrap();
+        writeln!(&mut handle, "").unwrap();
+    });
+}
+```
+- `write!` 和 `writeln!` 内部会为每个 `$arg` 自动添加 `&`，并调用 `Formatter` 的 `fmt` 方法。
+- 编译器通过类型推断和 trait 解析，确保 `$arg` 被正确借用和解引用。
+
+#### f. 编译器支持
+- Rust 编译器（`rustc`）在类型检查阶段会验证每个参数是否可以通过 `Deref` 或自动引用转换为 `&T`，其中 `T` 实现了 `Display` 或 `Debug`。
+- 如果类型不匹配，编译器会报错（例如，`Box<T>` 本身没有 `Display` 实现，除非通过 `Deref` 访问内部类型）。
+
+---
+
+### 3. 实现细节的验证
+
+- **自动借用的证据**：
+    - 在你的代码中，`println!("-> {}", *pass_s)` 不会导致 `pass_s` 失效，因为 `*pass_s`（`String`）被自动借用为 `&String`。
+    - 类似地，`println!("-> {}", pass_s)`（`Box<String>`）通过 `Deref` 转换为 `&str`，无需显式 `&`。
+
+- **运行时行为**：
+    - 自动借用发生在编译时，生成的机器码中，参数以引用的形式传递给 `std::io::stdout().write_fmt`。
+    - 这确保了零运行时开销，性能与手动添加 `&` 相同。
+
+- **限制**：
+    - 如果参数类型没有实现 `Display`（或通过 `Deref` 无法转换为实现 `Display` 的类型），编译器会报错。例如：
+      ```rust
+      let x = Box::new(42); // i32 没有直接的 Display 实现
+      println!("-> {}", x); // 错误：Box<i32> 无法格式化
+      ```
+      解决方法是显式转换（如 `println!("-> {}", *x)`，但需要 `i32` 的 `Display` 实现，通常通过 `to_string()`）。
+
+---
+
+### 4. 为什么设计成这样？
+
+- **历史原因**：
+    - `println!` 继承了 C 语言 `printf` 的格式化理念，但适配了 Rust 的所有权模型。C 中的 `printf` 接受指针（类似引用），Rust 对此进行了现代化改造。
+
+- **Rust 哲学**：
+    - 强调“零成本抽象”，自动借用避免了手动引用的开销，同时保持了类型安全。
+    - 支持“表达力”，让开发者专注于逻辑而非低级细节。
+
+- **与 `print!` 的区别**：
+    - `print!` 不添加换行符，但其借用机制相同。`println!` 额外调用 `writeln!` 添加 `\n`。
+
+---
+
+### 5. 总结
+
+- **为什么自动借用？**
+    - 为了避免所有权转移、提高通用性和用户体验，符合 Rust 的安全性和简洁性设计。
+
+- **如何实现？**
+    - 通过宏扩展（`println!` -> `write!`/`writeln!`）、`std::fmt` 的 `Display`/`Debug` trait、自动引用和 `Deref` 解引用强制转换。
+    - 编译器在类型检查阶段插入隐式 `&`，并在运行时通过 `Formatter` 处理。
+
+- **你的代码中的体现**：
+    - `*pass_s`（`String`）被借用为 `&String`，`&pass_s`（`&Box<String>`）和 `pass_s`（`Box<String>`）通过 `Deref` 转换为 `&str`，最终都输出 `"dog"`。
+
+这种机制使得 `println!` 既强大又易用，是 Rust 格式化输出的核心优势。如果需要更深入的源码分析或特定场景的探讨，请告诉我！
