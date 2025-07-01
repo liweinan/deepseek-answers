@@ -39,7 +39,7 @@ fn main() {
     let pass_num = Box::new(42);
 
     // deref() called
-    takes_num(*pass_num); // ownership moved out. copy happens.
+    takes_num(*pass_num); // ownership not moved out. copy happens.
 
     // deref() called
     takes_num(**&pass_num); // copy happens again.
