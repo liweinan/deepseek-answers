@@ -227,7 +227,7 @@ Here are the topics:
 - [OpenShift Disconnected Cluster](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-disconnected-cluster.md)
 - [以下是对“disconnected cluster”和“shared network”两种网络配置的比较](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-disconnected-cluster.md)
 - [Disconnected Cluster Creation](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-disconnected2.md)
-
+- [OpenShift Bootstrap Scripts 分析总结](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-bootstrap.md)
 ## HackerRank
 
 - [HackerRank - Contact Form](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-contactform.md)
