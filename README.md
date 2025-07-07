@@ -228,6 +228,9 @@ Here are the topics:
 - [以下是对“disconnected cluster”和“shared network”两种网络配置的比较](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-disconnected-cluster.md)
 - [Disconnected Cluster Creation](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-disconnected2.md)
 - [OpenShift Bootstrap Scripts 分析总结](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-bootstrap.md)
+- [Disconnected Cluster路由配置分析](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-route3.md)
+- [Red Hat Enterprise Linux CoreOS（RHCOS）](https://github.com/liweinan/deepseek-answers/blob/main/files/rhcos.md)
+
 ## HackerRank
 
 - [HackerRank - Contact Form](https://github.com/liweinan/deepseek-answers/blob/main/files/hr-contactform.md)
