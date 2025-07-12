@@ -231,6 +231,7 @@ Here are the topics:
 - [OpenShift Bootstrap Scripts 分析总结](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-bootstrap.md)
 - [Disconnected Cluster路由配置分析](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-route3.md)
 - [Red Hat Enterprise Linux CoreOS（RHCOS）](https://github.com/liweinan/deepseek-answers/blob/main/files/rhcos.md)
+- [AWS Lambda介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/aws-lambda.md)
 
 ## HackerRank
 
