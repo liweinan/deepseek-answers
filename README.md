@@ -151,6 +151,7 @@ Here are the topics:
 - [React的条件渲染](https://github.com/liweinan/deepseek-answers/blob/main/files/react-if-render.md)
 - [React Components以及函数学习汇总](https://github.com/liweinan/deepseek-answers/blob/main/files/react-components.md)
 - [React的Re-render](https://github.com/liweinan/deepseek-answers/blob/main/files/react-rerender.md)
+- [React Server Components（RSC）是 React 引入的一种新架构模式](https://github.com/liweinan/deepseek-answers/blob/main/files/nextjs2.md)
 
 ### Backend Frameworks
 
@@ -273,3 +274,4 @@ Here are the topics:
 ### 面试题
 
 - [防止重复下单是电商、支付等系统中常见的需求，涉及前端和后端的协同设计](https://github.com/liweinan/deepseek-answers/blob/main/files/anti-dup.md)
+- 
