@@ -33,6 +33,7 @@ Here are the topics:
 - [在GDB中，你可以快速计算整数值、查看其二进制表示，甚至进行位操作调试](https://github.com/liweinan/deepseek-answers/blob/main/files/gdb-bin.md)
 - [以下是一份**eBPF 的极简教程**](https://github.com/liweinan/deepseek-answers/blob/main/files/ebpf-intro.md)
 - [Linux Kernel项目中eBPF相关代码分析](https://github.com/liweinan/deepseek-answers/blob/main/files/ebpf2.md)
+- [让我详细解释eBPF的跳板机制（Trampoline Mechanism）](https://github.com/liweinan/deepseek-answers/blob/main/files/ebpf3.md)
 
 ### C / C++
 
