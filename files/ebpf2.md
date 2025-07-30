@@ -378,6 +378,389 @@ enum bpf_map_type {
 
 ---
 
+你说得对，让我补充eBPF程序执行阶段的内核代码详细说明：
+
+## eBPF程序执行阶段的内核代码分析
+
+### 1. 程序执行入口 - 跳板机制
+
+```c
+// kernel/bpf/trampoline.c - 跳板执行机制
+struct bpf_trampoline {
+    struct hlist_node hlist;
+    struct ftrace_ops fops;
+    struct bpf_prog *prog;
+    void *image;
+    void *image_end;
+    u64 key;
+    struct bpf_tramp_links {
+        struct bpf_tramp_link *links[BPF_MAX_TRAMP_PROGS];
+        int nr_links;
+    } *tlinks;
+    struct mutex mutex;
+    refcount_t refcnt;
+    u32 flags;
+    u64 bpf_cookie;
+};
+
+// 程序执行的核心函数
+static void __bpf_prog_enter(void)
+{
+    rcu_read_lock();
+    migrate_disable();
+}
+
+static void __bpf_prog_exit(struct bpf_prog *prog, struct bpf_tramp_run_ctx *run_ctx)
+{
+    rcu_read_unlock();
+    migrate_enable();
+}
+
+// 跳板执行函数
+static void bpf_trampoline_enter(void *data)
+{
+    struct bpf_tramp_run_ctx *run_ctx = data;
+    struct bpf_prog *prog = run_ctx->prog;
+    
+    __bpf_prog_enter();
+    
+    // 执行eBPF程序
+    run_ctx->ret = bpf_prog_run(prog, run_ctx->args);
+    
+    __bpf_prog_exit(prog, run_ctx);
+}
+```
+
+### 2. 程序执行核心 - bpf_prog_run
+
+```c
+// kernel/bpf/core.c - 程序执行核心
+static u64 bpf_prog_run_pin_on_cpu(const struct bpf_prog *prog, const void *ctx)
+{
+    u32 ret;
+    
+    // 获取当前CPU
+    preempt_disable();
+    
+    // 执行程序
+    ret = bpf_prog_run(prog, ctx);
+    
+    preempt_enable();
+    return ret;
+}
+
+// 实际的程序执行函数
+static u64 ___bpf_prog_run(u64 *regs, const struct bpf_insn *insn)
+{
+    u64 stack[MAX_BPF_STACK / sizeof(u64)];
+    u64 regs[MAX_BPF_REG];
+    const void *ptr;
+    int off;
+    
+    // 初始化寄存器
+    regs[0] = (u64) (unsigned long) ctx;
+    
+    // 指令执行循环
+    select:
+        if (unlikely(pc >= insn_cnt))
+            return 0;
+        
+        insn = &insns[pc];
+        switch (insn->code) {
+        case BPF_ALU64 | BPF_MOV | BPF_X:
+            // 寄存器移动
+            regs[insn->dst_reg] = regs[insn->src_reg];
+            break;
+            
+        case BPF_ALU64 | BPF_ADD | BPF_X:
+            // 寄存器加法
+            regs[insn->dst_reg] += regs[insn->src_reg];
+            break;
+            
+        case BPF_LDX | BPF_MEM | BPF_B:
+            // 内存加载
+            off = insn->off;
+            ptr = (void *) (unsigned long) regs[insn->src_reg];
+            regs[insn->dst_reg] = *(u8 *) (ptr + off);
+            break;
+            
+        case BPF_STX | BPF_MEM | BPF_B:
+            // 内存存储
+            off = insn->off;
+            ptr = (void *) (unsigned long) regs[insn->dst_reg];
+            *(u8 *) (ptr + off) = (u8) regs[insn->src_reg];
+            break;
+            
+        case BPF_JMP | BPF_JA:
+            // 无条件跳转
+            pc += insn->off;
+            goto select;
+            
+        case BPF_JMP | BPF_JNE | BPF_K:
+            // 条件跳转
+            if (regs[insn->dst_reg] != insn->imm)
+                pc += insn->off;
+            else
+                pc++;
+            goto select;
+            
+        case BPF_CALL:
+            // 函数调用
+            regs[BPF_REG_0] = bpf_call_func(insn->imm, regs);
+            break;
+            
+        case BPF_EXIT:
+            // 程序退出
+            return regs[BPF_REG_0];
+        }
+        
+        pc++;
+        goto select;
+}
+```
+
+### 3. 网络数据包处理 - XDP执行
+
+```c
+// net/core/dev.c - XDP程序执行
+static int __netif_receive_skb_core(struct sk_buff **pskb, bool pfmemalloc)
+{
+    struct sk_buff *skb = *pskb;
+    struct net_device *orig_dev;
+    struct packet_type *pt_prev = NULL;
+    struct net_device *null_or_dev;
+    int ret = NET_RX_DROP;
+    
+    // XDP程序执行
+    if (static_branch_unlikely(&generic_xdp_needed_key)) {
+        int ret2;
+        
+        preempt_disable();
+        ret2 = do_xdp_generic(rcu_dereference(skb->dev->xdp_prog), skb);
+        preempt_enable();
+        
+        if (ret2 != XDP_PASS) {
+            ret = NET_RX_DROP;
+            goto out;
+        }
+    }
+    
+    // 继续正常的网络处理流程
+    ...
+}
+
+// net/core/filter.c - XDP程序执行
+static u32 bpf_prog_run_xdp(const struct bpf_prog *prog, struct xdp_buff *xdp)
+{
+    struct bpf_prog_stats *stats;
+    u32 ret;
+    
+    // 获取统计信息
+    stats = this_cpu_ptr(prog->stats);
+    
+    // 执行XDP程序
+    ret = bpf_prog_run(prog, xdp);
+    
+    // 更新统计信息
+    if (ret == XDP_PASS) {
+        stats->nsecs += bpf_prog_run_xdp_time(prog);
+        stats->cnt++;
+    } else {
+        stats->misses++;
+    }
+    
+    return ret;
+}
+```
+
+### 4. 套接字过滤器执行
+
+```c
+// net/core/filter.c - 套接字过滤器执行
+int sk_filter(struct sock *sk, struct sk_buff *skb)
+{
+    struct bpf_prog *prog;
+    int ret;
+    
+    // 获取附加的过滤器程序
+    prog = rcu_dereference(sk->sk_filter);
+    if (!prog)
+        return 0;
+    
+    // 执行过滤器程序
+    ret = bpf_prog_run_save_cb(prog, skb);
+    
+    return ret == 0 ? -EPERM : 0;
+}
+
+// 套接字过滤器程序执行
+static u32 bpf_prog_run_save_cb(const struct bpf_prog *prog, struct sk_buff *skb)
+{
+    u32 ret;
+    
+    // 保存回调函数
+    bpf_compute_data_end(skb);
+    
+    // 执行程序
+    ret = bpf_prog_run(prog, skb);
+    
+    // 恢复回调函数
+    bpf_compute_data_pointers(skb);
+    
+    return ret;
+}
+```
+
+### 5. Kprobe程序执行
+
+```c
+// kernel/trace/bpf_trace.c - Kprobe程序执行
+static void bpf_kprobe_callback(struct kprobe *p, struct pt_regs *regs)
+{
+    struct bpf_kprobe *bpf_kp = container_of(p, struct bpf_kprobe, kp);
+    struct bpf_prog *prog = bpf_kp->prog;
+    struct bpf_tramp_run_ctx run_ctx = {};
+    
+    // 准备执行上下文
+    run_ctx.prog = prog;
+    run_ctx.args[0] = (u64) regs;
+    
+    // 执行程序
+    bpf_trampoline_enter(&run_ctx);
+}
+
+// Kprobe程序执行
+static u32 bpf_kprobe_run(struct bpf_prog *prog, struct pt_regs *regs)
+{
+    u32 ret;
+    
+    // 设置寄存器上下文
+    regs->ax = 0;
+    
+    // 执行程序
+    ret = bpf_prog_run(prog, regs);
+    
+    return ret;
+}
+```
+
+### 6. 映射操作执行
+
+```c
+// kernel/bpf/hashtab.c - 映射查找操作
+static void *htab_map_lookup_elem(struct bpf_map *map, void *key)
+{
+    struct bpf_htab *htab = container_of(map, struct bpf_htab, map);
+    struct hlist_nulls_head *head;
+    struct htab_elem *l;
+    u32 hash, key_size;
+    
+    WARN_ON_ONCE(!rcu_read_lock_held());
+    
+    key_size = map->key_size;
+    hash = htab_map_hash(key, key_size, htab->hashrnd);
+    head = select_bucket(htab, hash);
+    
+    // 查找元素
+    l = lookup_nulls_elem_raw(head, hash, key, key_size, htab->n_buckets);
+    
+    return l;
+}
+
+// kernel/bpf/arraymap.c - 数组映射更新
+static long array_map_update_elem(struct bpf_map *map, void *key, void *value, u64 flags)
+{
+    struct bpf_array *array = container_of(map, struct bpf_array, map);
+    u32 index = *(u32 *)key;
+    char *val;
+    
+    if (unlikely(index >= array->map.max_entries))
+        return -E2BIG;
+    
+    if (unlikely(map_flags > BPF_EXIST))
+        return -EINVAL;
+    
+    val = array->value + array->elem_size * index;
+    
+    // 更新元素
+    if (map_flags & BPF_NOEXIST)
+        return -EEXIST;
+    
+    memcpy(val, value, array->elem_size);
+    
+    return 0;
+}
+```
+
+### 7. 辅助函数执行
+
+```c
+// kernel/bpf/helpers.c - 辅助函数执行
+static const struct bpf_func_proto bpf_map_lookup_elem_proto = {
+    .func = bpf_map_lookup_elem,
+    .gpl_only = false,
+    .pkt_access = true,
+    .ret_type = RET_PTR_TO_MAP_VALUE_OR_NULL,
+    .arg1_type = ARG_CONST_MAP_PTR,
+    .arg2_type = ARG_PTR_TO_MAP_KEY,
+};
+
+// 映射查找辅助函数
+BPF_CALL_2(bpf_map_lookup_elem, struct bpf_map *, map, void *, key)
+{
+    WARN_ON_ONCE(!rcu_read_lock_held());
+    return (unsigned long) map->ops->map_lookup_elem(map, key);
+}
+
+// 获取当前任务ID辅助函数
+BPF_CALL_2(bpf_get_current_pid_tgid, u64, r1, u64, r2)
+{
+    struct task_struct *task = current;
+    
+    if (unlikely(!task))
+        return -EINVAL;
+    
+    return ((u64) task->tgid << 32) | task->pid;
+}
+```
+
+### 8. 程序执行统计和监控
+
+```c
+// kernel/bpf/core.c - 程序执行统计
+void bpf_prog_inc_misses_counter(struct bpf_prog *prog)
+{
+    struct bpf_prog_stats *stats;
+    
+    stats = this_cpu_ptr(prog->stats);
+    u64_stats_update_begin(&stats->syncp);
+    stats->misses++;
+    u64_stats_update_end(&stats->syncp);
+}
+
+// 程序执行时间统计
+static u64 bpf_prog_run_xdp_time(const struct bpf_prog *prog)
+{
+    u64 start = ktime_get_ns();
+    u64 end = ktime_get_ns();
+    
+    return end - start;
+}
+```
+
+### 关键执行特点：
+
+1. **原子性执行**：程序执行期间禁用抢占，确保原子性
+2. **上下文切换**：不同程序类型有不同的执行上下文
+3. **错误处理**：程序执行失败时有完善的错误处理机制
+4. **性能监控**：内置统计和性能监控功能
+5. **内存安全**：严格的边界检查和类型验证
+6. **并发控制**：使用RCU和锁机制保证并发安全
+
+这些代码展示了eBPF程序在内核中的实际执行过程，体现了其作为内核可编程接口的强大功能和安全性设计。
+
+---
+
 基于对Linux kernel eBPF代码的分析，我来为你绘制两张UML图：
 
 ## 1. UML Deployment Diagram - eBPF模块在Linux Kernel中的部署结构
@@ -583,3 +966,155 @@ sequenceDiagram
 4. **资源管理**：包含映射操作和资源清理
 
 这两张图完整描述了eBPF在Linux内核中的架构设计和执行流程，体现了其作为内核可编程接口的核心特性。
+
+---
+
+基于内核代码分析，我来绘制一张详细的eBPF程序执行时序图：
+
+```mermaid
+sequenceDiagram
+    participant US as 用户空间
+    participant SYSCALL as bpf_syscall.c
+    participant VERIFIER as verifier.c
+    participant CORE as core.c
+    participant TRAMP as trampoline.c
+    participant HELPERS as helpers.c
+    participant MAPS as hashtab.c/arraymap.c
+    participant NET as net/core/filter.c
+    participant XDP as net/core/dev.c
+    participant KPROBE as kernel/trace/bpf_trace.c
+    participant KERNEL as 内核子系统
+
+    Note over US,KERNEL: 1. 程序加载阶段
+    US->>SYSCALL: bpf_prog_load()
+    SYSCALL->>SYSCALL: bpf_check_uarg_tail_zero()
+    SYSCALL->>SYSCALL: map_create()
+    SYSCALL->>VERIFIER: bpf_check()
+    
+    Note over VERIFIER: 验证器检查
+    VERIFIER->>VERIFIER: do_check()
+    VERIFIER->>VERIFIER: check_insn()
+    VERIFIER->>VERIFIER: do_simulate()
+    VERIFIER-->>SYSCALL: 验证结果
+    
+    SYSCALL->>CORE: bpf_prog_alloc()
+    SYSCALL->>SYSCALL: bpf_prog_new_fd()
+    SYSCALL-->>US: 返回程序FD
+
+    Note over US,KERNEL: 2. 程序附加阶段
+    US->>SYSCALL: bpf_prog_attach()
+    SYSCALL->>TRAMP: bpf_trampoline_enter()
+    TRAMP->>TRAMP: __bpf_prog_enter()
+    TRAMP->>TRAMP: bpf_trampoline_enter()
+    SYSCALL-->>US: 附加成功
+
+    Note over US,KERNEL: 3. 事件触发执行阶段
+    
+    Note over NET: 网络数据包处理
+    NET->>NET: __netif_receive_skb_core()
+    NET->>NET: do_xdp_generic()
+    NET->>XDP: bpf_prog_run_xdp()
+    XDP->>CORE: bpf_prog_run()
+    CORE->>CORE: ___bpf_prog_run()
+    
+    Note over CORE: 指令执行循环
+    loop 指令执行
+        CORE->>CORE: 解析指令
+        CORE->>CORE: 执行ALU操作
+        CORE->>CORE: 内存访问
+        CORE->>HELPERS: 调用辅助函数
+        HELPERS->>MAPS: 映射操作
+        MAPS-->>HELPERS: 返回结果
+        HELPERS-->>CORE: 辅助函数结果
+        CORE->>CORE: 更新寄存器
+    end
+    
+    CORE-->>XDP: 程序执行结果
+    XDP-->>NET: XDP处理结果
+    NET->>NET: 处理返回值
+
+    Note over KPROBE: Kprobe事件处理
+    KPROBE->>KPROBE: bpf_kprobe_callback()
+    KPROBE->>TRAMP: bpf_trampoline_enter()
+    TRAMP->>CORE: bpf_prog_run()
+    CORE->>CORE: ___bpf_prog_run()
+    CORE-->>KPROBE: 执行结果
+    KPROBE->>KPROBE: bpf_kprobe_run()
+
+    Note over MAPS: 映射操作执行
+    MAPS->>MAPS: htab_map_lookup_elem()
+    MAPS->>MAPS: lookup_nulls_elem_raw()
+    MAPS-->>MAPS: 查找结果
+    
+    MAPS->>MAPS: array_map_update_elem()
+    MAPS->>MAPS: memcpy()
+    MAPS-->>MAPS: 更新结果
+
+    Note over HELPERS: 辅助函数执行
+    HELPERS->>HELPERS: bpf_map_lookup_elem()
+    HELPERS->>MAPS: map->ops->map_lookup_elem()
+    MAPS-->>HELPERS: 映射查找结果
+    HELPERS-->>HELPERS: 返回辅助函数结果
+
+    Note over CORE: 程序执行统计
+    CORE->>CORE: bpf_prog_inc_misses_counter()
+    CORE->>CORE: bpf_prog_run_xdp_time()
+
+    Note over US,KERNEL: 4. 程序分离阶段
+    US->>SYSCALL: bpf_prog_detach()
+    SYSCALL->>TRAMP: bpf_trampoline_exit()
+    TRAMP->>TRAMP: __bpf_prog_exit()
+    SYSCALL-->>US: 分离完成
+
+    Note over US,KERNEL: 5. 资源清理阶段
+    US->>SYSCALL: close()系统调用
+    SYSCALL->>SYSCALL: bpf_prog_release()
+    SYSCALL->>CORE: bpf_prog_put()
+    CORE->>CORE: __bpf_prog_put()
+    CORE->>CORE: bpf_prog_free()
+    SYSCALL-->>US: 资源清理完成
+
+    Note over US,KERNEL: 错误处理分支
+    alt 验证失败
+        VERIFIER-->>SYSCALL: 验证错误
+        SYSCALL-->>US: 返回错误码
+    else 执行失败
+        CORE-->>XDP: 执行错误
+        XDP-->>NET: 错误处理
+        NET->>NET: 丢弃数据包
+    else 映射操作失败
+        MAPS-->>HELPERS: 映射错误
+        HELPERS-->>CORE: 错误返回
+        CORE->>CORE: 错误处理
+    end
+```
+
+## 关键函数调用说明：
+
+### 1. 程序加载阶段
+- `bpf_prog_load()` - 系统调用入口
+- `bpf_check()` - 程序验证
+- `do_check()` - 验证器核心逻辑
+- `bpf_prog_alloc()` - 分配程序内存
+
+### 2. 程序执行阶段
+- `bpf_trampoline_enter()` - 跳板执行入口
+- `bpf_prog_run()` - 程序执行核心
+- `___bpf_prog_run()` - 指令执行循环
+- `bpf_prog_run_xdp()` - XDP程序执行
+
+### 3. 映射操作阶段
+- `htab_map_lookup_elem()` - 哈希表查找
+- `array_map_update_elem()` - 数组更新
+- `bpf_map_lookup_elem()` - 辅助函数调用
+
+### 4. 辅助函数执行
+- `bpf_get_current_pid_tgid()` - 获取进程ID
+- `bpf_map_lookup_elem()` - 映射查找
+- `bpf_ktime_get_ns()` - 获取时间戳
+
+### 5. 统计和监控
+- `bpf_prog_inc_misses_counter()` - 统计未命中
+- `bpf_prog_run_xdp_time()` - 执行时间统计
+
+这个时序图展示了eBPF程序从加载到执行再到清理的完整生命周期，体现了内核中eBPF系统的复杂性和完整性。每个阶段都有相应的错误处理机制，确保系统的稳定性和安全性。
