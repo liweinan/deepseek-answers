@@ -72,6 +72,7 @@ Here are the topics:
 - [To convert an `int` array to a `List<Integer>` in Java](https://github.com/liweinan/deepseek-answers/blob/main/files/java-int-array-to-list.md)
 - [Java面经 - 如何处理1万个`if-else`语句](https://github.com/liweinan/deepseek-answers/blob/main/files/java-if-else.md)
 - [在 Java 中，`Queue` 和 `List` 都是接口，属于 Java 集合框架](https://github.com/liweinan/deepseek-answers/blob/main/files/java-list-queue.md)
+- [Java的Deque和List关系图](https://github.com/liweinan/deepseek-answers/blob/main/files/java-deque-list.md)
 
 ### JavaScript / TypeScript
 
