@@ -1,5 +1,45 @@
 # 以下是一份**eBPF 的极简教程**，帮助你快速上手这项强大的 Linux 内核技术：
 
+```mermaid
+flowchart TD
+    subgraph User_Space[User Space]
+        A["User Applications<br>(e.g., bpftool, BCC, libbpf)"]
+        B["ELF Files<br>(eBPF Bytecode)"]
+    end
+
+    subgraph Kernel_Space[Kernel Space]
+        C["BPF Syscall Handler<br>(bpf() System Call)"]
+        D["BPF Verifier<br>(Security Checks)"]
+        E["JIT Compiler<br>(Bytecode to Native Code)"]
+        F["eBPF Virtual Machine<br>(Interpreter Mode)"]
+        G["eBPF Programs<br>(Attached to Hooks)"]
+        H["eBPF Maps<br>(Data Sharing Structures)"]
+        I["Helper Functions<br>(Safe Kernel Access)"]
+        subgraph Hook_Points[Hook Points]
+            J["Tracepoints<br>(Static Events)"]
+            K["Kprobes/Kretprobes<br>(Dynamic Function Probes)"]
+            L["XDP<br>(Network Packet Processing)"]
+            M["LSM Hooks<br>(Security Modules)"]
+        end
+    end
+
+    A -->|"Load eBPF Program<br>(via bpf() syscall)"| C
+    B -->|"Compiled Bytecode"| C
+    C -->|"Validate"| D
+    D -->|"Verified Bytecode"| E
+    E -->|"Native Code"| G
+    D -->|"If no JIT"| F
+    F -->|"Execute"| G
+    G -->|"Attach to"| J
+    G -->|"Attach to"| K
+    G -->|"Attach to"| L
+    G -->|"Attach to"| M
+    G -->|"Use"| H
+    G -->|"Call"| I
+    H -->|"Share Data"| A
+    I -->|"Access Kernel Resources"| KernelResources["Kernel Subsystems<br>(e.g., Network, Security, Tracing)"]
+```
+
 ---
 
 ### **1. 什么是 eBPF？**
