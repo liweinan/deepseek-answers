@@ -79,6 +79,7 @@ Here are the topics:
 
 - [Collection of some JavaScript quiz](https://github.com/liweinan/deepseek-answers/blob/main/files/js-quiz.md)
 - [ES6 Import](https://github.com/liweinan/deepseek-answers/blob/main/files/es-import.md)
+- [JavaScript 的 **解构赋值**（Destructuring Assignment）](https://github.com/liweinan/deepseek-answers/blob/main/files/js-deconstruct.md)
 
 ### Bash Scripting
 
