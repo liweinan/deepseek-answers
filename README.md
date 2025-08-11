@@ -114,7 +114,8 @@ Here are the topics:
 - [在 Rust 中，`Box<T>` 是一个智能指针，它会在堆（heap）上分配内存来存储类型 `T` 的值。](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-deref6.md)
 - [在 Rust 中，`&pass_s` 和 `*pass_s` 的行为涉及解引用和 `Deref` trait，但它们是否触发 `deref` 方法需要具体分析。](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-deref7.md)
 - [在 Rust 中，数据类型可以按照 **Copy/Non-Copy** 和 **DST (Dynamic Sized Type)/Non-DST** 两个维度进行分类。](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-dst.md)
-- [什么是胖指针（Fat Pointer）？](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-fat.md))
+- [什么是胖指针（Fat Pointer）？](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-fat.md)
+- [Rust的struct](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-struct.md)
 
 ### Languages
 
