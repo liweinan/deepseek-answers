@@ -264,6 +264,7 @@ Here are the topics:
 - [TestDome - React - Focus](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-react-focus.md)
 - [TestDome - Java题 - Route Planner](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-route-planner.md)
 - [TestDome - React题 - Http Server](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-httpserver.md)
+- [TestDome - Java题 - Binary Search Tree](https://github.com/liweinan/deepseek-answers/blob/main/files/testdome-java-bst.md)
 
 ### CheatSheets
 
