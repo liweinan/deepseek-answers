@@ -65,6 +65,7 @@ Here are the topics:
 - [Go 语言支持函数返回多个值](https://github.com/liweinan/deepseek-answers/blob/main/files/go-err.md)
 - [Go的DeepCopy](https://github.com/liweinan/deepseek-answers/blob/main/files/go-deepcopy.md)
 - [在 Go 语言中，interface{} 是一种特殊的接口类型](https://github.com/liweinan/deepseek-answers/blob/main/files/go-interface.md)
+- [Go AST 节点类型层级结构](https://github.com/liweinan/deepseek-answers/blob/main/files/go-parser-ast.md)
 
 ### Java
 
