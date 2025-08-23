@@ -160,6 +160,7 @@ Here are the topics:
 - [React Components以及函数学习汇总](https://github.com/liweinan/deepseek-answers/blob/main/files/react-components.md)
 - [React的Re-render](https://github.com/liweinan/deepseek-answers/blob/main/files/react-rerender.md)
 - [React Server Components（RSC）是 React 引入的一种新架构模式](https://github.com/liweinan/deepseek-answers/blob/main/files/nextjs2.md)
+- [React当中的花括号](https://github.com/liweinan/deepseek-answers/blob/main/files/react-brace.md)
 
 ### Backend Frameworks
 
