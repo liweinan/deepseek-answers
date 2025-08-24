@@ -585,3 +585,145 @@ function App() {
 - 如果需要 CSS 字符串的写法，建议使用外部 CSS 文件、Tailwind CSS 或 CSS-in-JS 库，而不是内联样式。
 
 如果你有其他具体场景或代码问题（比如动态样式、Tailwind 结合等），可以提供更多细节，我可以进一步帮你优化！
+
+---
+
+是的，在 JSX 中，像 `<p>Random: {Math.random()}</p>` 这样的表达式可以是多行的，只要它们最终返回一个值，并且被正确包裹在 `{}` 中。JSX 的 `{}` 允许嵌入任何有效的 JavaScript 表达式，包括多行表达式，但需要确保整个表达式是合法的且返回单一值。
+
+例如，以下多行表达式是有效的：
+
+```jsx
+<p>
+  Random: {
+    (() => {
+      const num = Math.random();
+      return num.toFixed(2); // 返回两位小数的随机数
+    })()
+  }
+</p>
+```
+
+### 关键点：
+1. **单一表达式**：`{}` 内的内容必须是一个表达式（即返回值的代码），不能是语句（如 `if`、`for` 循环等）。但可以使用立即调用函数表达式（IIFE）或三元运算符等来实现复杂逻辑。
+2. **多行支持**：只要表达式逻辑清晰，且最终返回一个值，多行代码没问题。
+3. **可读性**：为了代码可读性，复杂的多行逻辑建议抽取到单独的函数或组件外部。
+
+### 示例：
+以下是一些有效的多行表达式用例：
+
+```jsx
+function MyComponent() {
+  return (
+    <div>
+      {/* 多行表达式：计算随机数的平方 */}
+      <p>
+        Random Square: {
+          (() => {
+            const random = Math.random();
+            return (random * random).toFixed(4);
+          })()
+        }
+      </p>
+
+      {/* 多行表达式：基于条件返回不同值 */}
+      <p>
+        Status: {
+          (() => {
+            const value = Math.random();
+            return value > 0.5 ? 'High' : 'Low';
+          })()
+        }
+      </p>
+    </div>
+  );
+}
+```
+
+### 注意事项：
+- 如果逻辑过于复杂，建议将代码抽取到单独的函数中，避免 JSX 中嵌入过多逻辑。例如：
+
+```jsx
+function MyComponent() {
+  const getRandomSquare = () => {
+    const random = Math.random();
+    return (random * random).toFixed(4);
+  };
+
+  return <p>Random Square: {getRandomSquare()}</p>;
+}
+```
+
+这样代码更清晰，更易维护。
+
+总结：JSX 中的 `{}` 支持多行表达式，只要它们是合法的 JavaScript 表达式并返回单一值即可。
+
+---
+
+是的，在 JSX 中，像 `<p>Random: {Math.random()}</p>` 这样的表达式可以是多行的，只要它们最终返回一个值，并且被正确包裹在 `{}` 中。JSX 的 `{}` 允许嵌入任何有效的 JavaScript 表达式，包括多行表达式，但需要确保整个表达式是合法的且返回单一值。
+
+例如，以下多行表达式是有效的：
+
+```jsx
+<p>
+  Random: {
+    (() => {
+      const num = Math.random();
+      return num.toFixed(2); // 返回两位小数的随机数
+    })()
+  }
+</p>
+```
+
+### 关键点：
+1. **单一表达式**：`{}` 内的内容必须是一个表达式（即返回值的代码），不能是语句（如 `if`、`for` 循环等）。但可以使用立即调用函数表达式（IIFE）或三元运算符等来实现复杂逻辑。
+2. **多行支持**：只要表达式逻辑清晰，且最终返回一个值，多行代码没问题。
+3. **可读性**：为了代码可读性，复杂的多行逻辑建议抽取到单独的函数或组件外部。
+
+### 示例：
+以下是一些有效的多行表达式用例：
+
+```jsx
+function MyComponent() {
+  return (
+    <div>
+      {/* 多行表达式：计算随机数的平方 */}
+      <p>
+        Random Square: {
+          (() => {
+            const random = Math.random();
+            return (random * random).toFixed(4);
+          })()
+        }
+      </p>
+
+      {/* 多行表达式：基于条件返回不同值 */}
+      <p>
+        Status: {
+          (() => {
+            const value = Math.random();
+            return value > 0.5 ? 'High' : 'Low';
+          })()
+        }
+      </p>
+    </div>
+  );
+}
+```
+
+### 注意事项：
+- 如果逻辑过于复杂，建议将代码抽取到单独的函数中，避免 JSX 中嵌入过多逻辑。例如：
+
+```jsx
+function MyComponent() {
+  const getRandomSquare = () => {
+    const random = Math.random();
+    return (random * random).toFixed(4);
+  };
+
+  return <p>Random Square: {getRandomSquare()}</p>;
+}
+```
+
+这样代码更清晰，更易维护。
+
+总结：JSX 中的 `{}` 支持多行表达式，只要它们是合法的 JavaScript 表达式并返回单一值即可。
