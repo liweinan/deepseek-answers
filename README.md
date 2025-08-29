@@ -15,6 +15,7 @@ Here are the topics:
 - [Nested Hell（嵌套地狱）](https://github.com/liweinan/deepseek-answers/blob/main/files/nested-hell.md)
 - [学习二进制时，选择 **Python** 还是 **C** 取决于你的学习目标和应用场景](https://github.com/liweinan/deepseek-answers/blob/main/files/binary.md)
 - [用 **Python 刷算法** 的优势非常明显](https://github.com/liweinan/deepseek-answers/blob/main/files/python-alg.md)
+- [理解递归和循环](https://github.com/liweinan/deepseek-answers/blob/main/files/recur.md)
 
 ### AI / Machine Learning / BlockChain
 
