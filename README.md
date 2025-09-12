@@ -118,6 +118,7 @@ Here are the topics:
 - [在 Rust 中，数据类型可以按照 **Copy/Non-Copy** 和 **DST (Dynamic Sized Type)/Non-DST** 两个维度进行分类。](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-dst.md)
 - [什么是胖指针（Fat Pointer）？](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-fat.md)
 - [Rust的struct](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-struct.md)
+- [Rust 中的 `Cow`](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-cow.md)
 
 ### Languages
 
