@@ -136,3 +136,69 @@ fn process_input(input: &str) -> Cow<str> {
 | **优点** | 编写更灵活的 API，同时不牺牲性能。 |
 
 简单来说，`Cow` 是一个“聪明的懒家伙”。它能借就借，绝不轻易克隆；直到万不得已（需要修改但又没有所有权时），它才会动手克隆，非常高效。
+
+---
+
+# 在 Rust 中，`Cow`（Clone-on-Write） 是一个智能指针类型，位于 `std::borrow` 模块中，用于在需要时提供写时复制的功能。它可以持有借用的数据（`Borrowed`）或拥有的数据（`Owned`），从而避免不必要的复制开销。`Cow` 常用于需要灵活处理数据的场景，比如当数据可能需要修改时，但大多数情况下只需借用。
+
+以下是一个使用 `Cow` 和 `Vec` 的示例，展示如何处理 `Vec` 数据，同时在需要时进行写时复制：
+
+```rust
+use std::borrow::Cow;
+
+fn process_data(data: Cow<'static, Vec<i32>>) -> Cow<'static, Vec<i32>> {
+    // 检查数据是否需要修改
+    if data.iter().any(|&x| x < 0) {
+        // 如果有负数，将其转换为正数，触发写时复制
+        let mut owned_data = data.into_owned(); // 转换为拥有的 Vec
+        for x in owned_data.iter_mut() {
+            if *x < 0 {
+                *x = -*x;
+            }
+        }
+        Cow::Owned(owned_data)
+    } else {
+        // 数据无需修改，直接返回借用
+        data
+    }
+}
+
+fn main() {
+    // 创建一个静态生命周期的 Vec
+    let input = vec![1, -2, 3, -4];
+    let cow_input = Cow::Owned(input); // 拥有的数据
+
+    // 处理数据
+    let result = process_data(cow_input);
+    println!("Result: {:?}", result); // 输出: Result: [1, 2, 3, 4]
+
+    // 再创建一个借用的 Vec
+    let borrowed_input: &'static Vec<i32> = Box::leak(Box::new(vec![1, 2, 3]));
+    let cow_borrowed = Cow::Borrowed(borrowed_input);
+
+    // 处理无需修改的数据
+    let result_borrowed = process_data(cow_borrowed);
+    println!("Result (borrowed): {:?}", result_borrowed); // 输出: Result (borrowed): [1, 2, 3]
+}
+```
+
+### 代码说明
+1. **定义函数 `process_data`**：
+    - 接受一个 `Cow<'static, Vec<i32>>` 参数，可以是借用的 `Vec<i32>` 或拥有的 `Vec<i32>`。
+    - 检查 `Vec` 中是否有负数。如果有负数，则将数据转换为拥有的 `Vec`（通过 `into_owned`），并将负数改为正数，返回 `Cow::Owned`。
+    - 如果没有负数，则直接返回输入的 `Cow`（避免复制）。
+
+2. **在 `main` 中测试**：
+    - **拥有的数据**：创建一个 `Vec<i32>`，包装成 `Cow::Owned`，传入 `process_data`。由于包含负数，函数会修改数据并返回新的 `Cow::Owned`。
+    - **借用的数据**：通过 `Box::leak` 创建一个静态生命周期的 `Vec<i32>`，包装成 `Cow::Borrowed`。由于没有负数，函数直接返回借用的 `Cow::Borrowed`，避免复制。
+
+3. **输出**：
+    - 第一个例子输出 `[1, 2, 3, 4]`，因为负数被改为正数。
+    - 第二个例子输出 `[1, 2, 3]`，保持原样，未触发复制。
+
+### 关键点
+- `Cow` 的优势在于延迟复制：只有在需要修改时才创建新的 `Vec`，否则直接使用借用数据。
+- `'static` 生命周期用于简化示例，确保 `Cow` 可以持有借用或拥有的数据。在实际应用中，生命周期可以根据需要调整。
+- `Cow` 适用于需要高效处理只读或偶尔修改的场景，比如字符串或向量处理。
+
+如果你有更具体的需求（比如其他 `Cow` 用法或更复杂的 `Vec` 操作），可以告诉我！
