@@ -561,3 +561,153 @@ sequenceDiagram
 - **核心功能**：L4 传输层负载均衡
 
 MetalLB 让裸机 Kubernetes 集群也能享受云环境中的 LoadBalancer 服务，是 Kubernetes 生态中重要的网络组件。
+
+---
+
+**您说得完全正确！** 我之前的表述有误导性。让我澄清一下：
+
+## Nginx 的实际角色
+
+### 1. **Nginx Ingress Controller ≠ LoadBalancer 类型**
+```yaml
+# 这是 Ingress，不是 LoadBalancer
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress
+spec:
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-service
+            port:
+              number: 80
+```
+
+### 2. **Nginx 不能作为 `type: LoadBalancer` 的提供者**
+```yaml
+# 这个配置中，Nginx 不是 LoadBalancer 的提供者
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  type: LoadBalancer  # Nginx 不能提供这个功能
+  ports:
+  - port: 80
+    targetPort: 8080
+```
+
+## 正确的理解
+
+### **Nginx Ingress Controller 的工作方式**：
+```mermaid
+graph TD
+    subgraph External["外部访问"]
+        User["用户"]
+    end
+    
+    subgraph K8S["Kubernetes 集群"]
+        subgraph Ingress["Ingress 层"]
+            NginxIngress["Nginx Ingress Controller<br/>Pod 形式运行"]
+        end
+        
+        subgraph Service["Service 层"]
+            WebService["web-service<br/>type: ClusterIP"]
+        end
+        
+        subgraph Pod["Pod 层"]
+            WebPod1["Web Pod 1"]
+            WebPod2["Web Pod 2"]
+            WebPod3["Web Pod 3"]
+        end
+    end
+    
+    User -->|HTTP 请求| NginxIngress
+    NginxIngress -->|负载均衡| WebService
+    WebService -->|kube-proxy 转发| WebPod1
+    WebService -->|kube-proxy 转发| WebPod2
+    WebService -->|kube-proxy 转发| WebPod3
+```
+
+### **Nginx Ingress Controller 本身也需要 Service**：
+```yaml
+# Nginx Ingress Controller 的 Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+spec:
+  type: LoadBalancer  # 这里才需要真正的 LoadBalancer 提供者
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
+  - port: 443
+    targetPort: 443
+    name: https
+```
+
+## 层级关系对比
+
+| 组件 | 角色 | 是否需要 LoadBalancer | 提供者 |
+|------|------|---------------------|--------|
+| **Nginx Ingress Controller** | L7 负载均衡器 | ✅ 需要 | 云提供商 LB 或 MetalLB |
+| **用户应用 Service** | 后端服务 | ❌ 不需要 | 使用 ClusterIP |
+| **kube-proxy** | L4 负载均衡器 | ❌ 不需要 | Kubernetes 内置 |
+
+## 正确的架构理解
+
+### **完整的请求流程**：
+```
+1. 用户 → 云提供商 LoadBalancer (External IP)
+2. LoadBalancer → Nginx Ingress Controller Pod
+3. Nginx Ingress Controller → 应用 Service (ClusterIP)
+4. 应用 Service → 应用 Pod (通过 kube-proxy)
+```
+
+### **Nginx Ingress Controller 的部署**：
+```yaml
+# Nginx Ingress Controller 作为 Deployment 运行
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ingress-nginx
+  template:
+    metadata:
+      labels:
+        app: ingress-nginx
+    spec:
+      containers:
+      - name: controller
+        image: k8s.gcr.io/ingress-nginx/controller:v1.8.2
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+```
+
+## 总结
+
+**您的理解是正确的**：
+- ❌ **Nginx 不能作为 `type: LoadBalancer` 的提供者**
+- ✅ **Nginx Ingress Controller 本身需要 LoadBalancer 来暴露**
+- ✅ **Nginx 提供的是 L7 应用层负载均衡，不是 L4 传输层 LoadBalancer**
+
+**正确的角色分工**：
+- **云提供商 LB/MetalLB**：提供 `type: LoadBalancer` 功能
+- **Nginx Ingress Controller**：提供 L7 HTTP/HTTPS 负载均衡
+- **kube-proxy**：提供 L4 TCP/UDP 负载均衡
+
+感谢您的纠正！
