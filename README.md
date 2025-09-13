@@ -245,6 +245,7 @@ Here are the topics:
 - [Red Hat Enterprise Linux CoreOS（RHCOS）](https://github.com/liweinan/deepseek-answers/blob/main/files/rhcos.md)
 - [AWS Lambda介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/aws-lambda.md)
 - [Kubernetes OSI 七层网络拓扑结构图](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-osi-network-topology.md)
+- [Kubernetes 中的 Load Balancer 组件](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-lb.md)
 
 ## HackerRank
 
