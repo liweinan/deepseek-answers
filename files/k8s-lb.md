@@ -396,3 +396,168 @@ Port 443 (HTTPS) → Backend Port 8443
 - LoadBalancer 使用 IP 地址，但主要功能是 L4
 
 所以，虽然 External IP 是 L3 概念，但 **LoadBalancer 的核心功能是 L4 传输层的负载均衡**。
+
+---
+
+**是的**，MetalLB 是一个 LoadBalancer 实现，但它是一个**软件定义的负载均衡器**，专门为裸机 Kubernetes 集群设计。
+
+## MetalLB 概述
+
+### 1. **MetalLB 是什么？**
+- **开源项目**：为裸机 Kubernetes 集群提供 LoadBalancer 服务
+- **解决问题**：云环境有云提供商的 LoadBalancer，但裸机环境没有
+- **实现方式**：通过软件实现 LoadBalancer 功能
+
+### 2. **MetalLB 的两种模式**
+
+#### **Layer 2 模式（L2）**
+```yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: first-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 192.168.1.240-192.168.1.250  # 分配 IP 地址池
+```
+
+- **OSI 层级**：第 2 层（数据链路层）
+- **工作原理**：使用 ARP 协议，让一个节点响应特定 IP 的 ARP 请求
+- **特点**：简单，但单点故障
+
+#### **BGP 模式（L3）**
+```yaml
+apiVersion: metallb.io/v1beta1
+kind: BGPPeer
+metadata:
+  name: sample
+  namespace: metallb-system
+spec:
+  peerAddress: 192.168.1.1
+  peerASN: 64501
+  myASN: 64500
+```
+
+- **OSI 层级**：第 3 层（网络层）
+- **工作原理**：通过 BGP 协议与路由器通信，发布路由信息
+- **特点**：高可用，但需要支持 BGP 的路由器
+
+## MetalLB 在 OSI 模型中的位置
+
+```mermaid
+graph TD
+    subgraph L3["L3 网络层"]
+        BGP["BGP 模式<br/>路由发布<br/>IP 地址管理"]
+    end
+    
+    subgraph L2["L2 数据链路层"]
+        ARP["Layer 2 模式<br/>ARP 响应<br/>MAC 地址管理"]
+    end
+    
+    subgraph L4["L4 传输层"]
+        LoadBalancing["负载均衡<br/>端口映射<br/>TCP/UDP 处理"]
+    end
+    
+    BGP --> LoadBalancing
+    ARP --> LoadBalancing
+```
+
+## MetalLB 与其他 LoadBalancer 的对比
+
+| 类型 | 环境 | OSI 层级 | 实现方式 | 高可用性 |
+|------|------|----------|----------|----------|
+| **云提供商 LB** | 云环境 | L4 | 硬件/软件 | 高 |
+| **MetalLB L2** | 裸机 | L2 + L4 | ARP + 软件 | 低（单点） |
+| **MetalLB BGP** | 裸机 | L3 + L4 | BGP + 软件 | 高 |
+| **kube-proxy** | 所有环境 | L3 + L4 | iptables/IPVS | 高 |
+
+## MetalLB 配置示例
+
+### 1. **安装 MetalLB**
+```bash
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.12/config/manifests/metallb-native.yaml
+```
+
+### 2. **配置 IP 地址池**
+```yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: production
+  namespace: metallb-system
+spec:
+  addresses:
+  - 192.168.1.100-192.168.1.200
+```
+
+### 3. **创建 LoadBalancer Service**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+```
+
+**结果**：
+```bash
+$ kubectl get svc
+NAME         TYPE           CLUSTER-IP    EXTERNAL-IP     PORT(S)
+my-service   LoadBalancer   10.96.0.1     192.168.1.100   80:30001/TCP
+```
+
+## MetalLB 的工作流程
+
+### Layer 2 模式流程：
+```mermaid
+sequenceDiagram
+    participant Client as 客户端
+    participant Router as 路由器
+    participant Node as MetalLB 节点
+    participant Pod as 后端 Pod
+
+    Client->>Router: ARP 请求 192.168.1.100
+    Router->>Node: ARP 响应 (MetalLB 节点 MAC)
+    Client->>Node: 请求 192.168.1.100:80
+    Node->>Node: kube-proxy 负载均衡
+    Node->>Pod: 转发到后端 Pod
+    Pod-->>Node: 响应
+    Node-->>Client: 返回响应
+```
+
+### BGP 模式流程：
+```mermaid
+sequenceDiagram
+    participant Client as 客户端
+    participant Router as BGP 路由器
+    participant Node1 as MetalLB 节点 1
+    participant Node2 as MetalLB 节点 2
+    participant Pod as 后端 Pod
+
+    Node1->>Router: BGP 公告 192.168.1.100/32
+    Node2->>Router: BGP 公告 192.168.1.100/32
+    Client->>Router: 请求 192.168.1.100:80
+    Router->>Node1: 路由到节点 1
+    Node1->>Pod: 转发到后端 Pod
+    Pod-->>Node1: 响应
+    Node1-->>Client: 返回响应
+```
+
+## 总结
+
+**MetalLB 是 LoadBalancer 吗？**
+- ✅ **是的**：它实现了 Kubernetes LoadBalancer 接口
+- ✅ **软件实现**：通过软件提供 LoadBalancer 功能
+- ✅ **裸机专用**：解决裸机环境缺少 LoadBalancer 的问题
+
+**OSI 层级定位**：
+- **Layer 2 模式**：L2（ARP）+ L4（负载均衡）
+- **BGP 模式**：L3（BGP）+ L4（负载均衡）
+- **核心功能**：L4 传输层负载均衡
+
+MetalLB 让裸机 Kubernetes 集群也能享受云环境中的 LoadBalancer 服务，是 Kubernetes 生态中重要的网络组件。
