@@ -244,6 +244,7 @@ Here are the topics:
 - [Disconnected Cluster路由配置分析](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-route3.md)
 - [Red Hat Enterprise Linux CoreOS（RHCOS）](https://github.com/liweinan/deepseek-answers/blob/main/files/rhcos.md)
 - [AWS Lambda介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/aws-lambda.md)
+- [Kubernetes OSI 七层网络拓扑结构图](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-osi-network-topology.md)
 
 ## HackerRank
 
