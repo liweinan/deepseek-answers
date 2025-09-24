@@ -175,6 +175,7 @@ Here are the topics:
 - [Manticore Search 支持的数据源和格式](https://github.com/liweinan/deepseek-answers/blob/main/files/manticoresearch-datasource.md)
 - [SmallRye 是一个开源项目](https://github.com/liweinan/deepseek-answers/blob/main/files/smallrye.md)
 - [在Quarkus REST 中的`Multi<String>`](https://github.com/liweinan/deepseek-answers/blob/main/files/quarkus-multi.md)
+- [关于Quarkus微服务实践项目推荐的问题](https://github.com/liweinan/deepseek-answers/blob/main/files/quarkus-microservice.md)
 
 ### Cloud Native
 
