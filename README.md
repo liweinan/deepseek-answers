@@ -248,6 +248,7 @@ Here are the topics:
 - [Kubernetes OSI 七层网络拓扑结构图](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-osi-network-topology.md)
 - [Kubernetes 中的 Load Balancer 组件](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-lb.md)
 - [当一个 pod 包含多个容器时，需要指定容器名称来登录特定的容器](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-multi-containers.md)
+- [我来分析 ingress controller 和 loadbalancer 类型 service 的协同工作原理。](https://github.com/liweinan/deepseek-answers/blob/main/files/ingress-lb.md)
 
 ## HackerRank
 
