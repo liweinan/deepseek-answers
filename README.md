@@ -163,6 +163,7 @@ Here are the topics:
 - [React的Re-render](https://github.com/liweinan/deepseek-answers/blob/main/files/react-rerender.md)
 - [React Server Components（RSC）是 React 引入的一种新架构模式](https://github.com/liweinan/deepseek-answers/blob/main/files/nextjs2.md)
 - [React当中的花括号](https://github.com/liweinan/deepseek-answers/blob/main/files/react-brace.md)
+- [SemVer (Semantic Versioning, 语义化版本) 是一套简单而明确的版本号管理规则](https://github.com/liweinan/deepseek-answers/blob/main/files/semver.md)
 
 ### Backend Frameworks
 
@@ -250,6 +251,7 @@ Here are the topics:
 - [当一个 pod 包含多个容器时，需要指定容器名称来登录特定的容器](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-multi-containers.md)
 - [我来分析 ingress controller 和 loadbalancer 类型 service 的协同工作原理。](https://github.com/liweinan/deepseek-answers/blob/main/files/ingress-lb.md)
 - [LoadBalancer与ClusterIP类型服务的本质区别](https://github.com/liweinan/deepseek-answers/blob/main/files/lb-vs-clusterip.md)
+- [NGINX Ingress Controller / Gateway](https://github.com/liweinan/deepseek-answers/blob/main/files/k8s-gateway.md)
 
 ## HackerRank
 
