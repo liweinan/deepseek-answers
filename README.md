@@ -128,6 +128,7 @@ Here are the topics:
 - [Stream API 的出现时间和在不同编程语言中的发展可以从以下几个方面来分析](https://github.com/liweinan/deepseek-answers/blob/main/files/stream-api.md)
 - [深拷贝与浅拷贝的区别](https://github.com/liweinan/deepseek-answers/blob/main/files/shallow-copy.md)
 - [在Haskell中，由于其纯函数式编程的特性，默认情况下所有函数都是无状态的](https://github.com/liweinan/deepseek-answers/blob/main/files/haskell-monad.md)
+- [Option vs. Null](https://github.com/liweinan/deepseek-answers/blob/main/files/option-vs-null.md)
 
 ### Linux Administration & DevOps
 
