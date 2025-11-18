@@ -1,8 +1,8 @@
-# Go 语言面试题卷（含答案）
+# Go Language Interview Questions (with Answers)
 
-## 第一部分：基础语法（20分）
+## Part 1: Basic Syntax (20 points)
 
-### 1. 下面代码输出什么？为什么？（5分）
+### 1. What does the following code output? Why? (5 points)
 ```go
 package main
 
@@ -16,13 +16,13 @@ func main() {
 }
 ```
 
-**答案**：
+**Answer**:
 ```
 2.5
 ```
-**解析**：整数相除会截断小数部分，转换为 float64 后除法会保留小数。
+**Explanation**: Integer division truncates the decimal part, converting to float64 preserves decimals in division.
 
-### 2. 以下代码有什么问题？如何修复？（5分）
+### 2. What's wrong with this code? How to fix it? (5 points)
 ```go
 func main() {
     var x int
@@ -33,10 +33,10 @@ func main() {
 }
 ```
 
-**答案**：
-代码没有问题，输出 `10`。展示了指针的基本用法。
+**Answer**:
+No problem with the code, outputs `10`. Demonstrates basic pointer usage.
 
-### 3. 下面代码的输出是什么？（5分）
+### 3. What does this code output? (5 points)
 ```go
 func main() {
     s := []int{1, 2, 3}
@@ -49,13 +49,13 @@ func modifySlice(s []int) {
 }
 ```
 
-**答案**：
+**Answer**:
 ```
 [100 2 3]
 ```
-**解析**：切片是引用类型，函数内修改会影响原切片。
+**Explanation**: Slices are reference types, modifications inside function affect the original slice.
 
-### 4. 写出defer的执行顺序（5分）
+### 4. Write the defer execution order (5 points)
 ```go
 func main() {
     defer fmt.Println(1)
@@ -64,17 +64,17 @@ func main() {
 }
 ```
 
-**答案**：
+**Answer**:
 ```
 3
 2
 1
 ```
-**解析**：defer 是后进先出（LIFO）的执行顺序。
+**Explanation**: defer executes in LIFO (Last In, First Out) order.
 
-## 第二部分：并发编程（30分）
+## Part 2: Concurrent Programming (30 points)
 
-### 1. 以下代码有什么问题？（10分）
+### 1. What's wrong with this code? (10 points)
 ```go
 func main() {
     var wg sync.WaitGroup
@@ -89,10 +89,10 @@ func main() {
 }
 ```
 
-**答案**：
-问题1：`wg.Add(1)` 应该在 goroutine 外调用
-问题2：闭包捕获的是循环变量的最终值（会输出多个5）
-修复方案：
+**Answer**:
+Problem 1: `wg.Add(1)` should be called outside the goroutine
+Problem 2: The closure captures the final value of the loop variable (will output multiple 5s)
+Fix:
 ```go
 for i := 0; i < 5; i++ {
     wg.Add(1)
@@ -103,22 +103,22 @@ for i := 0; i < 5; i++ {
 }
 ```
 
-### 2. 实现并发安全的计数器（10分）
+### 2. Implement a concurrent-safe counter (10 points)
 ```go
 type Counter struct {
-    // 补充代码
+    // Complete the code
 }
 
 func (c *Counter) Inc() {
-    // 补充代码
+    // Complete the code
 }
 
 func (c *Counter) Value() int {
-    // 补充代码
+    // Complete the code
 }
 ```
 
-**答案**：
+**Answer**:
 ```go
 type Counter struct {
     mu    sync.Mutex
@@ -138,10 +138,10 @@ func (c *Counter) Value() int {
 }
 ```
 
-### 3. 使用channel实现工作池（10分）
-实现一个工作池，处理100个任务，并发度为10。
+### 3. Implement a worker pool using channels (10 points)
+Implement a worker pool that processes 100 tasks with concurrency of 10.
 
-**答案**：
+**Answer**:
 ```go
 func worker(id int, jobs <-chan int, results chan<- int) {
     for j := range jobs {
@@ -154,34 +154,34 @@ func main() {
     jobs := make(chan int, 100)
     results := make(chan int, 100)
     
-    // 启动10个worker
+    // Start 10 workers
     for w := 1; w <= 10; w++ {
         go worker(w, jobs, results)
     }
     
-    // 发送100个任务
+    // Send 100 tasks
     for j := 1; j <= 100; j++ {
         jobs <- j
     }
     close(jobs)
     
-    // 收集结果
+    // Collect results
     for a := 1; a <= 100; a++ {
         <-results
     }
 }
 ```
 
-## 第三部分：高级特性（30分）
+## Part 3: Advanced Features (30 points)
 
-### 1. 解释interface的底层实现（10分）
+### 1. Explain interface underlying implementation (10 points)
 
-**答案**：
-Go的interface由两部分组成：
-1. `_type`：存储动态类型信息
-2. `data`：指向实际值的指针
+**Answer**:
+Go's interface consists of two parts:
+1. `_type`: stores dynamic type information
+2. `data`: pointer to actual value
 
-对于空接口`interface{}`：
+For empty interface `interface{}`:
 ```go
 type eface struct {
     _type *_type
@@ -189,7 +189,7 @@ type eface struct {
 }
 ```
 
-对于非空接口（如`io.Reader`）：
+For non-empty interface (like `io.Reader`):
 ```go
 type iface struct {
     tab  *itab
@@ -197,7 +197,7 @@ type iface struct {
 }
 ```
 
-### 2. 以下代码输出什么？（10分）
+### 2. What does this code output? (10 points)
 ```go
 func main() {
     var i interface{} = "hello"
@@ -213,15 +213,15 @@ func main() {
 }
 ```
 
-**答案**：
+**Answer**:
 ```
 string: hello
 ```
 
-### 3. 实现一个简单的HTTP服务器（10分）
-要求：监听8080端口，/hello返回"Hello World"
+### 3. Implement a simple HTTP server (10 points)
+Requirement: Listen on port 8080, return "Hello World" at /hello
 
-**答案**：
+**Answer**:
 ```go
 package main
 
@@ -240,11 +240,11 @@ func main() {
 }
 ```
 
-## 第四部分：实战编程（20分）
+## Part 4: Practical Programming (20 points)
 
-### 1. 实现快速排序（10分）
+### 1. Implement quicksort (10 points)
 
-**答案**：
+**Answer**:
 ```go
 func quickSort(arr []int) []int {
     if len(arr) <= 1 {
@@ -269,13 +269,13 @@ func quickSort(arr []int) []int {
 }
 ```
 
-### 2. 解析JSON文件并计算平均值（10分）
-给定data.json:
+### 2. Parse JSON file and calculate average (10 points)
+Given data.json:
 ```json
 [{"name":"A","score":80},{"name":"B","score":90}]
 ```
 
-**答案**：
+**Answer**:
 ```go
 type Student struct {
     Name  string `json:"name"`
@@ -306,13 +306,13 @@ func averageScore(filename string) (float64, error) {
 }
 ```
 
-## 评分标准
+## Scoring Criteria
 
-- 90-100分：资深Go开发工程师
-- 70-89分：高级Go开发工程师
-- 50-69分：中级Go开发工程师
-- 30-49分：初级Go开发工程师
-- 0-29分：需要加强Go语言学习
+- 90-100 points: Senior Go Development Engineer
+- 70-89 points: Advanced Go Development Engineer
+- 50-69 points: Intermediate Go Development Engineer
+- 30-49 points: Junior Go Development Engineer
+- 0-29 points: Needs to strengthen Go language learning
 
-这份试卷涵盖了Go语言的核心知识点，包括基础语法、并发编程、高级特性和实战编程，适合评估候选人的综合Go语言能力。
+This exam covers the core knowledge points of Go language, including basic syntax, concurrent programming, advanced features, and practical programming, suitable for assessing candidates' comprehensive Go language abilities.
 

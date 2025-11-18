@@ -1,10 +1,10 @@
-# Go语言中的Backpressure实现
+# Backpressure Implementation in Go
 
-Go语言虽然没有像Spring WebFlux那样内置的响应式编程框架，但可以通过一些模式和并发原语实现类似的backpressure控制。以下是几种在Go中实现backpressure的方法：
+Although Go doesn't have a built-in reactive programming framework like Spring WebFlux, it can achieve similar backpressure control through patterns and concurrency primitives. Here are several methods to implement backpressure in Go:
 
-## 1. 使用带缓冲的Channel
+## 1. Using Buffered Channels
 
-这是Go中最简单的backpressure实现方式：
+This is the simplest backpressure implementation in Go:
 
 ```go
 package main
@@ -17,8 +17,8 @@ import (
 func producer(ch chan<- int) {
  for i := 0; i < 20; i++ {
   fmt.Printf("Producing: %d\n", i)
-  ch <- i // 当channel满时会阻塞，实现backpressure
-  time.Sleep(50 * time.Millisecond) // 模拟生产速度
+  ch <- i // Blocks when channel is full, implementing backpressure
+  time.Sleep(50 * time.Millisecond) // Simulate production speed
  }
  close(ch)
 }
@@ -26,12 +26,12 @@ func producer(ch chan<- int) {
 func consumer(ch <-chan int) {
  for item := range ch {
   fmt.Printf("Consuming: %d\n", item)
-  time.Sleep(200 * time.Millisecond) // 模拟慢速消费
+  time.Sleep(200 * time.Millisecond) // Simulate slow consumption
  }
 }
 
 func main() {
- bufferSize := 5 // 背压缓冲区大小
+ bufferSize := 5 // Backpressure buffer size
  ch := make(chan int, bufferSize)
  
  go producer(ch)
@@ -39,7 +39,7 @@ func main() {
 }
 ```
 
-## 2. 使用信号量模式
+## 2. Using Semaphore Pattern
 
 ```go
 package main
@@ -50,30 +50,30 @@ import (
 )
 
 func main() {
- const maxConcurrent = 3 // 最大并发处理数
- sem := make(chan struct{}, maxConcurrent) // 信号量channel
+ const maxConcurrent = 3 // Maximum concurrent processing
+ sem := make(chan struct{}, maxConcurrent) // Semaphore channel
 
  for i := 0; i < 10; i++ {
-  sem <- struct{}{} // 获取信号量，如果满则阻塞
+  sem <- struct{}{} // Acquire semaphore, blocks if full
   go func(id int) {
-   defer func() { <-sem }() // 释放信号量
+   defer func() { <-sem }() // Release semaphore
    
    fmt.Printf("Start processing %d\n", id)
-   time.Sleep(1 * time.Second) // 模拟处理时间
+   time.Sleep(1 * time.Second) // Simulate processing time
    fmt.Printf("Finished processing %d\n", id)
   }(i)
  }
 
- // 等待所有goroutine完成
+ // Wait for all goroutines to complete
  for i := 0; i < maxConcurrent; i++ {
   sem <- struct{}{}
  }
 }
 ```
 
-## 3. 类似Reactive Stream的实现
+## 3. Reactive Stream-like Implementation
 
-可以使用第三方库如[RxGo](https://github.com/ReactiveX/RxGo)：
+You can use third-party libraries like [RxGo](https://github.com/ReactiveX/RxGo):
 
 ```go
 package main
@@ -88,16 +88,16 @@ import (
 func main() {
  observable := rxgo.Range(0, 10).
   Map(func(_ context.Context, i interface{}) (interface{}, error) {
-   // 模拟处理
+   // Simulate processing
    time.Sleep(200 * time.Millisecond)
    return i.(int) * 2, nil
   }, 
-  // 设置背压选项
+  // Set backpressure options
   rxgo.WithBufferedChannel(3),
   rxgo.WithCPUPool(),
   rxgo.WithPublishStrategy())
 
- // 订阅
+ // Subscribe
  done := observable.ForEach(func(i interface{}) {
   fmt.Printf("Received: %v\n", i)
  }, func(err error) {
@@ -110,9 +110,9 @@ func main() {
 }
 ```
 
-## 4. HTTP服务中的Backpressure
+## 4. Backpressure in HTTP Services
 
-### 服务端实现
+### Server Implementation
 
 ```go
 package main
@@ -134,23 +134,23 @@ func dataStream(w http.ResponseWriter, r *http.Request) {
  w.Header().Set("Cache-Control", "no-cache")
  w.Header().Set("Connection", "keep-alive")
 
- // 使用带缓冲的channel控制背压
- ch := make(chan int, 5) // 缓冲区大小5
+ // Use buffered channel to control backpressure
+ ch := make(chan int, 5) // Buffer size 5
 
- // 生产者
+ // Producer
  go func() {
   defer close(ch)
   for i := 0; i < 20; i++ {
    ch <- i
-   time.Sleep(100 * time.Millisecond) // 生产速度
+   time.Sleep(100 * time.Millisecond) // Production speed
   }
  }()
 
- // 消费者
+ // Consumer
  for i := range ch {
   fmt.Fprintf(w, "data: %d\n\n", i)
   flusher.Flush()
-  time.Sleep(300 * time.Millisecond) // 消费速度慢于生产
+  time.Sleep(300 * time.Millisecond) // Consumption speed slower than production
  }
 }
 
@@ -160,7 +160,7 @@ func main() {
 }
 ```
 
-### 客户端实现
+### Client Implementation
 
 ```go
 package main
@@ -185,7 +185,7 @@ func main() {
   line := scanner.Text()
   if line != "" {
    fmt.Println("Received:", line)
-   time.Sleep(500 * time.Millisecond) // 模拟慢速处理
+   time.Sleep(500 * time.Millisecond) // Simulate slow processing
   }
  }
 
@@ -195,7 +195,7 @@ func main() {
 }
 ```
 
-## 5. 使用Worker Pool模式
+## 5. Using Worker Pool Pattern
 
 ```go
 package main
@@ -210,7 +210,7 @@ func worker(id int, jobs <-chan int, results chan<- int, wg *sync.WaitGroup) {
  defer wg.Done()
  for j := range jobs {
   fmt.Printf("Worker %d started job %d\n", id, j)
-  time.Sleep(time.Second) // 模拟工作负载
+  time.Sleep(time.Second) // Simulate workload
   fmt.Printf("Worker %d finished job %d\n", id, j)
   results <- j * 2
  }
@@ -218,52 +218,52 @@ func worker(id int, jobs <-chan int, results chan<- int, wg *sync.WaitGroup) {
 
 func main() {
  const numJobs = 10
- const numWorkers = 3 // 控制并发度实现背压
+ const numWorkers = 3 // Control concurrency to implement backpressure
 
  jobs := make(chan int, numJobs)
  results := make(chan int, numJobs)
  var wg sync.WaitGroup
 
- // 启动workers
+ // Start workers
  for w := 1; w <= numWorkers; w++ {
   wg.Add(1)
   go worker(w, jobs, results, &wg)
  }
 
- // 发送jobs
+ // Send jobs
  for j := 1; j <= numJobs; j++ {
   jobs <- j
  }
  close(jobs)
 
- // 等待所有workers完成
+ // Wait for all workers to complete
  go func() {
   wg.Wait()
   close(results)
  }()
 
- // 收集结果
+ // Collect results
  for r := range results {
   fmt.Println("Result:", r)
  }
 }
 ```
 
-## 关键区别和注意事项
+## Key Differences and Considerations
 
-1. **Go与Java响应式编程的区别**：
-    - Go使用channel和goroutine作为核心并发原语
-    - 没有内置的响应式流规范，但可以通过模式实现类似效果
-    - backpressure主要通过channel缓冲区和goroutine调度实现
+1. **Differences between Go and Java reactive programming**:
+    - Go uses channels and goroutines as core concurrency primitives
+    - No built-in reactive streams specification, but similar effects can be achieved through patterns
+    - Backpressure is mainly implemented through channel buffering and goroutine scheduling
 
-2. **选择方案的建议**：
-    - 简单场景：使用带缓冲的channel
-    - 需要限制并发：使用worker pool或信号量模式
-    - 复杂响应式需求：考虑RxGo等第三方库
+2. **Recommendations for choosing solutions**:
+    - Simple scenarios: Use buffered channels
+    - Need to limit concurrency: Use worker pool or semaphore pattern
+    - Complex reactive requirements: Consider third-party libraries like RxGo
 
-3. **性能考虑**：
-    - Go的goroutine比Java线程更轻量
-    - channel操作有开销，在极高吞吐量场景需要优化
-    - 合理设置缓冲区大小很关键
+3. **Performance considerations**:
+    - Go's goroutines are lighter than Java threads
+    - Channel operations have overhead, need optimization in high-throughput scenarios
+    - Proper buffer size setting is crucial
 
-Go语言的backpressure实现通常比Java更显式，需要开发者手动控制并发和缓冲，这也使得它更加灵活和透明。
+Go's backpressure implementation is usually more explicit than Java, requiring developers to manually control concurrency and buffering, which also makes it more flexible and transparent.

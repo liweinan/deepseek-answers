@@ -1,55 +1,55 @@
-# AWS CloudFormation 是亚马逊云服务（AWS）提供的一种基础设施即代码（IaC）服务，允许用户通过模板文件定义和管理 AWS 资源。它简化了云资源的创建、更新和删除过程，支持自动化和一致性部署。
+# AWS CloudFormation is Amazon Web Services' Infrastructure as Code (IaC) service that allows users to define and manage AWS resources through template files. It simplifies the creation, updating, and deletion of cloud resources, supporting automated and consistent deployment.
 
-### 核心概念
-1. **模板（Template）**：
-    - 使用 JSON 或 YAML 格式的文本文件，描述 AWS 资源及其配置（如 EC2 实例、S3 桶、VPC 等）。
-    - 包含以下主要部分：
-        - **Parameters**：定义输入参数，增加模板灵活性。
-        - **Resources**：定义需要创建的 AWS 资源，必填项。
-        - **Outputs**：指定部署后返回的值，如资源 ID 或 URL。
-        - **Mappings**：定义键值对，用于条件逻辑。
-        - **Conditions**：控制资源创建的条件逻辑。
+### Core Concepts
+1. **Template**:
+    - Uses JSON or YAML format text files to describe AWS resources and their configurations (such as EC2 instances, S3 buckets, VPCs, etc.).
+    - Contains the following main sections:
+        - **Parameters**: Define input parameters to increase template flexibility.
+        - **Resources**: Define AWS resources to be created, required field.
+        - **Outputs**: Specify values returned after deployment, such as resource IDs or URLs.
+        - **Mappings**: Define key-value pairs for conditional logic.
+        - **Conditions**: Control conditional logic for resource creation.
 
-2. **堆栈（Stack）**：
-    - 通过模板部署的一组 AWS 资源，作为一个管理单元。
-    - 可以创建、更新或删除整个堆栈，CloudFormation 自动处理依赖关系。
+2. **Stack**:
+    - A group of AWS resources deployed through a template, managed as a single unit.
+    - Can create, update, or delete entire stacks, CloudFormation automatically handles dependencies.
 
-3. **变更集（Change Set）**：
-    - 在更新堆栈前，生成一个变更集，预览模板更改对资源的影响，帮助用户确认操作。
+3. **Change Set**:
+    - Before updating a stack, generate a change set to preview the impact of template changes on resources, helping users confirm operations.
 
-### 工作原理
-1. 用户编写或使用现有的 CloudFormation 模板。
-2. 通过 AWS 控制台、CLI 或 SDK 上传模板并创建堆栈。
-3. CloudFormation 解析模板，自动按依赖顺序创建或更新资源。
-4. 部署完成后，返回输出值（如资源地址）。
-5. 如果需要修改或删除，更新模板或直接删除堆栈，CloudFormation 自动处理资源调整或清理。
+### How It Works
+1. Users write or use existing CloudFormation templates.
+2. Upload templates and create stacks through AWS console, CLI, or SDK.
+3. CloudFormation parses the template and automatically creates or updates resources in dependency order.
+4. After deployment completes, returns output values (such as resource addresses).
+5. If modifications or deletions are needed, update the template or directly delete the stack, CloudFormation automatically handles resource adjustments or cleanup.
 
-### 主要功能
-- **自动化部署**：通过模板一键部署复杂架构，避免手动配置。
-- **一致性**：确保环境配置在不同区域或账户中保持一致。
-- **跨区域支持**：支持在多个 AWS 区域部署资源。
-- **漂移检测**：检测堆栈资源是否被手动修改，偏离模板定义。
-- **模块化**：支持嵌套堆栈和模块，复用模板片段。
-- **Rollback**：部署失败时自动回滚到上次成功状态。
+### Main Features
+- **Automated Deployment**: One-click deployment of complex architectures through templates, avoiding manual configuration.
+- **Consistency**: Ensures environment configurations remain consistent across different regions or accounts.
+- **Cross-region Support**: Supports deploying resources across multiple AWS regions.
+- **Drift Detection**: Detects whether stack resources have been manually modified, deviating from template definitions.
+- **Modularity**: Supports nested stacks and modules, reusing template fragments.
+- **Rollback**: Automatically rolls back to the last successful state when deployment fails.
 
-### 优点
-- **简化管理**：集中管理资源，减少操作复杂性。
-- **可重复性**：通过模板快速复制环境（如开发、测试、生产）。
-- **版本控制**：模板文件可存储在 Git 中，便于跟踪更改。
-- **免费使用**：CloudFormation 本身免费，仅按使用的 AWS 资源计费。
+### Advantages
+- **Simplified Management**: Centralized resource management, reducing operational complexity.
+- **Repeatability**: Quickly replicate environments (such as development, testing, production) through templates.
+- **Version Control**: Template files can be stored in Git for easy change tracking.
+- **Free to Use**: CloudFormation itself is free, only charges for AWS resources used.
 
-### 局限性
-- **学习曲线**：编写复杂模板需要熟悉 YAML/JSON 和 AWS 资源属性。
-- **调试困难**：模板错误可能导致部署失败，需仔细排查。
-- **资源限制**：某些新推出的 AWS 服务可能暂不支持。
+### Limitations
+- **Learning Curve**: Writing complex templates requires familiarity with YAML/JSON and AWS resource properties.
+- **Difficult Debugging**: Template errors may cause deployment failures, requiring careful troubleshooting.
+- **Resource Limitations**: Some newly launched AWS services may not be supported yet.
 
-### 使用场景
-- **自动化基础设施**：快速部署服务器、数据库、网络等。
-- **环境复制**：在不同区域或账户中创建一致的开发/生产环境。
-- **灾难恢复**：通过模板快速重建基础设施。
-- **合规性管理**：通过模板确保资源配置符合安全和合规要求。
+### Use Cases
+- **Automated Infrastructure**: Quickly deploy servers, databases, networks, etc.
+- **Environment Replication**: Create consistent development/production environments in different regions or accounts.
+- **Disaster Recovery**: Quickly rebuild infrastructure through templates.
+- **Compliance Management**: Ensure resource configurations meet security and compliance requirements through templates.
 
-### 示例模板（简易 VPC 创建）
+### Example Template (Simple VPC Creation)
 ```yaml
 Resources:
   MyVPC:
@@ -65,13 +65,13 @@ Outputs:
     Description: ID of the created VPC
 ```
 
-### 相关工具
-- **AWS CLI/SDK**：用于脚本化管理 CloudFormation 堆栈。
-- **AWS CDK**：CloudFormation 的高级工具，用编程语言（如 Python、TypeScript）定义模板。
-- **StackSets**：在多个账户和区域中部署堆栈。
+### Related Tools
+- **AWS CLI/SDK**: Used for scripted management of CloudFormation stacks.
+- **AWS CDK**: Advanced tool for CloudFormation, defining templates in programming languages (such as Python, TypeScript).
+- **StackSets**: Deploy stacks across multiple accounts and regions.
 
-### 获取更多信息
-- 官方文档：https://aws.amazon.com/cloudformation/
-- 模板示例：AWS 提供丰富的示例模板，可在控制台或文档中获取。
+### Get More Information
+- Official documentation: https://aws.amazon.com/cloudformation/
+- Template examples: AWS provides rich sample templates, available in console or documentation.
 
-如果需要深入某部分（如模板编写、具体用例），请告诉我！
+Let me know if you need to dive deeper into any part (such as template writing, specific use cases)!

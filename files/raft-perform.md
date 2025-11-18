@@ -1,54 +1,54 @@
-# Raft 的并发性能限制
+# Raft Concurrency Performance Limitations
 
-Raft 协议在**高并发场景下的适用性**取决于具体的需求、系统规模和优化措施。以下是详细分析：
-
----
-
-### **1. Raft 的并发性能限制**
-Raft 作为强一致性的共识算法，其设计目标优先保证**安全性**和**易理解性**，而非极致的高并发吞吐量。以下是主要限制：
-- **顺序写入**：Raft 要求日志条目严格顺序提交（通过 Leader 串行处理），这天然限制了写入并发。
-- **心跳和选举开销**：频繁的 Leader 心跳和选举（尤其在网络不稳定时）会占用带宽和 CPU。
-- **小规模集群的吞吐瓶颈**：通常 3~5 节点的集群，吞吐量在万级 TPS（经优化后可能更高，但远不及 AP 系统如 Redis Cluster）。
+The **applicability of the Raft protocol in high-concurrency scenarios** depends on specific requirements, system scale, and optimization measures. Here is a detailed analysis:
 
 ---
 
-### **2. 适合高并发的场景**
-Raft 仍可用于高并发场景，但需满足以下条件：
-- **读多写少**：通过 `ReadIndex` 或 `Lease Read` 避免 Leader 参与，实现线性一致读的高并发。
-- **批量写入**：合并多个客户端请求为单个日志条目提交（如 etcd 的 `batched writes`）。
-- **低延迟网络**：节点间的 RPC 延迟直接影响吞吐（如同机房部署）。
+### **1. Raft Concurrency Performance Limitations**
+As a strongly consistent consensus algorithm, Raft's design goals prioritize **safety** and **ease of understanding** rather than extreme high-concurrency throughput. Here are the main limitations:
+- **Sequential Writing**: Raft requires log entries to be strictly committed in order (through Leader serial processing), which inherently limits write concurrency.
+- **Heartbeat and Election Overhead**: Frequent Leader heartbeats and elections (especially during network instability) consume bandwidth and CPU.
+- **Throughput Bottleneck in Small Clusters**: Typically 3-5 node clusters have throughput in the tens of thousands TPS (potentially higher after optimization, but far below AP systems like Redis Cluster).
 
 ---
 
-### **3. 不适用 Raft 的超高并发场景**
-以下情况可能需要其他方案：
-- **百万级 TPS 写入**：考虑最终一致性系统（如 DynamoDB）、分片架构（如 Kafka Partition）或并行共识算法（如 EPaxos）。
-- **频繁 Leader 切换**：网络分区或节点故障频发时，Raft 的选举机制会成为瓶颈。
-- **跨地域部署**：高延迟下 Raft 性能下降明显，可考虑 Multi-Raft 或异步复制。
+### **2. Scenarios Suitable for High Concurrency**
+Raft can still be used in high-concurrency scenarios, but needs to meet the following conditions:
+- **Read-Heavy, Write-Light**: Avoid Leader participation through `ReadIndex` or `Lease Read`, achieving high concurrency for linearizable reads.
+- **Batch Writing**: Merge multiple client requests into single log entry submission (like etcd's `batched writes`).
+- **Low-Latency Network**: RPC latency between nodes directly affects throughput (like same-datacenter deployment).
 
 ---
 
-### **4. 优化 Raft 并发的常见方法**
-若坚持使用 Raft，可通过以下手段提升并发能力：
-- **并行日志复制**：如 TiDB 的 **Multi-Raft**，将数据分片（Region），每个分片独立运行 Raft 组。
-- **Pipeline 提交**：Leader 异步发送日志条目，不等待前一条目提交（需处理乱序确认）。
-- **硬件加速**：使用 RDMA 网络、NVMe 存储降低延迟。
-- **客户端批处理**：合并多个操作为单个 Raft 日志（如 etcd 的批量事务）。
+### **3. Ultra-High Concurrency Scenarios Not Suitable for Raft**
+The following situations may require other solutions:
+- **Million-Level TPS Writes**: Consider eventually consistent systems (like DynamoDB), sharded architectures (like Kafka Partition) or parallel consensus algorithms (like EPaxos).
+- **Frequent Leader Switching**: When network partitions or node failures occur frequently, Raft's election mechanism becomes a bottleneck.
+- **Cross-Region Deployment**: Raft performance degrades significantly under high latency, consider Multi-Raft or asynchronous replication.
 
 ---
 
-### **5. 替代方案对比**
-| 场景                | 推荐方案                     | 举例                          |
-|---------------------|----------------------------|-------------------------------|
-| 强一致 + 中等并发    | Raft (优化后)               | etcd, TiKV                    |
-| 超高写入并发         | 分片 + 最终一致性            | Cassandra, Kafka              |
-| 低延迟 + 高吞吐      | 并行共识算法                 | EPaxos, Fast Paxos            |
-| 只读高并发           | Raft + 读缓存/Lease Read    | PolarDB (基于 Raft 的 RW 分离) |
+### **4. Common Methods to Optimize Raft Concurrency**
+If insisting on using Raft, concurrency can be improved through these methods:
+- **Parallel Log Replication**: Like TiDB's **Multi-Raft**, shard data into Regions, each running independent Raft groups.
+- **Pipeline Submission**: Leader asynchronously sends log entries without waiting for previous entry submission (needs to handle out-of-order acknowledgments).
+- **Hardware Acceleration**: Use RDMA networks, NVMe storage to reduce latency.
+- **Client Batching**: Merge multiple operations into single Raft log (like etcd's batch transactions).
 
 ---
 
-### **结论**
-- **适合**：Raft 可胜任**中等写入并发**（经优化可达 10K~100K TPS）且需要强一致性的场景（如分布式数据库元信息管理）。
-- **不适合**：若需百万级 TPS 或对延迟极度敏感（如高频交易），需选择其他架构。
+### **5. Alternative Solutions Comparison**
+| Scenario                | Recommended Solution                     | Examples                          |
+|-------------------------|------------------------------------------|-----------------------------------|
+| Strong Consistency + Medium Concurrency | Raft (optimized)               | etcd, TiKV                        |
+| Ultra-High Write Concurrency         | Sharding + Eventual Consistency            | Cassandra, Kafka                  |
+| Low Latency + High Throughput      | Parallel Consensus Algorithms                 | EPaxos, Fast Paxos                |
+| Read-Only High Concurrency           | Raft + Read Cache/Lease Read    | PolarDB (Raft-based RW separation) |
 
-建议通过压力测试（如使用 **etcd** 的 `benchmark` 工具）验证实际场景中的性能表现。
+---
+
+### **Conclusion**
+- **Suitable**: Raft can handle **medium write concurrency** (optimized to reach 10K~100K TPS) scenarios requiring strong consistency (like distributed database metadata management).
+- **Not Suitable**: If million-level TPS is needed or extremely sensitive to latency (like high-frequency trading), other architectures should be chosen.
+
+Recommend verifying performance in actual scenarios through stress testing (like using **etcd**'s `benchmark` tool).

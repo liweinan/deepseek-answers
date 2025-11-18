@@ -1,20 +1,20 @@
-# OpenShift的三种核心资源
+# OpenShift's Three Core Resources
 
-在 OpenShift（基于 Kubernetes）中，**Service Account**、**ConfigMap** 和 **Secret** 是三种核心资源，分别用于管理身份认证、配置数据和敏感信息。以下是它们的详细说明和对比：
+In OpenShift (based on Kubernetes), **Service Account**, **ConfigMap**, and **Secret** are three core resources used for managing authentication, configuration data, and sensitive information respectively. Here's a detailed explanation and comparison:
 
 ---
 
-## **1. Service Account（服务账户）**
-### **作用**
-- **身份认证**：为 Pod 或系统组件提供身份，用于与 OpenShift/Kubernetes API 交互。
-- **权限控制**：通过 `RoleBinding` 或 `ClusterRoleBinding` 关联权限（RBAC）。
+## **1. Service Account (Service Account)**
+### **Purpose**
+- **Authentication**: Provides identity for Pods or system components to interact with the OpenShift/Kubernetes API.
+- **Access Control**: Associates permissions through `RoleBinding` or `ClusterRoleBinding` (RBAC).
 
-### **特点**
-- 每个 Namespace 自动生成一个默认 Service Account（`default`）。
-- Pod 运行时如果没有显式指定，会自动使用 `default` Service Account。
-- 用于安全访问集群资源（如创建 Pod、读取 Secrets）。
+### **Characteristics**
+- Each namespace automatically generates a default Service Account (`default`).
+- If not explicitly specified, Pods will automatically use the `default` Service Account at runtime.
+- Used for secure access to cluster resources (such as creating Pods, reading Secrets).
 
-### **示例**
+### **Example**
 ```yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -23,23 +23,23 @@ metadata:
   namespace: my-namespace
 ```
 
-### **使用场景**
-- Pod 需要调用 Kubernetes API（如 CI/CD 流水线）。
-- 限制 Pod 的权限（避免使用高权限的 `default` 账户）。
+### **Use Cases**
+- Pods need to call the Kubernetes API (such as CI/CD pipelines).
+- Restrict Pod permissions (avoid using high-privilege `default` accounts).
 
 ---
 
-## **2. ConfigMap（配置映射）**
-### **作用**
-- **存储非敏感的配置数据**（如环境变量、配置文件）。
-- 将配置与容器镜像解耦，便于灵活管理。
+## **2. ConfigMap (Configuration Map)**
+### **Purpose**
+- **Store non-sensitive configuration data** (such as environment variables, configuration files).
+- Decouple configuration from container images for flexible management.
 
-### **特点**
-- 数据以键值对（Key-Value）形式存储。
-- 可以通过环境变量或挂载为文件的方式注入到 Pod 中。
-- **不加密**，不适合存储密码、密钥等敏感信息。
+### **Characteristics**
+- Data stored in key-value pairs format.
+- Can be injected into Pods through environment variables or mounted as files.
+- **Not encrypted**, not suitable for storing passwords, keys, and other sensitive information.
 
-### **示例**
+### **Example**
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -47,34 +47,34 @@ metadata:
   name: my-config
   namespace: my-namespace
 data:
-  # 键值对形式的配置
+  # Key-value pair configuration
   APP_COLOR: "blue"
   APP_MODE: "production"
-  # 配置文件内容
+  # Configuration file content
   config-file.properties: |
     server.port=8080
     logging.level=INFO
 ```
 
-### **使用场景**
-- 应用配置（如数据库连接字符串、日志级别）。
-- 动态调整参数无需重新构建镜像。
+### **Use Cases**
+- Application configuration (such as database connection strings, log levels).
+- Dynamically adjust parameters without rebuilding images.
 
 ---
 
-## **3. Secret（密钥）**
-### **作用**
-- **存储敏感信息**（如密码、TLS 证书、令牌）。
-- 数据默认以 Base64 编码（非加密，需配合 RBAC 和网络策略保护）。
+## **3. Secret (Secret)**
+### **Purpose**
+- **Store sensitive information** (such as passwords, TLS certificates, tokens).
+- Data is Base64 encoded by default (not encrypted, needs RBAC and network policies for protection).
 
-### **特点**
-- 类型包括：
-    - `Opaque`：通用密钥（如用户名/密码）。
-    - `kubernetes.io/tls`：TLS 证书。
-    - `docker-registry`：镜像仓库认证信息。
-- 比 ConfigMap 更安全（但需额外措施确保真正安全）。
+### **Characteristics**
+- Types include:
+    - `Opaque`: General secrets (such as username/password).
+    - `kubernetes.io/tls`: TLS certificates.
+    - `docker-registry`: Image repository authentication information.
+- More secure than ConfigMap (but requires additional measures for true security).
 
-### **示例**
+### **Example**
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -83,30 +83,31 @@ metadata:
   namespace: my-namespace
 type: Opaque
 data:
-  username: YWRtaW4=  # Base64 编码的 "admin"
-  password: MWYyZDFlMmU2N2Rm  # Base64 编码的 "1f2d1e2e67df"
+  username: YWRtaW4=  # Base64 encoded "admin"
+  password: MWYyZDFlMmU2N2Rm  # Base64 encoded "1f2d1e2e67df"
 ```
 
-### **使用场景**
-- 数据库密码、API 密钥。
-- TLS 证书或镜像仓库认证。
+### **Use Cases**
+- Database passwords, API keys.
+- TLS certificates or image repository authentication.
 
 ---
 
-## **三者的核心区别**
-| 特性                | Service Account         | ConfigMap               | Secret                  |
-|---------------------|------------------------|-------------------------|-------------------------|
-| **用途**            | 身份认证和权限管理      | 存储非敏感配置          | 存储敏感信息            |
-| **数据安全**        | 关联 RBAC 权限          | 明文存储                | Base64 编码（非加密）    |
-| **典型数据**        | API 访问令牌            | 环境变量、配置文件       | 密码、证书、令牌         |
-| **是否加密**        | 否（但受 RBAC 保护）    | 否                      | 否（需额外加密措施）     |
-| **挂载方式**        | 自动挂载到 Pod          | 环境变量或文件卷         | 环境变量或文件卷         |
+## **Core Differences Between the Three**
+| Feature                | Service Account         | ConfigMap               | Secret                  |
+|------------------------|------------------------|-------------------------|-------------------------|
+| **Purpose**            | Authentication and permission management | Store non-sensitive configuration | Store sensitive information |
+| **Data Security**      | Protected by RBAC permissions | Plain text storage      | Base64 encoded (not encrypted) |
+| **Typical Data**       | API access tokens        | Environment variables, config files | Passwords, certificates, tokens |
+| **Encryption**         | No (but protected by RBAC) | No                      | No (requires additional encryption measures) |
+| **Mounting Method**    | Automatically mounted to Pod | Environment variables or volume mounts | Environment variables or volume mounts |
 
 ---
 
-## **常见使用方式**
-### **1. 在 Pod 中引用 ConfigMap/Secret**
-#### **作为环境变量**
+## **Common Usage Methods**
+
+### **1. Referencing ConfigMap/Secret in Pods**
+#### **As Environment Variables**
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -117,19 +118,19 @@ spec:
     - name: my-container
       image: nginx
       env:
-        - name: APP_COLOR  # 从 ConfigMap 注入
+        - name: APP_COLOR  # Injected from ConfigMap
           valueFrom:
             configMapKeyRef:
               name: my-config
               key: APP_COLOR
-        - name: DB_PASSWORD  # 从 Secret 注入
+        - name: DB_PASSWORD  # Injected from Secret
           valueFrom:
             secretKeyRef:
               name: my-secret
               key: password
 ```
 
-#### **作为文件卷挂载**
+#### **As Volume Mounts**
 ```yaml
 spec:
   containers:
@@ -147,14 +148,14 @@ spec:
         secretName: my-secret
 ```
 
-### **2. 为 Pod 指定 Service Account**
+### **2. Specifying Service Account for Pods**
 ```yaml
 apiVersion: v1
 kind: Pod
 metadata:
   name: my-pod
 spec:
-  serviceAccountName: my-service-account  # 指定自定义 Service Account
+  serviceAccountName: my-service-account  # Specify custom Service Account
   containers:
     - name: my-container
       image: nginx
@@ -162,20 +163,20 @@ spec:
 
 ---
 
-## **最佳实践**
-1. **Service Account**：
-    - 避免 Pod 使用高权限的 `default` 账户，按需创建最小权限账户。
-2. **ConfigMap**：
-    - 仅存储非敏感配置，变更后需重启 Pod 或使用支持热加载的应用。
-3. **Secret**：
-    - 结合 **SealedSecret** 或 **Vault** 实现加密。
-    - 限制 Secret 的访问权限（RBAC）。
+## **Best Practices**
+1. **Service Account**:
+    - Avoid Pods using high-privilege `default` accounts, create minimum privilege accounts as needed.
+2. **ConfigMap**:
+    - Only store non-sensitive configurations, restart Pods after changes or use applications that support hot reloading.
+3. **Secret**:
+    - Combine with **SealedSecret** or **Vault** for encryption.
+    - Limit access to Secrets (RBAC).
 
 ---
 
-## **总结**
-- **Service Account**：管理 Pod 身份和权限。
-- **ConfigMap**：存储应用配置（非敏感）。
-- **Secret**：存储敏感数据（需额外保护）。
-- **三者协作**：  
-  `Service Account` 控制访问权限 → `ConfigMap` 提供配置 → `Secret` 保护密钥。
+## **Summary**
+- **Service Account**: Manages Pod identity and permissions.
+- **ConfigMap**: Stores application configurations (non-sensitive).
+- **Secret**: Stores sensitive data (requires additional protection).
+- **Three Working Together**:  
+  `Service Account` controls access permissions → `ConfigMap` provides configuration → `Secret` protects keys.

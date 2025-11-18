@@ -1,17 +1,24 @@
-# 工厂模式（Factory Pattern）和策略模式（Strategy Pattern）是两种常见的设计模式，它们解决的问题和应用场景不同。以下是它们的区别和简要介绍：
+# Factory Pattern vs Strategy Pattern
 
-### 1. **工厂模式**
-- **定义**: 工厂模式属于**创建型模式**，用于创建对象。它通过定义一个工厂类或方法，封装对象的创建逻辑，客户端无需关心具体类的实例化过程。
-- **核心思想**: 将对象的创建与使用分离，客户端通过工厂获取对象，而无需直接调用构造函数。
-- **主要组成部分**:
-    - **抽象产品**：定义产品的接口或抽象类。
-    - **具体产品**：实现抽象产品的具体类。
-    - **工厂**：负责根据输入参数或条件创建具体产品实例。
-- **应用场景**:
-    - 需要根据条件创建不同类型的对象。
-    - 对象的创建过程复杂或需要统一管理。
-    - 示例：根据用户输入创建不同类型的数据库连接（MySQL、PostgreSQL）。
-- **代码示例**（简单工厂）:
+Factory Pattern and Strategy Pattern are two common design patterns that solve different problems and are used in different scenarios.
+
+## 1. **Factory Pattern**
+
+- **Definition**: Factory Pattern belongs to **creational patterns**, used for creating objects. It encapsulates object creation logic by defining a factory class or method, so clients don't need to care about the instantiation process of specific classes.
+
+- **Core Idea**: Separate object creation from usage, clients obtain objects through the factory without directly calling constructors.
+
+- **Main Components**:
+    - **Abstract Product**: Defines the interface or abstract class of the product.
+    - **Concrete Product**: Implements the specific class of the abstract product.
+    - **Factory**: Responsible for creating instances of concrete products based on input parameters or conditions.
+
+- **Application Scenarios**:
+    - Need to create different types of objects based on conditions.
+    - Object creation process is complex or needs unified management.
+    - Example: Create different types of database connections (MySQL, PostgreSQL) based on user input.
+
+- **Code Example** (Simple Factory):
   ```java
   interface Product {
       void use();
@@ -36,23 +43,28 @@
   public class Main {
       public static void main(String[] args) {
           Product product = Factory.createProduct("A");
-          product.use(); // 输出: Using Product A
+          product.use(); // Output: Using Product A
       }
   }
   ```
 
-### 2. **策略模式**
-- **定义**: 策略模式属于**行为型模式**，用于定义一系列算法或行为，将它们封装成独立的策略类，使它们可以互相替换。
-- **核心思想**: 将算法或行为抽象出来，客户端可以动态选择不同的策略来执行任务，而不改变上下文的结构。
-- **主要组成部分**:
-    - **策略接口**：定义策略的抽象方法。
-    - **具体策略**：实现策略接口的具体算法或行为。
-    - **上下文**：持有策略对象，负责调用策略的方法。
-- **应用场景**:
-    - 需要根据情况动态选择不同的算法或行为。
-    - 避免使用大量的条件语句（如 if-else）来切换行为。
-    - 示例：支付系统中根据支付方式（信用卡、PayPal）选择不同的支付逻辑。
-- **代码示例**:
+## 2. **Strategy Pattern**
+
+- **Definition**: Strategy Pattern belongs to **behavioral patterns**, used to define a series of algorithms or behaviors, encapsulate them into independent strategy classes, making them interchangeable.
+
+- **Core Idea**: Abstract algorithms or behaviors, allowing clients to dynamically choose different strategies to perform tasks without changing the context structure.
+
+- **Main Components**:
+    - **Strategy Interface**: Defines abstract methods for strategies.
+    - **Concrete Strategy**: Implements specific algorithms or behaviors of the strategy interface.
+    - **Context**: Holds a strategy object and is responsible for calling the strategy's methods.
+
+- **Application Scenarios**:
+    - Need to dynamically choose different algorithms or behaviors based on situations.
+    - Avoid using large amounts of conditional statements (like if-else) to switch behaviors.
+    - Example: In a payment system, choose different payment logic based on payment method (credit card, PayPal).
+
+- **Code Example**:
   ```java
   interface Strategy {
       void execute();
@@ -82,57 +94,61 @@
       public static void main(String[] args) {
           Context context = new Context();
           context.setStrategy(new ConcreteStrategyA());
-          context.executeStrategy(); // 输出: Executing Strategy A
+          context.executeStrategy(); // Output: Executing Strategy A
       }
   }
   ```
 
-### 3. **工厂模式与策略模式的区别**
-| **维度**            | **工厂模式**                              | **策略模式**                              |
+## 3. **Differences Between Factory Pattern and Strategy Pattern**
+
+| **Dimension**            | **Factory Pattern**                              | **Strategy Pattern**                              |
 |---------------------|------------------------------------------|------------------------------------------|
-| **类型**            | 创建型模式                               | 行为型模式                               |
-| **主要目标**        | 封装对象的创建过程                       | 封装算法或行为，允许动态切换             |
-| **关注点**          | 如何创建对象                             | 如何执行不同的算法或行为                 |
-| **使用场景**        | 需要创建一系列相关对象                   | 需要在运行时选择不同的算法或行为         |
-| **典型结构**        | 工厂类返回不同类型的对象                 | 上下文类通过策略接口调用不同实现         |
-| **客户端交互**      | 客户端通过工厂获取对象                   | 客户端通过上下文切换策略                 |
-| **代码复杂度**      | 关注对象的实例化逻辑                     | 关注算法的替换和行为逻辑                 |
-| **示例**            | 创建不同类型的数据库连接                 | 根据支付方式选择不同的支付逻辑           |
+| **Type**            | Creational Pattern                               | Behavioral Pattern                               |
+| **Main Goal**        | Encapsulate object creation process                       | Encapsulate algorithms or behaviors, allow dynamic switching             |
+| **Focus**          | How to create objects                             | How to execute different algorithms or behaviors                 |
+| **Use Cases**        | Need to create a series of related objects                   | Need to dynamically choose different algorithms or behaviors at runtime         |
+| **Typical Structure**        | Factory class returns different types of objects                 | Context class calls different implementations through strategy interface         |
+| **Client Interaction**      | Clients obtain objects through factory                   | Clients switch strategies through context                 |
+| **Code Complexity**      | Focus on object instantiation logic                     | Focus on algorithm replacement and behavior logic                 |
+| **Examples**            | Create different types of database connections                 | Choose different payment logic based on payment method           |
 
-### 4. **总结**
-- **工厂模式**解决的是**对象创建**的问题，适合需要根据条件生成不同对象实例的场景。
-- **策略模式**解决的是**行为切换**的问题，适合需要动态选择不同算法或行为的场景。
-- **结合使用**：在实际开发中，工厂模式和策略模式可以结合使用。例如，工厂模式可以用来创建策略对象，然后通过策略模式动态选择执行的策略。
+## 4. **Summary**
 
-如果你有更具体的场景或需要更详细的代码示例，请告诉我！
+- **Factory Pattern** solves **object creation** problems, suitable for scenarios where different object instances need to be generated based on conditions.
+- **Strategy Pattern** solves **behavior switching** problems, suitable for scenarios where different algorithms or behaviors need to be dynamically selected.
+- **Combined Use**: In actual development, factory pattern and strategy pattern can be used together. For example, factory pattern can be used to create strategy objects, and then strategy pattern can be used to dynamically select the strategy to execute.
 
+If you have more specific scenarios or need more detailed code examples, please let me know!
 
 ---
 
+Next, I will demonstrate how to combine **Factory Pattern** and **Strategy Pattern** in a Java code example, showing how these two design patterns work together in actual scenarios. The example scenario is simulating a **payment system**, where the factory pattern is used to create different payment strategy objects, and the strategy pattern is used to dynamically select and execute different payment methods.
 
-下面我将通过一个结合**工厂模式**和**策略模式**的 Java 代码示例，展示如何在实际场景中联合使用这两种设计模式。示例的场景是模拟一个**支付系统**，其中工厂模式用于创建不同类型的支付策略对象，策略模式用于动态选择和执行不同的支付方式。
+### Scenario Description
 
-### 场景描述
-假设我们有一个支付系统，支持多种支付方式（如信用卡、PayPal、微信支付）。我们希望：
-1. 使用**工厂模式**根据用户输入动态创建不同的支付策略对象。
-2. 使用**策略模式**让客户端可以动态切换支付方式并执行支付逻辑。
+Suppose we have a payment system that supports multiple payment methods (such as credit card, PayPal, WeChat Pay). We hope to:
 
-### 设计思路
-- **策略模式**：定义一个 `PaymentStrategy` 接口，包含支付方法。不同的支付方式（如信用卡、PayPal）实现这个接口，提供具体的支付逻辑。
-- **工厂模式**：定义一个 `PaymentFactory` 类，根据输入的支付类型（如 "credit"、"paypal"）创建对应的支付策略对象。
-- **上下文**：定义一个 `PaymentContext` 类，持有支付策略对象并调用其支付方法。
-- **结合**：客户端通过工厂获取支付策略对象，并将其设置到上下文中，上下文执行具体的支付逻辑。
+1. Use **Factory Pattern** to dynamically create different payment strategy objects based on user input.
+2. Use **Strategy Pattern** to allow clients to dynamically switch payment methods and execute payment logic.
 
-### 代码实现
-以下是完整的 Java 代码示例：
+### Design Approach
+
+- **Strategy Pattern**: Define a `PaymentStrategy` interface containing payment methods. Different payment methods (such as credit card, PayPal) implement this interface, providing specific payment logic.
+- **Factory Pattern**: Define a `PaymentFactory` class that creates corresponding payment strategy objects based on input payment types (such as "credit", "paypal").
+- **Context**: Define a `PaymentContext` class that holds a payment strategy object and calls its payment method.
+- **Combination**: Clients obtain payment strategy objects through the factory, set them in the context, and the context executes specific payment logic.
+
+### Code Implementation
+
+Here is the complete Java code example:
 
 ```java
-// 支付策略接口（策略模式）
+// Payment Strategy Interface (Strategy Pattern)
 interface PaymentStrategy {
     void pay(double amount);
 }
 
-// 具体策略：信用卡支付
+// Concrete Strategy: Credit Card Payment
 class CreditCardPayment implements PaymentStrategy {
     private String cardNumber;
 
@@ -142,11 +158,11 @@ class CreditCardPayment implements PaymentStrategy {
 
     @Override
     public void pay(double amount) {
-        System.out.println("使用信用卡支付 " + amount + " 元，卡号: " + cardNumber);
+        System.out.println("Paying " + amount + " yuan with credit card, card number: " + cardNumber);
     }
 }
 
-// 具体策略：PayPal支付
+// Concrete Strategy: PayPal Payment
 class PayPalPayment implements PaymentStrategy {
     private String email;
 
@@ -156,11 +172,11 @@ class PayPalPayment implements PaymentStrategy {
 
     @Override
     public void pay(double amount) {
-        System.out.println("使用PayPal支付 " + amount + " 元，邮箱: " + email);
+        System.out.println("Paying " + amount + " yuan with PayPal, email: " + email);
     }
 }
 
-// 具体策略：微信支付
+// Concrete Strategy: WeChat Payment
 class WeChatPayment implements PaymentStrategy {
     private String weChatId;
 
@@ -170,11 +186,11 @@ class WeChatPayment implements PaymentStrategy {
 
     @Override
     public void pay(double amount) {
-        System.out.println("使用微信支付 " + amount + " 元，微信ID: " + weChatId);
+        System.out.println("Paying " + amount + " yuan with WeChat, WeChat ID: " + weChatId);
     }
 }
 
-// 支付工厂（工厂模式）
+// Payment Factory (Factory Pattern)
 class PaymentFactory {
     public static PaymentStrategy createPaymentStrategy(String paymentType, String credential) {
         switch (paymentType.toLowerCase()) {
@@ -185,12 +201,12 @@ class PaymentFactory {
             case "wechat":
                 return new WeChatPayment(credential);
             default:
-                throw new IllegalArgumentException("不支持的支付类型: " + paymentType);
+                throw new IllegalArgumentException("Unsupported payment type: " + paymentType);
         }
     }
 }
 
-// 支付上下文（策略模式的上下文）
+// Payment Context (Strategy Pattern Context)
 class PaymentContext {
     private PaymentStrategy paymentStrategy;
 
@@ -200,30 +216,30 @@ class PaymentContext {
 
     public void executePayment(double amount) {
         if (paymentStrategy == null) {
-            throw new IllegalStateException("未设置支付策略");
+            throw new IllegalStateException("Payment strategy not set");
         }
         paymentStrategy.pay(amount);
     }
 }
 
-// 主程序：测试工厂模式和策略模式的结合
+// Main Program: Testing the Combination of Factory Pattern and Strategy Pattern
 public class PaymentSystem {
     public static void main(String[] args) {
-        // 创建支付上下文
+        // Create payment context
         PaymentContext context = new PaymentContext();
 
-        // 使用工厂模式创建支付策略
-        // 场景1：用户选择信用卡支付
+        // Use factory pattern to create payment strategies
+        // Scenario 1: User chooses credit card payment
         PaymentStrategy creditCardStrategy = PaymentFactory.createPaymentStrategy("credit", "1234-5678-9012-3456");
         context.setPaymentStrategy(creditCardStrategy);
         context.executePayment(100.0);
 
-        // 场景2：用户切换到PayPal支付
+        // Scenario 2: User switches to PayPal payment
         PaymentStrategy payPalStrategy = PaymentFactory.createPaymentStrategy("paypal", "user@example.com");
         context.setPaymentStrategy(payPalStrategy);
         context.executePayment(200.0);
 
-        // 场景3：用户切换到微信支付
+        // Scenario 3: User switches to WeChat payment
         PaymentStrategy weChatStrategy = PaymentFactory.createPaymentStrategy("wechat", "wx_user123");
         context.setPaymentStrategy(weChatStrategy);
         context.executePayment(300.0);
@@ -231,61 +247,67 @@ public class PaymentSystem {
 }
 ```
 
-### 代码运行结果
-运行上述代码后，输出如下：
+### Code Execution Results
+
+Running the above code will produce the following output:
 ```
-使用信用卡支付 100.0 元，卡号: 1234-5678-9012-3456
-使用PayPal支付 200.0 元，邮箱: user@example.com
-使用微信支付 300.0 元，微信ID: wx_user123
+Paying 100.0 yuan with credit card, card number: 1234-5678-9012-3456
+Paying 200.0 yuan with PayPal, email: user@example.com
+Paying 300.0 yuan with WeChat, WeChat ID: wx_user123
 ```
 
-### 代码讲解
-1. **策略模式部分**：
-    - `PaymentStrategy` 接口定义了支付方法 `pay`，所有具体支付方式（如 `CreditCardPayment`、`PayPalPayment`、`WeChatPayment`）都实现该接口。
-    - 每个具体策略类封装了特定支付方式的逻辑，例如信用卡支付需要卡号，PayPal支付需要邮箱。
-    - `PaymentContext` 是策略模式的上下文，负责持有当前支付策略并调用其 `pay` 方法。客户端通过 `setPaymentStrategy` 动态切换支付方式。
+### Code Explanation
 
-2. **工厂模式部分**：
-    - `PaymentFactory` 是一个简单工厂类，提供了静态方法 `createPaymentStrategy`，根据输入的支付类型（如 "credit"、"paypal"）和凭证（如卡号、邮箱）创建对应的支付策略对象。
-    - 工厂模式将支付策略对象的创建逻辑集中管理，客户端无需直接实例化具体策略类，降低了耦合性。
+1. **Strategy Pattern Part**:
+    - The `PaymentStrategy` interface defines the payment method `pay`, and all specific payment methods (such as `CreditCardPayment`, `PayPalPayment`, `WeChatPayment`) implement this interface.
+    - Each concrete strategy class encapsulates the logic of a specific payment method, such as credit card payment requiring card number, PayPal payment requiring email.
+    - `PaymentContext` is the context of the strategy pattern, responsible for holding the current payment strategy and calling its `pay` method. Clients can dynamically switch payment methods through `setPaymentStrategy`.
 
-3. **结合使用**：
-    - 在 `main` 方法中，客户端通过 `PaymentFactory` 创建不同类型的支付策略对象（如信用卡、PayPal、微信）。
-    - 创建的策略对象被设置到 `PaymentContext` 中，上下文调用策略的 `pay` 方法执行支付逻辑。
-    - 这种设计允许客户端在运行时动态切换支付方式（策略模式），而支付策略的创建则由工厂模式统一管理。
+2. **Factory Pattern Part**:
+    - `PaymentFactory` is a simple factory class that provides a static method `createPaymentStrategy` which creates corresponding payment strategy objects based on input payment types (such as "credit", "paypal") and credentials (such as card number, email).
+    - The factory pattern centralizes the creation logic of payment strategy objects, and clients don't need to directly instantiate concrete strategy classes, reducing coupling.
 
-4. **优势**：
-    - **工厂模式**：封装了支付策略对象的创建过程，客户端只需提供支付类型和凭证，无需关心具体类的构造细节。如果新增支付方式，只需在工厂中添加新的 case 分支。
-    - **策略模式**：将支付逻辑抽象为可替换的策略，客户端可以动态切换支付方式，而无需修改上下文代码。
-    - **解耦**：工厂模式和策略模式结合，客户端代码与具体支付方式的实现完全解耦，增强了系统的扩展性和维护性。
-    - **可扩展性**：如果需要新增一种支付方式（例如支付宝），只需添加一个新的策略类（如 `AlipayPayment`）并在工厂中添加对应的创建逻辑，现有代码无需改动。
+3. **Combined Use**:
+    - In the `main` method, clients create different payment strategy objects through `PaymentFactory` (such as credit card, PayPal, WeChat).
+    - The created strategy objects are set in `PaymentContext`, and the context calls the strategy's `pay` method to execute payment logic.
+    - This design allows clients to dynamically switch payment methods (strategy pattern) at runtime, while the creation of payment strategies is uniformly managed by the factory pattern.
 
-5. **潜在改进**：
-    - 可以将简单工厂升级为**抽象工厂模式**，以支持更复杂的对象创建逻辑（例如，创建与支付相关的多种对象）。
-    - 可以结合**依赖注入**，通过配置文件或框架自动注入支付策略，减少硬编码。
+4. **Advantages**:
+    - **Factory Pattern**: Encapsulates the creation process of payment strategy objects, clients only need to provide payment type and credentials, without caring about the construction details of concrete classes. If a new payment method is added, only a new case branch needs to be added in the factory.
+    - **Strategy Pattern**: Abstracts payment logic into replaceable strategies, clients can dynamically switch payment methods without modifying context code.
+    - **Decoupling**: The combination of factory pattern and strategy pattern completely decouples client code from the implementation of specific payment methods, enhancing system extensibility and maintainability.
+    - **Extensibility**: If you need to add a new payment method (such as Alipay), you only need to add a new strategy class (such as `AlipayPayment`) and add corresponding creation logic in the factory, without modifying existing code.
 
-### 总结
-通过这个示例，我们展示了如何结合工厂模式和策略模式来实现一个灵活的支付系统：
-- **工厂模式**负责创建支付策略对象，隐藏了对象实例化的细节。
-- **策略模式**允许动态切换支付方式，保持支付逻辑的独立性和可替换性。
-- 两者的结合使得系统既易于扩展（新增支付方式），又灵活（动态切换支付逻辑）。
+5. **Potential Improvements**:
+    - The simple factory can be upgraded to **Abstract Factory Pattern** to support more complex object creation logic (for example, creating multiple objects related to payments).
+    - It can be combined with **Dependency Injection**, automatically injecting payment strategies through configuration files or frameworks, reducing hard coding.
 
-如果你有其他场景或需要进一步优化代码，请告诉我！
+### Summary
+
+Through this example, we demonstrated how to combine factory pattern and strategy pattern to implement a flexible payment system:
+
+- **Factory Pattern** is responsible for creating payment strategy objects, hiding the details of object instantiation.
+- **Strategy Pattern** allows dynamic switching of payment methods, maintaining the independence and replaceability of payment logic.
+- The combination of the two makes the system both easy to extend (adding new payment methods) and flexible (dynamically switching payment logic).
+
+If you have other scenarios or need further code optimization, please let me know!
 
 ---
 
-下面我将为结合**工厂模式**和**策略模式**的支付系统示例生成一个 **Mermaid UML 类图**，展示类之间的关系和结构。Mermaid 是一种基于文本的图表生成工具，适合描述 UML 类图。类图将基于之前的 Java 代码示例，包含策略模式和工厂模式的组件。
+Next, I will generate a **Mermaid UML class diagram** for the combined **Factory Pattern** and **Strategy Pattern** payment system example, showing the relationships and structure between classes. Mermaid is a text-based diagram generation tool suitable for describing UML class diagrams. The class diagram will be based on the previous Java code example, including components of both strategy pattern and factory pattern.
 
-### 设计说明
-- **策略模式**：包含 `PaymentStrategy` 接口及其实现类（`CreditCardPayment`、`PayPalPayment`、`WeChatPayment`），以及使用策略的 `PaymentContext` 类。
-- **工厂模式**：包含 `PaymentFactory` 类，负责创建 `PaymentStrategy` 的具体实现。
-- **关系**：
-    - `PaymentStrategy` 是接口，具体支付方式类通过**实现**关系（`..|>`)关联。
-    - `PaymentContext` 通过**组合**关系（`o--`)持有 `PaymentStrategy`。
-    - `PaymentFactory` 通过**创建**关系（`..>`)生成 `PaymentStrategy` 实例。
+### Design Explanation
 
-### Mermaid UML 类图代码
-以下是 Mermaid 格式的 UML 类图代码，描述了支付系统的类结构：
+- **Strategy Pattern**: Includes the `PaymentStrategy` interface and its implementation classes (`CreditCardPayment`, `PayPalPayment`, `WeChatPayment`), as well as the `PaymentContext` class that uses the strategies.
+- **Factory Pattern**: Includes the `PaymentFactory` class responsible for creating `PaymentStrategy` implementations.
+- **Relationships**:
+    - `PaymentStrategy` is an interface, and concrete payment classes are associated through **implementation** relationships (`..|>`).
+    - `PaymentContext` is associated with `PaymentStrategy` through **composition** relationship (`o--`).
+    - `PaymentFactory` generates `PaymentStrategy` instances through **creation** relationship (`..>`).
+
+### Mermaid UML Class Diagram Code
+
+Here is the Mermaid format UML class diagram code describing the class structure of the payment system:
 
 ```mermaid
 classDiagram
@@ -329,41 +351,37 @@ classDiagram
     PaymentFactory ..> PaymentStrategy : creates
 ```
 
-### 代码讲解
-1. **类定义**：
-    - `PaymentStrategy` 是一个接口（使用 `<<interface>>` 标注），定义了 `pay` 方法。
-    - `CreditCardPayment`、`PayPalPayment` 和 `WeChatPayment` 是具体策略类，各自有私有属性（如 `cardNumber`、`email`、`weChatId`）和构造函数。
-    - `PaymentContext` 持有 `PaymentStrategy` 的引用，并提供 `setPaymentStrategy` 和 `executePayment` 方法。
-    - `PaymentFactory` 提供静态方法 `createPaymentStrategy` 用于创建策略对象（`$` 表示静态方法）。
+### Code Explanation
 
-2. **关系**：
-    - `PaymentStrategy <|.. CreditCardPayment` 等表示实现关系（空心箭头，虚线）。
-    - `PaymentContext o--> "1" PaymentStrategy` 表示组合关系（实心菱形箭头，`1` 表示一对一关系）。
-    - `PaymentFactory ..> PaymentStrategy` 表示创建关系（虚线箭头，表示工厂生成策略对象）。
+1. **Class Definitions**:
+    - `PaymentStrategy` is an interface (marked with `<<interface>>`), defining the `pay` method.
+    - `CreditCardPayment`, `PayPalPayment`, and `WeChatPayment` are concrete strategy classes, each with private attributes (such as `cardNumber`, `email`, `weChatId`) and constructors.
+    - `PaymentContext` holds a reference to `PaymentStrategy` and provides `setPaymentStrategy` and `executePayment` methods.
+    - `PaymentFactory` provides a static method `createPaymentStrategy` for creating strategy objects (the `$` indicates a static method).
 
-3. **Mermaid 语法**：
-    - `classDiagram` 用于定义 UML 类图。
-    - 类内部用 `+` 表示公共方法/属性，`-` 表示私有属性。
-    - 关系使用 `..>`（依赖/创建）、`<|..`（实现）、`o--`（组合）等符号。
+2. **Relationships**:
+    - `PaymentStrategy <|.. CreditCardPayment` etc. represent implementation relationships (hollow arrow, dashed line).
+    - `PaymentContext o--> "1" PaymentStrategy` represents a composition relationship (solid diamond arrow, `"1"` indicates a one-to-one relationship).
+    - `PaymentFactory ..> PaymentStrategy` represents a creation relationship (dashed arrow, indicating the factory generates strategy objects).
 
-### 生成图表的说明
-- 上述 Mermaid 代码可以在支持 Mermaid 的工具中渲染（如 Mermaid Live Editor、VS Code 的 Mermaid 插件，或 GitHub Markdown）。
-- 渲染后，图表将清晰展示：
-    - 策略模式的接口和实现类。
-    - 工厂模式中工厂与策略对象的关系。
-    - 上下文与策略的组合关系。
+3. **Mermaid Syntax**:
+    - `classDiagram` is used to define UML class diagrams.
+    - Inside classes, `+` represents public methods/attributes, `-` represents private attributes.
+    - Relationships use symbols like `..>` (dependency/creation), `<|..` (implementation), `o--` (composition), etc.
 
-### 运行方式
-如果你想预览图表，可以：
-1. 复制上述 Mermaid 代码。
-2. 粘贴到 [Mermaid Live Editor](https://mermaid.live/) 或其他支持 Mermaid 的平台。
-3. 查看生成的 UML 类图。
+### Diagram Generation Instructions
 
-### 补充说明
-- 该类图清晰展示了工厂模式和策略模式的结合：
-    - **策略模式**：`PaymentStrategy` 和其实现类（`CreditCardPayment` 等）体现了可替换的支付行为。
-    - **工厂模式**：`PaymentFactory` 封装了策略对象的创建逻辑。
-    - **上下文**：`PaymentContext` 动态使用不同的支付策略。
-- 如果需要对图表进行调整（例如添加更多细节、修改样式）或生成其他类型的图（如时序图），请告诉我！
+To preview the diagram, you can:
+1. Copy the above Mermaid code.
+2. Paste it into [Mermaid Live Editor](https://mermaid.live/) or other platforms that support Mermaid.
+3. View the generated UML class diagram.
 
-希望这个 UML 类图对你理解工厂模式和策略模式的结合有帮助！如果有其他需求，请随时告知。
+### Additional Instructions
+
+- This class diagram clearly shows:
+    - The strategy pattern: `PaymentStrategy` interface and its implementation classes (`CreditCardPayment`, etc.) demonstrate replaceable payment behaviors.
+    - The factory pattern: `PaymentFactory` encapsulates the creation logic of strategy objects.
+    - The context: `PaymentContext` dynamically uses different payment strategies.
+- If you need to adjust the diagram (such as adding more details, modifying styles) or generate other types of diagrams (such as sequence diagrams), please let me know!
+
+I hope this UML class diagram helps you understand the combination of factory pattern and strategy pattern! If you have other needs, please feel free to tell me!

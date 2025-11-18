@@ -1,4 +1,4 @@
-# # Bastion Host Creation in OpenShift CI Operator
+# Bastion Host Creation in OpenShift CI Operator
 
 The OpenShift CI Operator project provisions the AWS bastion host using a combination of a shell script and a CloudFormation template. The main logic is found in:
 

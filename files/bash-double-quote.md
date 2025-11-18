@@ -1,219 +1,219 @@
-# Bash的双方括号 `[[ ]]`
+# Bash Double Brackets `[[ ]]`
 
-在 Bash 中，双方括号 `[[ ]]` 是 **扩展的测试命令**（也称为条件表达式），相比传统的单方括号 `[ ]` 提供了更强大的功能和更灵活的语法。它是 Bash 的关键字（而非外部命令），因此在某些情况下更高效且更安全。
+In Bash, double brackets `[[ ]]` are **extended test commands** (also known as conditional expressions), providing more powerful features and more flexible syntax compared to traditional single brackets `[ ]`. It is a Bash keyword (not an external command), so in some cases it is more efficient and safer.
 
 ---
 
-### **主要特点**
-1. **不需要对变量加引号**  
-   `[[ ]]` 会自动处理变量中的空格和特殊字符，避免意外分词（word splitting）。
+### **Main Features**
+1. **No need to quote variables**  
+   `[[ ]]` automatically handles spaces and special characters in variables, avoiding unexpected word splitting.
    ```bash
    name="Hello World"
-   [[ $name == "Hello World" ]]  # 无需写成 "$name"
+   [[ $name == "Hello World" ]]  # No need to write "$name"
    ```
 
-2. **支持更强大的模式匹配**  
-   可以使用 `==` 或 `=~` 进行通配符和正则表达式匹配：
+2. **Supports more powerful pattern matching**  
+   Can use `==` or `=~` for wildcard and regular expression matching:
    ```bash
-   [[ "file.txt" == *.txt ]]      # 通配符匹配，返回 true
-   [[ "123" =~ ^[0-9]+$ ]]       # 正则匹配，返回 true
+   [[ "file.txt" == *.txt ]]      # Wildcard matching, returns true
+   [[ "123" =~ ^[0-9]+$ ]]       # Regular expression matching, returns true
    ```
 
-3. **逻辑运算符更直观**  
-   支持 `&&`（与）、`||`（或） 代替 `-a`、`-o`：
+3. **More intuitive logical operators**  
+   Supports `&&` (AND), `||` (OR) instead of `-a`, `-o`:
    ```bash
-   [[ $x -gt 10 && $y -lt 20 ]]  # 无需写成 [ $x -gt 10 -a $y -lt 20 ]
+   [[ $x -gt 10 && $y -lt 20 ]]  # No need to write [ $x -gt 10 -a $y -lt 20 ]
    ```
 
-4. **支持字符串比较的字典序**  
-   直接使用 `>` 或 `<` 比较字符串（按字典序）：
+4. **Supports lexicographical string comparison**  
+   Directly use `>` or `<` to compare strings (lexicographically):
    ```bash
-   [[ "apple" < "banana" ]]  # 返回 true
+   [[ "apple" < "banana" ]]  # Returns true
    ```
 
-5. **避免路径扩展（globbing）问题**  
-   在 `[[ ]]` 中，`==` 的右侧不会触发文件名扩展：
+5. **Avoids path expansion (globbing) issues**  
+   In `[[ ]]`, the right side of `==` won't trigger filename expansion:
    ```bash
-   [[ "file" == * ]]  # 只是通配符匹配，不会展开为当前目录的文件名
+   [[ "file" == * ]]  # Just wildcard matching, won't expand to current directory filenames
    ```
 
 ---
 
-### **常见用法示例**
-| 功能                | `[[ ]]` 语法                          | 等效的 `[ ]` 语法（对比）          |
+### **Common Usage Examples**
+| Function                | `[[ ]]` Syntax                          | Equivalent `[ ]` Syntax (for comparison)          |
 |---------------------|---------------------------------------|----------------------------------|
-| 字符串相等          | `[[ "$str" == "value" ]]`             | `[ "$str" = "value" ]`           |
-| 字符串不相等        | `[[ "$str" != "value" ]]`             | `[ "$str" != "value" ]`          |
-| 数字比较            | `[[ "$num" -gt 10 ]]`                 | `[ "$num" -gt 10 ]`              |
-| 文件存在            | `[[ -e "file.txt" ]]`                 | `[ -e "file.txt" ]`              |
-| 逻辑组合            | `[[ -f file && -r file ]]`            | `[ -f file -a -r file ]`         |
-| 正则匹配            | `[[ "$str" =~ ^[0-9]+$ ]]`            | 无（需外部工具如 `grep`）        |
+| String equality          | `[[ "$str" == "value" ]]`             | `[ "$str" = "value" ]`           |
+| String inequality        | `[[ "$str" != "value" ]]`             | `[ "$str" != "value" ]`          |
+| Numeric comparison            | `[[ "$num" -gt 10 ]]`                 | `[ "$num" -gt 10 ]`              |
+| File exists            | `[[ -e "file.txt" ]]`                 | `[ -e "file.txt" ]`              |
+| Logical combination            | `[[ -f file && -r file ]]`            | `[ -f file -a -r file ]`         |
+| Regular expression matching            | `[[ "$str" =~ ^[0-9]+$ ]]`            | Not available (requires external tools like `grep`)        |
 
 ---
 
-### **注意事项**
-1. **兼容性**  
-   `[[ ]]` 是 Bash 的扩展功能，在 POSIX Shell（如 `sh`）中不可用。脚本首行应指定 `#!/bin/bash`。
+### **Notes**
+1. **Compatibility**  
+   `[[ ]]` is a Bash extension feature, not available in POSIX Shell (such as `sh`). The script's first line should specify `#!/bin/bash`.
 
-2. **变量为空时的安全性**  
-   即使变量未定义或为空，`[[ ]]` 也不会报错：
+2. **Safety when variable is empty**  
+   Even if variable is undefined or empty, `[[ ]]` won't report errors:
    ```bash
-   [[ $undefined_var == "" ]]  # 安全，返回 true
-   [ $undefined_var = "" ]     # 可能报错（建议写成 [ "${undefined_var}" = "" ]）
+   [[ $undefined_var == "" ]]  # Safe, returns true
+   [ $undefined_var = "" ]     # May error (recommended to write [ "${undefined_var}" = "" ])
    ```
 
-3. **避免与 `[ ]` 混淆**
-    - `[ ]` 是传统测试命令（实际是 `test` 命令的别名），需要严格遵循空格和引号规则。
-    - `[[ ]]` 更现代，推荐在 Bash 中使用。
+3. **Avoid confusion with `[ ]`**
+    - `[ ]` is traditional test command (actually an alias for `test` command), needs to strictly follow spaces and quotation rules.
+    - `[[ ]]` is more modern, recommended for use in Bash.
 
 ---
 
-### **为什么推荐使用 `[[ ]]`？**
-- 更简洁的语法（如直接使用 `&&`）。
-- 更少的引号需求（减少错误）。
-- 支持高级匹配（正则、通配符）。
-- 更高的执行效率（因为是 Bash 内置关键字）。
+### **Why recommend using `[[ ]]`?**
+- More concise syntax (like directly using `&&`).
+- Fewer quotation requirements (reduces errors).
+- Supports advanced matching (regular expressions, wildcards).
+- Higher execution efficiency (because it's a Bash built-in keyword).
 
 ---
 
-### 经典用例
+### Classic Use Cases
 ```bash
 if [[ "$file" == *.txt && -f "$file" ]]; then
-    echo "这是一个文本文件且存在"
+    echo "This is a text file and exists"
 fi
 
-# 正则匹配提取分组
+# Regular expression matching with group extraction
 if [[ "2023-01-01" =~ ^([0-9]{4})-([0-9]{2}) ]]; then
     year=${BASH_REMATCH[1]}
     month=${BASH_REMATCH[2]}
-    echo "年份: $year, 月份: $month"
+    echo "Year: $year, Month: $month"
 fi
 ```
 
-总之，在 Bash 脚本中优先使用 `[[ ]]`，除非需要兼容 POSIX Shell（如 `sh`）。
+In summary, prefer using `[[ ]]` in Bash scripts, unless POSIX Shell compatibility (like `sh`) is needed.
 
 ---
 
-在 Bash 脚本中，单括号 `[]` 和双括号 `[[]]` 都用于条件测试，但它们的用法、功能和行为有显著区别。以下是详细说明，帮助你判断何时使用单括号、何时使用双括号。
+In Bash scripts, single brackets `[]` and double brackets `[[]]` are both used for conditional testing, but their usage, functionality, and behavior have significant differences. Here is a detailed explanation to help you determine when to use single brackets and when to use double brackets.
 
 ---
 
-### 1. 单括号 `[]`
-- **定义**：单括号是 Bash 的内置 `test` 命令的简写形式，用于条件测试。
-- **特点**：
-    - 遵循 POSIX 标准，兼容性强，可在大多数 shell（如 sh）中使用。
-    - 语法较为严格，需要小心处理变量引用和空格。
-    - 不支持高级模式匹配（如正则表达式）和逻辑运算符 `&&`、`||`。
-    - 变量未定义或为空可能导致语法错误，需要用引号保护。
-- **用法**：
-    - 用于基本比较（字符串、整数、文件属性等）。
-    - 常见操作符：
-        - 字符串：`=`, `!=`, `-z`, `-n`
-        - 整数：`-eq`, `-ne`, `-lt`, `-le`, `-gt`, `-ge`
-        - 文件：`-e`, `-d`, `-f`, `-r`, `-w`, `-x`
-    - 逻辑运算需要使用 `-a`（与）、`-o`（或）或结合多个 `test` 命令。
-- **语法要求**：
-    - 变量需要用双引号括起来以避免空值错误。
-    - 两侧必须有空格，例如 `[ "$var" = "value" ]`。
-- **示例**：
+### 1. Single Brackets `[]`
+- **Definition**: Single brackets are shorthand for Bash's built-in `test` command, used for conditional testing.
+- **Features**:
+    - Follows POSIX standard, strong compatibility, can be used in most shells (like sh).
+    - Stricter syntax, needs careful handling of variable references and spaces.
+    - Doesn't support advanced pattern matching (like regular expressions) and logical operators `&&`, `||`.
+    - Undefined or empty variables may cause syntax errors, need quotation protection.
+- **Usage**:
+    - For basic comparisons (strings, integers, file attributes, etc.).
+    - Common operators:
+        - Strings: `=`, `!=`, `-z`, `-n`
+        - Integers: `-eq`, `-ne`, `-lt`, `-le`, `-gt`, `-ge`
+        - Files: `-e`, `-d`, `-f`, `-r`, `-w`, `-x`
+    - Logical operations need to use `-a` (AND), `-o` (OR) or combine multiple `test` commands.
+- **Syntax Requirements**:
+    - Variables need to be enclosed in double quotes to avoid empty value errors.
+    - Must have spaces on both sides, e.g. `[ "$var" = "value" ]`.
+- **Example**:
   ```bash
-  # 检查变量是否为空
+  # Check if variable is empty
   if [ -z "$var" ]; then
       echo "var is empty"
   fi
 
-  # 比较整数
+  # Compare integers
   if [ "$num" -eq 10 ]; then
       echo "num is 10"
   fi
 
-  # 逻辑与
+  # Logical AND
   if [ "$a" = "foo" ] && [ "$b" = "bar" ]; then
       echo "Both conditions are true"
   fi
   ```
 
-- **注意事项**：
-    - 如果变量未定义或为空，可能会导致语法错误，例如 `[ $var = "value" ]` 当 `$var` 为空时会出错。
-    - 不支持通配符（如 `*`）或正则表达式。
-    - 字符串比较使用 `=` 而不是 `==`（虽然 Bash 中 `==` 也兼容）。
+- **Notes**:
+    - If variable is undefined or empty, may cause syntax errors, e.g. `[ $var = "value" ]` will error when `$var` is empty.
+    - Doesn't support wildcards (like `*`) or regular expressions.
+    - String comparison uses `=` instead of `==` (though `==` is also compatible in Bash).
 
 ---
 
-### 2. 双括号 `[[]]`
-- **定义**：双括号是 Bash 的扩展功能，专门为 Bash 和 ksh 设计，功能更强大。
-- **特点**：
-    - 不遵循 POSIX 标准，仅在 Bash、zsh 等现代 shell 中支持。
-    - 支持更灵活的语法，如正则表达式、通配符、逻辑运算符 `&&` 和 `||`。
-    - 变量无需总是用引号括起来，空值处理更安全。
-    - 性能略优于单括号，因为它是 Bash 的关键字而非外部命令。
-- **用法**：
-    - 支持所有单括号的操作符。
-    - 额外支持：
-        - 逻辑运算符：`&&`（与）、`||`（或）、`!`（非）。
-        - 正则表达式：`=~` 运算符。
-        - 通配符：使用 `==` 或 `!=` 支持 glob 模式。
-        - 更灵活的比较：支持 `==` 用于字符串，整数比较更直观。
-- **语法要求**：
-    - 两侧仍需空格，例如 `[[ $var == "value" ]]`.
-    - 变量可以不加引号，`[[ $var == value ]]` 不会因 `$var` 为空而报错。
-- **示例**：
+### 2. Double Brackets `[[]]`
+- **Definition**: Double brackets are Bash extension features, specifically designed for Bash and ksh, with more powerful functions.
+- **Features**:
+    - Doesn't follow POSIX standard, only supported in modern shells like Bash, zsh.
+    - Supports more flexible syntax, like regular expressions, wildcards, logical operators `&&` and `||`.
+    - Variables don't always need to be quoted, safer handling of empty values.
+    - Slightly better performance than single brackets, because it's a Bash keyword rather than external command.
+- **Usage**:
+    - Supports all operators of single brackets.
+    - Additional support:
+        - Logical operators: `&&` (AND), `||` (OR), `!` (NOT).
+        - Regular expressions: `=~` operator.
+        - Wildcards: Use `==` or `!=` to support glob patterns.
+        - More flexible comparisons: supports `==` for strings, more intuitive integer comparisons.
+- **Syntax Requirements**:
+    - Still needs spaces on both sides, e.g. `[[ $var == "value" ]]`.
+    - Variables can be unquoted, `[[ $var == value ]]` won't error when `$var` is empty.
+- **Example**:
   ```bash
-  # 检查字符串是否匹配模式
+  # Check if string matches pattern
   if [[ $var == "test"* ]]; then
       echo "var starts with test"
   fi
 
-  # 使用正则表达式
+  # Use regular expression
   if [[ $var =~ ^[0-9]+$ ]]; then
       echo "var is a number"
   fi
 
-  # 逻辑运算
+  # Logical operations
   if [[ $a == "foo" && $b == "bar" ]]; then
       echo "Both conditions are true"
   fi
   ```
 
-- **注意事项**：
-    - 不兼容 POSIX shell（如 sh），不能在严格的 POSIX 环境中使用。
-    - 支持更现代的编程风格，适合复杂条件判断。
+- **Notes**:
+    - Not compatible with POSIX shell (like sh), cannot be used in strict POSIX environments.
+    - Supports more modern programming style, suitable for complex conditional judgments.
 
 ---
 
-### 何时使用单括号、何时使用双括号？
+### When to use single brackets, when to use double brackets?
 
-| 场景                            | 单括号 `[]`        | 双括号 `[[]]` |
+| Scenario                            | Single Brackets `[]`        | Double Brackets `[[]]` |
 |-------------------------------|-----------------|---------------|
-| **需要 POSIX 兼容性**（如在 sh 脚本中运行） | ✅ 使用            | ❌ 不支持 |
-| **基本字符串/整数比较**                | ✅ 适合            | ✅ 适合 |
-| **文件属性检查**（如 `-f`, `-d`）      | ✅ 常用            | ✅ 同样支持 |
-| **逻辑运算**（`&&`, `\|\|`）        | ❌ 需要外部 `&&` 或 `-a`/`-o` | ✅ 直接支持 |
-| **正则表达式匹配**                   | ❌ 不支持           | ✅ 使用 `=~` |
-| **通配符匹配**（如 `*`, `?`）         | ❌ 不支持           | ✅ 使用 `==` |
-| **变量可能为空**                    | ❌ 需加引号          | ✅ 更安全 |
-| **复杂条件表达式**                   | ❌ 不够灵活          | ✅ 推荐 |
-| **性能敏感场景**                    | ❌ 略慢（调用 test 命令） | ✅ 更快（Bash 内置） |
+| **Need POSIX compatibility** (run in sh scripts) | ✅ Use            | ❌ Not supported |
+| **Basic string/integer comparison**                | ✅ Suitable            | ✅ Suitable |
+| **File attribute check** (like `-f`, `-d`)      | ✅ Common            | ✅ Also supported |
+| **Logical operations** (`&&`, `\|\|`)        | ❌ Need external `&&` or `-a`/`-o` | ✅ Direct support |
+| **Regular expression matching**                   | ❌ Not supported           | ✅ Use `=~` |
+| **Wildcard matching** (like `*`, `?`)         | ❌ Not supported           | ✅ Use `==` |
+| **Variable may be empty**                    | ❌ Need quotes          | ✅ Safer |
+| **Complex conditional expressions**                   | ❌ Not flexible enough          | ✅ Recommended |
+| **Performance-sensitive scenarios**                    | ❌ Slightly slower (calls test command) | ✅ Faster (Bash built-in) |
 
 ---
 
-### 快速总结
-- **用单括号 `[]`**：
-    - 需要编写可移植脚本（POSIX 兼容，运行在 sh 或其他基本 shell）。
-    - 简单的条件测试（字符串、整数、文件属性）。
-    - 环境限制无法使用 Bash 扩展功能。
+### Quick Summary
+- **Use single brackets `[]`**:
+    - Need to write portable scripts (POSIX compatible, run in sh or other basic shells).
+    - Simple conditional testing (strings, integers, file attributes).
+    - Environment restrictions prevent using Bash extension features.
 
-- **用双括号 `[[]]`**：
-    - 在 Bash 脚本中，追求更现代、灵活的语法。
-    - 需要正则表达式、通配符或逻辑运算符 `&&`、`||`。
-    - 处理复杂条件或变量可能为空的场景。
-    - 不需要考虑 POSIX 兼容性。
+- **Use double brackets `[[]]`**:
+    - In Bash scripts, pursue more modern, flexible syntax.
+    - Need regular expressions, wildcards, or logical operators `&&`, `||`.
+    - Handle complex conditions or scenarios where variables may be empty.
+    - Don't need to consider POSIX compatibility.
 
 ---
 
-### 实用示例对比
+### Practical Example Comparison
 ```bash
-# 单括号：需要小心变量为空
+# Single brackets: need to be careful with empty variables
 var=""
 if [ -n "$var" ]; then
     echo "var is not empty"
@@ -221,7 +221,7 @@ else
     echo "var is empty"
 fi
 
-# 双括号：更安全，变量无需引号
+# Double brackets: safer, variables don't need quotes
 var=""
 if [[ -n $var ]]; then
     echo "var is not empty"
@@ -229,7 +229,7 @@ else
     echo "var is empty"
 fi
 
-# 双括号支持正则表达式
+# Double brackets support regular expressions
 var="123"
 if [[ $var =~ ^[0-9]+$ ]]; then
     echo "var is a number"
@@ -238,9 +238,9 @@ fi
 
 ---
 
-### 额外提示
-- 如果你在写 Bash 脚本（`#!/bin/bash`），优先使用双括号 `[[]]`，因为它更强大、更安全。
-- 如果需要兼容旧系统或非 Bash 环境（如 Docker 镜像中的 `/bin/sh`），使用单括号 `[]`。
-- 注意避免常见错误，例如忘记空格或误用操作符（例如在单括号中用 `==` 做正则匹配）。
+### Additional Tips
+- If you're writing Bash scripts (`#!/bin/bash`), prefer double brackets `[[]]`, because they're more powerful and safer.
+- If you need to be compatible with older systems or non-Bash environments (like Docker images with `/bin/sh`), use single brackets `[]`.
+- Be careful to avoid common mistakes, like forgetting spaces or misusing operators (e.g., using `==` for regex matching in single brackets).
 
-如果你有具体的 Bash 脚本或条件测试问题，可以分享代码，我帮你分析或优化！
+If you have specific Bash scripts or conditional testing questions, feel free to share the code and I'll help you analyze or optimize it!

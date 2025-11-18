@@ -1,56 +1,56 @@
-# 我来解释这行语法：`import React, { useState } from 'react';`
+# Let me explain this syntax: `import React, { useState } from 'react';`
 
-### 1. **语法结构解析**
-这行代码是 JavaScript 的 ES6 模块导入语法，用于从 React 库中导入 `React` 和 `useState`。具体分解如下：
+### 1. **Syntax Structure Analysis**
+This line of code is JavaScript's ES6 module import syntax, used to import `React` and `useState` from the React library. The specific breakdown is as follows:
 
-- **`import`**: ES6 模块系统的关键字，用于导入模块中的内容。
-- **`React`**: React 库的默认导出（default export）。默认导出不需要用花括号 `{}`。
-- **`{ useState }`**: `useState` 是 React 库的一个命名导出（named export），命名导出需要用花括号 `{}` 来指定导入的具体内容。
-- **`from 'react'`**: 表示从 `react` 模块（即 React 库）中导入内容。`'react'` 是模块的名称，通常指向 `node_modules` 中的 React 包。
+- **`import`**: ES6 module system keyword, used to import content from modules.
+- **`React`**: The default export of the React library. Default exports don't need curly braces `{}`.
+- **`{ useState }`**: `useState` is a named export of the React library, named exports need to be specified with curly braces `{}`.
+- **`from 'react'`**: Indicates importing content from the `react` module (i.e., the React library). `'react'` is the module name, usually pointing to the React package in `node_modules`.
 
-### 2. **为什么 `useState` 要用花括号？**
-在 ES6 模块系统中，导入方式分为两种：
-- **默认导出（Default Export）**：一个模块只能有一个默认导出，导入时不需要花括号，直接使用任意名称。例如，`React` 是 React 库的默认导出，因此可以直接写 `import React from 'react';`。
-- **命名导出（Named Export）**：一个模块可以有多个命名导出，导入时需要明确指定名称，并用花括号 `{}` 包裹。例如，`useState` 是 React 库的一个命名导出，必须用 `{ useState }` 来导入。
+### 2. **Why does `useState` need curly braces?**
+In the ES6 module system, there are two import methods:
+- **Default Export**: A module can only have one default export, no curly braces needed when importing, can use any name directly. For example, `React` is the default export of the React library, so you can directly write `import React from 'react';`.
+- **Named Export**: A module can have multiple named exports, need to explicitly specify names when importing, and wrap with curly braces `{}`. For example, `useState` is a named export of the React library, must use `{ useState }` to import.
 
-因此，`useState` 用花括号是因为它是 React 模块的命名导出，而不是默认导出。
+Therefore, `useState` uses curly braces because it's a named export of the React module, not a default export.
 
-### 3. **为什么 `useState` 放在 `React` 后面？**
-在 `import` 语句中，`React, { useState }` 的顺序并没有严格的语法要求，`React` 和 `{ useState }` 的位置可以互换，写成 `import { useState }, React from 'react';` 也是合法的。然而，习惯上会将默认导出（`React`）写在前面，命名导出（如 `{ useState }`）写在后面，原因如下：
-- **代码风格惯例**：JavaScript 社区的代码规范（如 ESLint 的 `import` 规则）通常建议默认导出放在命名导出之前，增强代码可读性。
-- **逻辑分组**：默认导出通常是模块的主要内容（在这里是 `React`），而命名导出是附加的功能（如 `useState`、`useEffect` 等）。将默认导出放在前面更符合逻辑顺序。
+### 3. **Why is `useState` placed after `React`?**
+In the `import` statement, the order of `React, { useState }` has no strict syntax requirements, the positions of `React` and `{ useState }` can be swapped, writing `import { useState }, React from 'react';` is also legal. However, by convention, the default export (`React`) is written first, and named exports (like `{ useState }`) are written after, for the following reasons:
+- **Code style convention**: JavaScript community code standards (like ESLint's `import` rules) usually suggest placing default exports before named exports to enhance code readability.
+- **Logical grouping**: Default exports are usually the main content of the module (here it's `React`), while named exports are additional features (like `useState`, `useEffect`, etc.). Placing the default export first better matches logical order.
 
-### 4. **为什么需要 `import React`？**
-即使代码中没有直接使用 `React`（如没有写 `React.createElement`），在 JSX 语法中，React 必须被导入，因为 JSX 会被编译成 `React.createElement` 调用。例如：
+### 4. **Why is `import React` needed?**
+Even if `React` is not directly used in the code (like not writing `React.createElement`), in JSX syntax, React must be imported because JSX will be compiled into `React.createElement` calls. For example:
 ```jsx
 const element = <div>Hello</div>;
 ```
-会被 Babel 编译为：
+Will be compiled by Babel as:
 ```javascript
 const element = React.createElement('div', null, 'Hello');
 ```
-因此，`React` 必须在作用域内，即使你没有显式使用它。
+Therefore, `React` must be in scope, even if you don't explicitly use it.
 
-### 5. **总结**
-- **`useState` 用花括号**：因为 `useState` 是 React 模块的命名导出，命名导出需要用 `{}` 包裹。
-- **`useState` 放在 `React` 后面**：这只是代码风格惯例，没有语法强制要求，但默认导出通常写在前面以提高可读性。
-- **导入 `React`**：即使代码中不直接使用 `React`，JSX 编译需要 `React` 在作用域内。
+### 5. **Summary**
+- **`useState` uses curly braces**: Because `useState` is a named export of the React module, named exports need to be wrapped with `{}`.
+- **`useState` placed after `React`**: This is just a code style convention, there's no syntax requirement, but default exports are usually written first to improve readability.
+- **Import `React`**: Even if `React` is not directly used in the code, JSX compilation requires `React` to be in scope.
 
-### 示例
-以下是等价的写法，说明顺序不影响功能：
+### Examples
+Here are equivalent ways to write it, showing order doesn't affect functionality:
 ```javascript
 import React, { useState } from 'react';
-// 等价于
+// Equivalent to
 import { useState }, React from 'react';
 ```
 
-如果只需要 `useState`，也可以只导入它：
+If you only need `useState`, you can also import just it:
 ```javascript
 import { useState } from 'react';
 ```
-但如果代码中有 JSX，通常还需要导入 `React`。
+But if there's JSX in the code, you usually also need to import `React`.
 
-希望这解释清楚了！如果有进一步问题，请告诉我。
+Hope this explains it clearly! Let me know if you have further questions.
 
 ---
 

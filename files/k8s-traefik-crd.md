@@ -1,40 +1,41 @@
-# Traefik 原生 CRD 支持详解
+# Traefik Native CRD Support Detailed Explanation
 
-原生 CRD (Custom Resource Definition) 支持是指 Traefik 等云原生工具深度集成 Kubernetes 的扩展机制，通过自定义资源类型提供更自然、更强大的配置方式。这种支持代表了与 Kubernetes 生态系统的深度整合。
+Native CRD (Custom Resource Definition) support means that cloud-native tools like Traefik deeply integrate with Kubernetes' extension mechanisms through custom resource types, providing a more natural and powerful configuration method. This support represents deep integration with the Kubernetes ecosystem.
 
-## 核心概念解析
+## Core Concept Analysis
 
-### 1. 什么是 CRD？
-CRD (Custom Resource Definition) 是 Kubernetes 允许用户扩展 API 的机制，可以创建：
-- **自定义资源类型**（如 `TraefikService`, `Middleware`）
-- **自定义控制器** 处理这些资源
+### 1. What is CRD?
+CRD (Custom Resource Definition) is a Kubernetes mechanism that allows users to extend APIs, enabling creation of:
+- **Custom Resource Types** (such as `TraefikService`, `Middleware`)
+- **Custom Controllers** to process these resources
 
-### 2. 原生支持 vs 注解(Annotations)方式
+### 2. Native Support vs Annotations Approach
 
-| 特性               | 原生 CRD 支持                          | 传统注解方式                     |
+| Feature               | Native CRD Support                          | Traditional Annotations Approach                     |
 |--------------------|---------------------------------------|--------------------------------|
-| **配置形式**       | 独立 YAML 资源                         | 在 Ingress 资源中添加注解       |
-| **验证能力**       | 强类型 Schema 校验                     | 字符串无结构校验               |
-| **可发现性**       | `kubectl get traefikservices`          | 需查看 Ingress 注解            |
-| **功能扩展性**     | 可定义复杂对象结构                      | 受限于注解的 key-value 简单结构 |
-| **版本管理**       | 支持多版本 API 转换                     | 无版本控制                    |
+| **Configuration Form**       | Independent YAML resources                         | Adding annotations in Ingress resources       |
+| **Validation Capability**       | Strong type Schema validation                     | String without structural validation               |
+| **Discoverability**       | `kubectl get traefikservices`          | Need to check Ingress annotations            |
+| **Function Extensibility**     | Can define complex object structures                  | Limited by annotation's key-value simple structure |
+| **Version Management**       | Supports multi-version API conversion                   | No version control                    |
 
-## Traefik 的 CRD 实现
+## Traefik's CRD Implementation
 
-### 1. 主要自定义资源类型
+### 1. Main Custom Resource Types
 
 ```mermaid
 graph TD
-    A[IngressRoute] --> B[Route规则]
-    A --> C[TLS配置]
-    D[Middleware] --> E[认证]
-    D --> F[重定向]
-    D --> G[限流]
-    TraefikService --> H[负载均衡策略]
+    A[IngressRoute] --> B[Route Rules]
+    A --> C[TLS Configuration]
+    D[Middleware] --> E[Authentication]
+    D --> F[Redirect]
+    D --> G[Rate Limiting]
+    TraefikService --> H[Load Balancing Strategy]
 ```
 
-#### 关键 CRD 示例：
-- **IngressRoute** (替代原生 Ingress)
+#### Key CRD Examples:
+
+- **IngressRoute** (Alternative to native Ingress)
   ```yaml
   apiVersion: traefik.io/v1alpha1
   kind: IngressRoute
@@ -52,7 +53,7 @@ graph TD
       - name: rate-limit
   ```
 
-- **Middleware** (中间件)
+- **Middleware** (Middleware)
   ```yaml
   apiVersion: traefik.io/v1alpha1
   kind: Middleware
@@ -63,7 +64,7 @@ graph TD
       secret: auth-secret
   ```
 
-- **TraefikService** (高级服务定义)
+- **TraefikService** (Advanced Service Definition)
   ```yaml
   apiVersion: traefik.io/v1alpha1
   kind: TraefikService
@@ -78,17 +79,17 @@ graph TD
         weight: 30
   ```
 
-### 2. 安装 CRD 资源
-部署时需要预先注册 CRD：
+### 2. Install CRD Resources
+CRD resources need to be pre-registered during deployment:
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/traefik/traefik/v2.6/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
 ```
 
-## 核心优势
+## Core Advantages
 
-### 1. 类型安全的配置
+### 1. Type-Safe Configuration
 ```go
-// 示例 CRD 的 Go 结构体定义（Traefik 实际使用）
+// Example CRD Go struct definition (actually used by Traefik)
 type IngressRouteSpec struct {
     EntryPoints []string          `json:"entryPoints"`
     Routes      []Route           `json:"routes"`
@@ -102,12 +103,12 @@ type Route struct {
     Middlewares []MiddlewareRef   `json:"middlewares"`
 }
 ```
-- 编译时检查字段有效性
-- 自动生成文档和Schema
+- Compile-time field validation
+- Automatic documentation and Schema generation
 
-### 2. 动态能力组合
+### 2. Dynamic Capability Combination
 ```yaml
-# 组合多个中间件
+# Combine multiple middlewares
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -120,20 +121,20 @@ spec:
     - name: auth
 ```
 
-### 3. 与 Kubernetes 生态深度集成
-- 原生支持 `kubectl` 操作
+### 3. Deep Integration with Kubernetes Ecosystem
+- Native support for `kubectl` operations
   ```bash
   kubectl get ingressroutes
   kubectl describe middleware rate-limit
   ```
-- 与 RBAC 系统无缝配合
-- 支持 Kubernetes 的 watch/update 机制
+- Seamless integration with RBAC system
+- Support for Kubernetes' watch/update mechanisms
 
-## 生产实践示例
+## Production Practice Example
 
-### 案例：金丝雀发布配置
+### Case: Canary Release Configuration
 ```yaml
-# 1. 定义流量拆分服务
+# 1. Define traffic splitting service
 apiVersion: traefik.io/v1alpha1
 kind: TraefikService
 metadata:
@@ -146,7 +147,7 @@ spec:
     - name: app-v2
       weight: 10
 
-# 2. 路由到拆分服务
+# 2. Route to split service
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -161,29 +162,29 @@ spec:
       kind: TraefikService
 ```
 
-### 验证配置
+### Verify Configuration
 ```bash
-# 查看已定义的 CRD 资源
+# View defined CRD resources
 kubectl get crd | grep traefik
 
-# 检查资源配置状态
+# Check resource configuration status
 kubectl get ingressroutes -o wide
 kubectl describe traefikservice canary-app
 ```
 
-## 性能考量
+## Performance Considerations
 
-1. **API Server 负载**：
-    - 每个 CRD 操作都会经过 Kubernetes API
-    - 大量配置时建议批量应用
+1. **API Server Load**:
+    - Each CRD operation goes through Kubernetes API
+    - For large configurations, recommend batch application
 
-2. **控制器效率**：
+2. **Controller Efficiency**:
    ```bash
-   # 查看 Traefik 控制器处理延迟
+   # View Traefik controller processing latency
    kubectl logs -n traefik traefik-pod | grep "Configuration reload"
    ```
 
-3. **资源限制建议**：
+3. **Resource Limit Recommendations**:
    ```yaml
    resources:
      limits:
@@ -194,4 +195,4 @@ kubectl describe traefikservice canary-app
        memory: 128Mi
    ```
 
-原生 CRD 支持使 Traefik 成为 Kubernetes 生态中的一等公民，相比传统注解方式，它提供了更强大、更类型安全且更易维护的配置方式，特别适合复杂的企业级流量管理场景。
+Native CRD support makes Traefik a first-class citizen in the Kubernetes ecosystem. Compared with traditional annotation approaches, it provides more powerful, type-safe, and maintainable configuration methods, especially suitable for complex enterprise-level traffic management scenarios.

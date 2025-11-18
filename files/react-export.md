@@ -1,47 +1,47 @@
-# 在React中，你完全可以把多个组件放在一个JSX文件里
+# In React, you can absolutely put multiple components in a single JSX file
 
-可以！在 React 中，你完全可以把多个组件放在一个 JSX 文件里。只要确保每个组件都是独立定义的，并且正确导出（如果需要在其他地方使用）。以下是一些关键点和示例：
+Yes! In React, you can absolutely put multiple components in a single JSX file. Just ensure each component is independently defined and properly exported (if needed elsewhere). Here are some key points and examples:
 
-### 关键点
-1. **单一文件多组件**：一个 JSX 文件可以包含多个 React 组件，通常是一个默认导出的主组件和其他辅助组件。
-2. **导出方式**：
-    - 你可以选择默认导出（`export default`）一个主组件。
-    - 其他组件可以按需导出（`export`）。
-3. **组织清晰**：如果文件内容过多，建议将组件拆分到单独的文件中以提高可维护性。
-4. **命名冲突**：确保组件名称不冲突，遵循清晰的命名规范。
+### Key Points
+1. **Multiple components in one file**: A JSX file can contain multiple React components, typically a main component with default export and other helper components.
+2. **Export methods**:
+    - You can choose to export a main component as default (`export default`).
+    - Other components can be exported as needed (`export`).
+3. **Clear organization**: If the file content becomes too large, consider splitting components into separate files for better maintainability.
+4. **Naming conflicts**: Ensure component names don't conflict and follow clear naming conventions.
 
-### 示例代码
+### Example Code
 ```jsx
 // components.jsx
 
 import React from 'react';
 
-// 主组件
+// Main component
 function MainComponent() {
   return (
     <div>
-      <h1>主组件</h1>
+      <h1>Main Component</h1>
       <SubComponent />
     </div>
   );
 }
 
-// 辅助组件
+// Helper component
 export function SubComponent() {
-  return <p>这是一个辅助组件</p>;
+  return <p>This is a helper component</p>;
 }
 
-// 另一个辅助组件
+// Another helper component
 export function AnotherComponent() {
-  return <button>点击我</button>;
+  return <button>Click me</button>;
 }
 
-// 默认导出主组件
+// Default export main component
 export default MainComponent;
 ```
 
-### 使用方式
-在其他文件中，你可以这样导入：
+### Usage
+In other files, you can import like this:
 ```jsx
 import MainComponent, { SubComponent, AnotherComponent } from './components';
 
@@ -56,18 +56,18 @@ function App() {
 }
 ```
 
-### 注意事项
-1. **文件大小**：如果 JSX 文件包含太多组件，可能会导致代码难以维护。建议根据项目规模决定是否拆分。
-2. **命名空间**：确保组件名称有意义，避免与项目中其他组件冲突。
-3. **性能**：将多个组件放在一个文件中不会显著影响性能，但要注意组件的渲染逻辑是否高效。
-4. **模块化**：如果组件需要复用，建议将它们拆分到单独的文件中，便于管理和测试。
+### Considerations
+1. **File size**: If a JSX file contains too many components, it may become difficult to maintain. Consider splitting based on project scale.
+2. **Namespace**: Ensure component names are meaningful and avoid conflicts with other components in the project.
+3. **Performance**: Putting multiple components in one file won't significantly impact performance, but pay attention to efficient component rendering logic.
+4. **Modularity**: If components need to be reused, consider splitting them into separate files for easier management and testing.
 
-### 何时拆分组件？
-- 当组件逻辑复杂或代码量大时。
-- 当组件需要在多个地方复用时。
-- 当团队协作需要更清晰的模块划分时。
+### When to Split Components?
+- When component logic is complex or has large code volume.
+- When components need to be reused in multiple places.
+- When team collaboration requires clearer module division.
 
-总结：把多个组件放在一个 JSX 文件中是完全可行的，适合小型项目或相关组件的组织。但在大型项目中，拆分组件到单独文件通常是更好的实践。
+Summary: Putting multiple components in a single JSX file is completely feasible, suitable for small projects or organizing related components. However, in large projects, splitting components into separate files is usually a better practice.
 
 ---
 

@@ -1,4 +1,4 @@
-# 在 Rust 中，引用（`&`）和解引用（`*`）在设计上具有一定的对称性，但并非完全对称。这种设计源于 Rust 的内存安全模型和所有权机制。以下是对引用和解引用的详细分析，以帮助理解它们的对称性与非对称性：
+# In Rust, references (`&`) and dereferencing (`*`) have certain symmetry in design, but they are not completely symmetric. This design stems from Rust's memory safety model and ownership mechanism. Below is a detailed analysis of references and dereferencing to help understand their symmetry and asymmetry:
 
 ### 1. **基本对称性**
 引用和解引用在概念上是一对互逆的操作：

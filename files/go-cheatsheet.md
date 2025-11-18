@@ -1,37 +1,37 @@
-# Go 语言速查表 (Cheatsheet)
+# Go Language Cheatsheet
 
-## 基础语法
+## Basic Syntax
 
 ```go
-package main      // 包声明
+package main      // Package declaration
 
-import "fmt"      // 导入包
+import "fmt"      // Import package
 
-func main() {     // 主函数
+func main() {     // Main function
     fmt.Println("Hello, World!")
 }
 ```
 
-## 变量与常量
+## Variables and Constants
 
 ```go
-// 变量声明
+// Variable declaration
 var name string = "Go"
-var age = 30      // 类型推断
-count := 10       // 简短声明(只能在函数内)
+var age = 30      // Type inference
+count := 10       // Short declaration (only inside functions)
 
-// 多变量声明
+// Multiple variable declaration
 var a, b, c = 1, 2, 3
 x, y := "x", "y"
 
-// 常量
+// Constants
 const Pi = 3.14
 const (
     StatusOK = 200
     StatusNotFound = 404
 )
 
-// iota 枚举
+// iota enumeration
 const (
     Zero = iota   // 0
     One           // 1
@@ -39,45 +39,45 @@ const (
 )
 ```
 
-## 基本数据类型
+## Basic Data Types
 
 ```go
-// 布尔
+// Boolean
 var isActive bool = true
 
-// 数字类型
+// Numeric types
 var num int = 42
 var floatNum float64 = 3.14
 
-// 字符串
+// String
 str := "Hello"
-ch := str[0]       // 获取字符(byte类型)
-length := len(str) // 字符串长度
+ch := str[0]       // Get character (byte type)
+length := len(str) // String length
 
-// 类型转换
+// Type conversion
 i := 42
 f := float64(i)
-s := string(i)     // 注意: 不是数字转字符串
-s2 := fmt.Sprintf("%d", i) // 正确数字转字符串方式
+s := string(i)     // Note: not number to string conversion
+s2 := fmt.Sprintf("%d", i) // Correct way to convert number to string
 ```
 
-## 复合数据类型
+## Composite Data Types
 
 ```go
-// 数组
+// Array
 var arr [3]int = [3]int{1, 2, 3}
-arr2 := [...]int{4, 5, 6} // 编译器计算长度
+arr2 := [...]int{4, 5, 6} // Compiler calculates length
 
-// 切片(动态数组)
+// Slice (dynamic array)
 slice := []int{1, 2, 3}
-slice = append(slice, 4)  // 追加元素
-sub := slice[1:3]        // 切片操作 [start:end]
+slice = append(slice, 4)  // Append element
+sub := slice[1:3]        // Slice operation [start:end]
 
-// 映射(map)
+// Map
 m := map[string]int{"a": 1, "b": 2}
-value, exists := m["a"]  // 检查键是否存在
+value, exists := m["a"]  // Check if key exists
 
-// 结构体
+// Struct
 type Person struct {
     Name string
     Age  int
@@ -85,7 +85,7 @@ type Person struct {
 p := Person{Name: "Alice", Age: 25}
 ```
 
-## 控制结构
+## Control Structures
 
 ```go
 // if-else
@@ -107,44 +107,44 @@ default:
     fmt.Println("Other day")
 }
 
-// for 循环
+// for loop
 for i := 0; i < 10; i++ {
     fmt.Println(i)
 }
 
-// while 等效
+// while equivalent
 i := 0
 for i < 10 {
     fmt.Println(i)
     i++
 }
 
-// 无限循环
+// infinite loop
 for {
     // ...
-    break // 退出循环
+    break // exit loop
 }
 
-// range 遍历
+// range iteration
 for index, value := range slice {
     fmt.Println(index, value)
 }
 ```
 
-## 函数
+## Functions
 
 ```go
-// 基本函数
+// Basic function
 func add(a int, b int) int {
     return a + b
 }
 
-// 多返回值
+// Multiple return values
 func swap(a, b int) (int, int) {
     return b, a
 }
 
-// 命名返回值
+// Named return values
 func divide(a, b float64) (result float64, err error) {
     if b == 0.0 {
         err = errors.New("division by zero")
@@ -154,7 +154,7 @@ func divide(a, b float64) (result float64, err error) {
     return
 }
 
-// 可变参数
+// Variadic parameters
 func sum(nums ...int) int {
     total := 0
     for _, num := range nums {
@@ -163,7 +163,7 @@ func sum(nums ...int) int {
     return total
 }
 
-// 匿名函数和闭包
+// Anonymous functions and closures
 func adder() func(int) int {
     sum := 0
     return func(x int) int {
@@ -173,17 +173,17 @@ func adder() func(int) int {
 }
 ```
 
-## 指针
+## Pointers
 
 ```go
-var p *int          // 指针声明
+var p *int          // Pointer declaration
 i := 42
-p = &i              // 获取地址
-fmt.Println(*p)     // 解引用
-*p = 21             // 通过指针修改值
+p = &i              // Get address
+fmt.Println(*p)     // Dereference
+*p = 21             // Modify value through pointer
 ```
 
-## 接口
+## Interfaces
 
 ```go
 type Shape interface {
@@ -203,16 +203,16 @@ func printArea(s Shape) {
 }
 ```
 
-## 错误处理
+## Error Handling
 
 ```go
-// 基本错误处理
+// Basic error handling
 result, err := someFunction()
 if err != nil {
     log.Fatal(err)
 }
 
-// 自定义错误
+// Custom errors
 type MyError struct {
     Msg string
 }
@@ -226,7 +226,7 @@ func test() error {
 }
 ```
 
-## 并发
+## Concurrency
 
 ```go
 // goroutine
@@ -237,11 +237,11 @@ go func() {
 // channel
 ch := make(chan int)
 go func() {
-    ch <- 42 // 发送
+    ch <- 42 // Send
 }()
-value := <-ch // 接收
+value := <-ch // Receive
 
-// 带缓冲的channel
+// Buffered channel
 bufCh := make(chan int, 2)
 bufCh <- 1
 bufCh <- 2
@@ -268,7 +268,7 @@ for i := 0; i < 5; i++ {
 wg.Wait()
 ```
 
-## 常用标准库
+## Common Standard Libraries
 
 ```go
 // fmt
@@ -286,11 +286,11 @@ strconv.Itoa(123)    // "123"
 strconv.Atoi("123")  // 123, <error>
 
 // os
-os.Args              // 命令行参数
-os.Getenv("PATH")    // 获取环境变量
+os.Args              // Command line arguments
+os.Getenv("PATH")    // Get environment variable
 os.Setenv("KEY", "value")
 
-// io/ioutil (Go 1.16+ 使用 os 和 io 包替代)
+// io/ioutil (Go 1.16+ replaced with os and io packages)
 data, _ := os.ReadFile("file.txt")
 os.WriteFile("file.txt", data, 0644)
 
@@ -305,10 +305,10 @@ duration := time.Second * 5
 time.Sleep(duration)
 ```
 
-## 测试
+## Testing
 
 ```go
-// 测试文件 (xxx_test.go)
+// Test file (xxx_test.go)
 func TestAdd(t *testing.T) {
     result := add(2, 3)
     if result != 5 {
@@ -316,7 +316,7 @@ func TestAdd(t *testing.T) {
     }
 }
 
-// 基准测试
+// Benchmark test
 func BenchmarkAdd(b *testing.B) {
     for i := 0; i < b.N; i++ {
         add(1, 2)
@@ -324,21 +324,21 @@ func BenchmarkAdd(b *testing.B) {
 }
 ```
 
-## 常用命令
+## Common Commands
 
 ```bash
-go run main.go       # 编译并运行
-go build             # 编译生成可执行文件
-go test              # 运行测试
-go test -v           # 详细测试输出
-go test -bench=.     # 运行基准测试
-go mod init example.com/mymodule  # 初始化模块
-go get package       # 下载依赖
-go fmt               # 格式化代码
-go doc fmt.Println   # 查看文档
+go run main.go       # Compile and run
+go build             # Compile to executable
+go test              # Run tests
+go test -v           # Verbose test output
+go test -bench=.     # Run benchmark tests
+go mod init example.com/mymodule  # Initialize module
+go get package       # Download dependencies
+go fmt               # Format code
+go doc fmt.Println   # View documentation
 ```
 
-## 示例程序
+## Example Program
 
 ```go
 package main
@@ -374,4 +374,4 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-这个速查表涵盖了 Go 语言的主要特性，可以作为日常开发的快速参考。根据你的具体需求，可以进一步深入某个特定领域。
+This cheatsheet covers the main features of the Go language and can be used as a quick reference for daily development. You can dive deeper into specific areas based on your needs.

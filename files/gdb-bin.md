@@ -1,56 +1,56 @@
-# 在GDB中，你可以快速计算整数值、查看其二进制表示，甚至进行位操作调试。以下是具体方法和示例：
+# In GDB, you can quickly calculate integer values, view their binary representation, and even debug bit operations. Here are specific methods and examples:
 
 ---
 
-### **1. 快速计算整数值**
-#### **方法一：直接使用`print`命令**
+### **1. Quick Integer Value Calculation**
+#### **Method 1: Directly use `print` command**
 ```bash
-(gdb) print 5 + 3            # 算术运算
+(gdb) print 5 + 3            # Arithmetic operation
 $1 = 8
-(gdb) print 0x0A & 0x0F      # 位运算（与）
+(gdb) print 0x0A & 0x0F      # Bitwise operation (AND)
 $2 = 10
-(gdb) print ~0b1010          # 位运算（取反，显示十进制结果）
-$3 = -11                     # 补码表示
+(gdb) print ~0b1010          # Bitwise operation (NOT, shows decimal result)
+$3 = -11                     # Two's complement representation
 ```
 
-#### **方法二：使用`printf`格式化输出**
+#### **Method 2: Use `printf` for formatted output**
 ```bash
-(gdb) printf "%d\n", 42      # 十进制
+(gdb) printf "%d\n", 42      # Decimal
 42
-(gdb) printf "0x%x\n", 42    # 十六进制
+(gdb) printf "0x%x\n", 42    # Hexadecimal
 0x2a
-(gdb) printf "0%o\n", 42     # 八进制
+(gdb) printf "0%o\n", 42     # Octal
 052
 ```
 
 ---
 
-### **2. 查看变量的二进制表示**
-#### **方法一：`print/t` 显示二进制**
+### **2. View Variable Binary Representation**
+#### **Method 1: `print/t` shows binary**
 ```bash
 (gdb) print/t 42
-$4 = 101010                  # 默认显示无符号数的二进制
+$4 = 101010                  # Default shows unsigned number binary
 (gdb) print/t (char)-1
-$5 = 11111111                # char类型的-1（补码）
+$5 = 11111111                # char type -1 (two's complement)
 ```
 
-#### **方法二：结合`x`命令查看内存中的二进制**
+#### **Method 2: Combine `x` command to view binary in memory**
 ```bash
-(gdb) x/1tb &variable        # 查看1字节的二进制
-(gdb) x/4tb &variable        # 查看4字节的二进制（逐字节显示）
+(gdb) x/1tb &variable        # View 1 byte binary
+(gdb) x/4tb &variable        # View 4 bytes binary (byte by byte display)
 ```
-**示例**：
+**Example**:
 ```c
 int x = 42;
 ```
-在GDB中：
+In GDB:
 ```bash
 (gdb) x/4tb &x
-0x7fffffffde44: 00101010    00000000    00000000    00000000  # 小端序（最低字节在前）
+0x7fffffffde44: 00101010    00000000    00000000    00000000  # Little-endian (lowest byte first)
 ```
 
-#### **方法三：自定义函数显示完整二进制**
-将以下代码添加到GDB的`.gdbinit`文件中：
+#### **Method 3: Custom function to display complete binary**
+Add the following code to GDB's `.gdbinit` file:
 ```python
 define bin
   printf "0b"
@@ -66,31 +66,31 @@ define bin
   printf "\n"
 end
 ```
-**使用**：
+**Usage**:
 ```bash
 (gdb) bin 42
 0b00101010
 (gdb) bin x
-0b00000000 00000000 00000000 00101010  # 32位整数的完整二进制
+0b00000000 00000000 00000000 00101010  # 32-bit integer complete binary
 ```
 
 ---
 
-### **3. 位操作调试技巧**
-#### **检查特定位**
+### **3. Bit Operation Debugging Tips**
+#### **Check Specific Bit**
 ```bash
-(gdb) print (x & (1 << 3)) != 0  # 检查第3位是否为1
+(gdb) print (x & (1 << 3)) != 0  # Check if bit 3 is 1
 ```
-#### **修改特定位**
+#### **Modify Specific Bit**
 ```bash
-(gdb) set x = x | (1 << 2)      # 将第2位置1
-(gdb) set x = x & ~(1 << 2)     # 将第2位清0
+(gdb) set x = x | (1 << 2)      # Set bit 2 to 1
+(gdb) set x = x & ~(1 << 2)     # Clear bit 2 to 0
 ```
 
 ---
 
-### **4. 实战示例**
-假设调试以下代码：
+### **4. Practical Example**
+Assume debugging the following code:
 ```c
 #include <stdio.h>
 int main() {
@@ -99,17 +99,17 @@ int main() {
     return 0;
 }
 ```
-**GDB操作流程**：
+**GDB Operation Process**:
 ```bash
-# 编译并启动GDB
+# Compile and start GDB
 gcc -g test.c -o test
 gdb ./test
 
-# 在main函数开头设断点
+# Set breakpoint at main function start
 (gdb) break main
 (gdb) run
 
-# 查看变量值和二进制
+# View variable values and binary
 (gdb) print a
 $1 = 3855
 (gdb) print/x a
@@ -120,42 +120,42 @@ $3 = 111100001111
 (gdb) print b
 $4 = -42
 (gdb) print/t b
-$5 = 11111111111111111111111111010110  # -42的补码表示
+$5 = 11111111111111111111111111010110  # -42's two's complement representation
 
-# 查看内存中的二进制布局
+# View binary layout in memory
 (gdb) x/4tb &a
-0x7fffffffde3c: 00001111    00001111    00000000    00000000  # 小端序
+0x7fffffffde3c: 00001111    00001111    00000000    00000000  # Little-endian
 (gdb) x/4tb &b
 0x7fffffffde38: 11010110    11111111    11111111    11111111
 ```
 
 ---
 
-### **5. 高级技巧**
-#### **使用Python脚本扩展**
-在GDB 7.0+中，可直接用Python处理二进制：
+### **5. Advanced Techniques**
+#### **Use Python Script Extension**
+In GDB 7.0+, you can directly use Python to handle binary:
 ```bash
 (gdb) python print(bin(0x0F0F))
 '0b111100001111'
 ```
 
-#### **临时修改变量为二进制字面量**
+#### **Temporarily Modify Variable to Binary Literal**
 ```bash
 (gdb) set var a = 0b11001100
 ```
 
 ---
 
-### **注意事项**
-1. **符号问题**：`print/t`显示的是无符号数的二进制，负数会以补码形式显示。
-2. **大小端序**：`x`命令显示的内存数据是小端序（低字节在前）。
-3. **类型转换**：强制类型转换可改变解释方式：
+### **Notes**
+1. **Sign Issues**: `print/t` shows binary of unsigned numbers, negative numbers are displayed in two's complement form.
+2. **Endianness**: `x` command displays memory data in little-endian (low byte first).
+3. **Type Casting**: Forced type casting can change interpretation:
    ```bash
    (gdb) print/t (unsigned char)-1
    $6 = 11111111
    ```
 
-掌握这些方法后，你可以在调试时快速验证位操作算法的正确性！
+After mastering these methods, you can quickly verify the correctness of bit operation algorithms during debugging!
 
 ---
 

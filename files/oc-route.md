@@ -87,21 +87,21 @@ spec:
 
 ---
 
-### 结论
+### Conclusion
 
-- **Route 不是 Ingress Controller**，但 Route 的流量最终由 OpenShift 的 Ingress Controller 处理。
-- 在 OpenShift 中，Route 是更贴近用户的高级抽象，而 Ingress 是 Kubernetes 的标准方案（需额外配置）。
-
----
-
-OpenShift **Route** 的实现细节涉及多个组件协作，包括 API 处理、底层 Ingress Controller（默认基于 HAProxy）、网络插件（如
-OVN-Kubernetes）等。以下是其核心实现细节的深入解析：
+- **Route is not Ingress Controller**, but Route traffic is ultimately handled by OpenShift's Ingress Controller.
+- In OpenShift, Route is a higher-level abstraction closer to users, while Ingress is Kubernetes' standard solution (requires additional configuration).
 
 ---
 
-### 1. **Route 资源定义**
+OpenShift **Route** implementation details involve collaboration of multiple components, including API processing, underlying Ingress Controller (default based on HAProxy), network plugins (like
+OVN-Kubernetes), etc. Below is an in-depth analysis of its core implementation details:
 
-Route 是 OpenShift 的 CRD（Custom Resource Definition），属于 `route.openshift.io/v1` API 组。其典型 YAML 结构如下：
+---
+
+### 1. **Route Resource Definition**
+
+Route is OpenShift's CRD (Custom Resource Definition), belonging to `route.openshift.io/v1` API group. Its typical YAML structure is as follows:
 
 ```yaml
 apiVersion: route.openshift.io/v1
@@ -109,54 +109,54 @@ kind: Route
 metadata:
   name: my-route
 spec:
-  host: app.example.com      # 自定义域名（可选，未指定时使用默认域名）
+  host: app.example.com      # Custom domain (optional, uses default domain if not specified)
   to:
     kind: Service
-    name: my-service         # 后端服务
-    weight: 100             # 流量权重（用于分片）
+    name: my-service         # Backend service
+    weight: 100             # Traffic weight (for sharding)
   port:
-    targetPort: 8080        # 服务端口
+    targetPort: 8080        # Service port
   tls:
-    termination: edge       # TLS 终止策略（edge/passthrough/reencrypt）
-    insecureEdgeTerminationPolicy: Redirect # HTTP 跳转 HTTPS
+    termination: edge       # TLS termination strategy (edge/passthrough/reencrypt)
+    insecureEdgeTerminationPolicy: Redirect # HTTP redirect to HTTPS
 ```
 
 ---
 
-### 2. **Route 的核心组件**
+### 2. **Core Components of Route**
 
 #### **(1) OpenShift API Server**
 
-- 负责接收和处理 `Route` 资源的创建/更新/删除请求。
-- 验证 `Route` 的合法性（如 `host` 是否冲突、`tls` 证书是否有效等）。
+- Responsible for receiving and processing `Route` resource creation/update/deletion requests.
+- Validate `Route` legitimacy (like whether `host` conflicts, whether `tls` certificates are valid, etc.).
 
 #### **(2) OpenShift Ingress Operator**
 
-- 管理集群的 **Ingress Controller**（默认部署为 `openshift-ingress` 命名空间下的 Pod）。
-- 监控 `Route` 和 `Ingress` 资源的变化，同步配置到底层 Ingress Controller（HAProxy）。
-- 自动为 Route 分配默认域名（如 `<route-name>-<namespace>.<cluster-domain>`）。
+- Manage cluster's **Ingress Controller** (default deployment as Pods in `openshift-ingress` namespace).
+- Monitor changes in `Route` and `Ingress` resources, sync configurations to underlying Ingress Controller (HAProxy).
+- Automatically assign default domain names for Routes (like `<route-name>-<namespace>.<cluster-domain>`).
 
 #### **(3) Ingress Controller (HAProxy)**
 
-- **数据面**：默认使用 HAProxy 作为负载均衡器，以 DaemonSet 或 Deployment 形式运行。
-- **配置生成**：
-    - 监听 Route 变化，动态生成 HAProxy 的配置文件（`/var/lib/haproxy/conf/haproxy.config`）。
-    - 支持动态配置加载（通过 `reload` 而非重启）。
-- **功能实现**：
-    - **路由规则**：基于 `host` 和 `path` 匹配请求，转发到后端 Service 的 Endpoints。
-    - **TLS 终止**：处理证书（支持自动从 OpenShift 内置 CA 或用户提供的 Secret 获取）。
-    - **负载均衡**：支持轮询、最小连接等算法。
+- **Data Plane**: Default uses HAProxy as load balancer, runs as DaemonSet or Deployment.
+- **Configuration Generation**:
+    - Monitor Route changes, dynamically generate HAProxy configuration files (`/var/lib/haproxy/conf/haproxy.config`).
+    - Support dynamic configuration loading (through `reload` rather than restart).
+- **Function Implementation**:
+    - **Routing Rules**: Match requests based on `host` and `path`, forward to backend Service Endpoints.
+    - **TLS Termination**: Handle certificates (support automatic acquisition from OpenShift built-in CA or user-provided Secret).
+    - **Load Balancing**: Support round-robin, least connections and other algorithms.
 
-#### **(4) Network Plugin（如 OVN-Kubernetes）**
+#### **(4) Network Plugin (like OVN-Kubernetes)**
 
-- 负责将外部流量引入集群，通常通过 `Service` 类型为 `LoadBalancer` 或 `NodePort` 的 Ingress Controller Service。
-- 在云环境中，可能自动配置云负载均衡器（如 AWS ALB）。
+- Responsible for bringing external traffic into the cluster, usually through Ingress Controller Service of type `LoadBalancer` or `NodePort`.
+- In cloud environments, may automatically configure cloud load balancers (like AWS ALB).
 
 ---
 
-### 3. **流量路径示例**
+### 3. **Traffic Path Example**
 
-假设用户访问 `https://app.example.com`：
+Assuming user accesses `https://app.example.com`:
 
 1. **DNS 解析**：`app.example.com` 解析到 OpenShift Ingress Controller 的外部 IP（或云负载均衡器 IP）。
 2. **到达 Ingress Controller**：请求被 HAProxy Pod 接收。

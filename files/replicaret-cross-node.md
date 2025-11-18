@@ -1,17 +1,17 @@
-# ReplicaSet 创建的 Pod 可以跨节点（Node）部署
+# ReplicaSet Created Pods Can Be Deployed Across Nodes
 
-是的，**ReplicaSet 创建的 Pod 可以跨节点（Node）部署**。这是 Kubernetes 设计中的一个核心特性，目的是提高应用的可用性和容错能力。
+Yes, **Pods created by ReplicaSet can be deployed across nodes**. This is a core feature in Kubernetes design, aimed at improving application availability and fault tolerance.
 
 ---
 
-### **ReplicaSet 和 Pod 跨节点部署的工作原理**
-1. **ReplicaSet 的作用**：
-    - ReplicaSet 是 Kubernetes 中用于确保指定数量的 Pod 副本始终运行的控制器。
-    - 它会监控 Pod 的状态，如果 Pod 数量少于预期，则会创建新的 Pod；如果多于预期，则会删除多余的 Pod。
+### **How ReplicaSet and Pod Cross-Node Deployment Works**
+1. **Role of ReplicaSet**:
+    - ReplicaSet is a controller in Kubernetes used to ensure that a specified number of Pod replicas are always running.
+    - It monitors Pod status, creating new Pods if the count is below expected, and deleting excess Pods if above expected.
 
-2. **Pod 调度**：
-    - 当 ReplicaSet 创建 Pod 时，Pod 并不会固定在某一个节点上，而是由 Kubernetes 的调度器（Scheduler）根据调度策略和节点资源情况，将 Pod 分配到合适的节点上。
-    - 默认情况下，调度器会尽量将 Pod 分散到不同的节点上，以提高应用的可用性。
+2. **Pod Scheduling**:
+    - When ReplicaSet creates Pods, they are not fixed to a specific node. Instead, Kubernetes' scheduler assigns Pods to appropriate nodes based on scheduling policies and node resource availability.
+    - By default, the scheduler tries to distribute Pods across different nodes to improve application availability.
 
 3. **跨节点部署的优势**：
     - **高可用性**：Pod 分散在多个节点上，即使某个节点故障，其他节点上的 Pod 仍然可以正常运行。

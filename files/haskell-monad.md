@@ -1,10 +1,10 @@
-# 在Haskell中，由于其纯函数式编程的特性，默认情况下所有函数都是无状态的（即纯函数，相同的输入总是产生相同的输出）。然而，在实际应用中，我们有时需要处理有状态的逻辑（例如维护一个计数器、数据库连接等）。Haskell通过特定的机制（如`State` monad、IO monad等）将有状态的逻辑与无状态的逻辑清晰地分离开来，以保持函数的纯净性并提高代码的可维护性。以下是Haskell中实现这种拆分的主要方法和思路：
+# In Haskell, due to its pure functional programming nature, all functions are stateless by default (i.e., pure functions where the same input always produces the same output). However, in practical applications, we sometimes need to handle stateful logic (such as maintaining a counter, database connections, etc.). Haskell separates stateful logic from stateless logic clearly through specific mechanisms (like `State` monad, IO monad, etc.) to maintain function purity and improve code maintainability. Here are the main methods and approaches for achieving this separation in Haskell:
 
-### 1. **使用 `State` Monad 管理状态**
-`State` monad 是 Haskell 中专门用来处理状态的工具。它允许在纯函数式环境中模拟状态的传递，而不会破坏函数的纯净性。`State` monad 的核心思想是将状态封装在一个计算中，并通过函数式的方式传递和更新状态。
+### 1. **Using `State` Monad to Manage State**
+`State` monad is a specialized tool in Haskell for handling state. It allows simulating state passing in a pure functional environment without breaking function purity. The core idea of `State` monad is to encapsulate state within a computation and pass and update state through functional means.
 
-#### 示例：计数器
-假设我们需要实现一个计数器，记录操作的次数（有状态），但希望与无状态的逻辑分开。
+#### Example: Counter
+Suppose we need to implement a counter that records the number of operations (stateful), but we want to separate it from stateless logic.
 
 ```haskell
 import Control.Monad.State
@@ -19,9 +19,9 @@ add x y = x + y
 -- 有状态的逻辑：增加计数器并返回结果
 addWithCount :: Int -> Int -> State Counter Int
 addWithCount x y = do
-  count <- get -- 获取当前状态（计数器）
-  put (count + 1) -- 更新状态
-  return (add x y) -- 调用无状态的 add 函数
+  count <- get -- Get current state (counter)
+  put (count + 1) -- Update state
+  return (add x y) -- Call stateless add function
 
 -- 运行示例
 main :: IO ()
@@ -30,39 +30,39 @@ main = do
   putStrLn $ "Result: " ++ show result ++ ", Count: " ++ show finalState
 ```
 
-**拆分要点**：
-- **无状态逻辑**：`add` 函数是纯函数，只负责计算，不涉及状态。
-- **有状态逻辑**：`addWithCount` 使用 `State` monad 来管理计数器的状态。
-- **分离**：`addWithCount` 调用了 `add`，将有状态的计数器管理与无状态的计算逻辑分开。
+**Separation Key Points**:
+- **Stateless logic**: `add` function is pure, only responsible for calculation,不涉及state.
+- **Stateful logic**: `addWithCount` uses `State` monad to manage counter state.
+- **Separation**: `addWithCount` calls `add`, separating stateful counter management from stateless calculation logic.
 
-**输出**：
+**Output**:
 ```
 Result: 7, Count: 1
 ```
 
-#### 优点：
-- `State` monad 保持了函数的纯净性，状态的传递是显式的。
-- 无状态逻辑（`add`）可以独立测试和重用。
-- 有状态逻辑（`addWithCount`）通过 monad 封装，易于组合和扩展。
+#### Advantages:
+- `State` monad maintains function purity, with explicit state passing.
+- Stateless logic (`add`) can be tested and reused independently.
+- Stateful logic (`addWithCount`) is encapsulated through monad, making it easy to compose and extend.
 
-### 2. **使用 `IO` Monad 隔离副作用**
-对于需要与外部世界交互的逻辑（例如文件操作、网络请求），Haskell 使用 `IO` monad 来隔离副作用。这种方式天然地将有状态的逻辑（涉及外部资源）与无状态的逻辑分开。
+### 2. **Using `IO` Monad to Isolate Side Effects**
+For logic that needs to interact with the external world (such as file operations, network requests), Haskell uses `IO` monad to isolate side effects. This approach naturally separates stateful logic (involving external resources) from stateless logic.
 
-#### 示例：读取文件并处理内容
-假设我们要读取一个文件的内容（有状态），然后对内容进行无状态的处理。
+#### Example: Reading File and Processing Content
+Suppose we want to read the contents of a file (stateful), then perform stateless processing on the content.
 
 ```haskell
 import Data.Char (toUpper)
 
--- 无状态逻辑：将字符串转换为大写
+-- Stateless logic: convert string to uppercase
 toUpperString :: String -> String
 toUpperString = map toUpper
 
--- 有状态逻辑：读取文件并处理
+-- Stateful logic: read file and process
 processFile :: FilePath -> IO String
 processFile path = do
-  content <- readFile path -- 有状态：文件 I/O
-  return $ toUpperString content -- 无状态：调用纯函数
+  content <- readFile path -- Stateful: file I/O
+  return $ toUpperString content -- Stateless: call pure function
 
 -- 运行示例
 main :: IO ()
@@ -71,15 +71,15 @@ main = do
   putStrLn result
 ```
 
-**拆分要点**：
-- **无状态逻辑**：`toUpperString` 是纯函数，处理字符串转换，不涉及任何副作用。
-- **有状态逻辑**：`processFile` 使用 `IO` monad 管理文件读取的副作用。
-- **分离**：`processFile` 调用 `toUpperString`，将 I/O 操作与字符串处理逻辑分开。
+**Separation Key Points**:
+- **Stateless logic**: `toUpperString` is a pure function that processes string conversion,不涉及any side effects.
+- **Stateful logic**: `processFile` uses `IO` monad to manage side effects of file reading.
+- **Separation**: `processFile` calls `toUpperString`, separating I/O operations from string processing logic.
 
-#### 优点：
-- `IO` monad 隔离了副作用，确保纯函数不会被污染。
-- 无状态逻辑可以独立测试，且与具体 I/O 操作无关。
-- 代码结构清晰，易于维护和扩展。
+#### Advantages:
+- `IO` monad isolates side effects, ensuring pure functions are not contaminated.
+- Stateless logic can be tested independently and is independent of specific I/O operations.
+- Code structure is clear, easy to maintain and extend.
 
 ### 3. **使用数据结构显式传递状态**
 如果不想使用 monad，可以通过显式传递状态的方式来分离有状态和无状态逻辑。这种方法适合简单的场景，状态通过函数参数和返回值传递。

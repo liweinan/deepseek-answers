@@ -1,15 +1,15 @@
-# Nested Hell（嵌套地狱）
+# Nested Hell
 
-Nested Hell（嵌套地狱）是编程中的一个术语，用来描述代码中过度嵌套的结构所带来的问题。这种情况通常发生在：
+Nested Hell (嵌套地狱) is a term in programming used to describe problems caused by overly nested structures in code. This situation typically occurs when:
 
-1. **多层嵌套**：代码中有太多层的if-else、for循环、try-catch或其他控制结构的嵌套
-2. **回调地狱**：特别在JavaScript中，多个异步回调函数的嵌套（也称为"Callback Hell"）
-3. **条件嵌套**：复杂的条件判断导致深层嵌套
+1. **Multiple layers of nesting**: Code has too many layers of if-else, for loops, try-catch, or other control structure nesting
+2. **Callback hell**: Especially in JavaScript, nesting of multiple asynchronous callback functions (also known as "Callback Hell")
+3. **Conditional nesting**: Complex conditional judgments leading to deep nesting
 
-## 典型表现
+## Typical Examples
 
 ```javascript
-// 回调地狱示例
+// Callback hell example
 getData(function(a){
     getMoreData(a, function(b){
         getMoreData(b, function(c){ 
@@ -23,48 +23,48 @@ getData(function(a){
 });
 ```
 
-## 问题与影响
+## Problems and Impact
 
-1. **可读性差**：代码难以理解和维护
-2. **调试困难**：错误难以追踪
-3. **维护成本高**：添加新功能或修改现有逻辑变得复杂
-4. **违反单一职责原则**：一个函数/方法做了太多事情
+1. **Poor readability**: Code is difficult to understand and maintain
+2. **Difficult debugging**: Errors are hard to track
+3. **High maintenance cost**: Adding new features or modifying existing logic becomes complex
+4. **Violates single responsibility principle**: One function/method does too many things
 
-## 解决方案
+## Solutions
 
-1. **函数拆分**：将嵌套逻辑拆分为多个小函数
-2. **使用Promise/async-await**（针对异步代码）
-3. **使用设计模式**：如策略模式、状态模式等替代复杂条件
-4. **提前返回**：减少else分支的使用
-5. **使用卫语句**（Guard Clauses）
+1. **Function splitting**: Split nested logic into multiple small functions
+2. **Use Promise/async-await** (for asynchronous code)
+3. **Use design patterns**: Such as strategy pattern, state pattern, etc. to replace complex conditions
+4. **Early return**: Reduce the use of else branches
+5. **Use guard clauses** (Guard Clauses)
 
-您是在特定语言或场景下遇到嵌套问题吗？我可以提供更具体的建议。
+Are you encountering nesting problems in a specific language or scenario? I can provide more specific suggestions.
 
 ---
 
-# Java异步编程中的嵌套地狱及解决方案（含Mutiny和Reactor）
+# Java Asynchronous Programming Nested Hell and Solutions (Including Mutiny and Reactor)
 
-在Java异步编程中，嵌套地狱同样存在，尤其是在处理复杂异步操作链时。以下是几种典型情况及其解决方案：
+In Java asynchronous programming, nested hell also exists, especially when dealing with complex asynchronous operation chains. Here are several typical situations and their solutions:
 
-## 1. 传统回调地狱（Callback Hell）
+## 1. Traditional Callback Hell (Callback Hell)
 
 ```java
-// 嵌套回调示例
+// Nested callback example
 userService.getUser(userId, user -> {
     orderService.getOrders(user, orders -> {
         paymentService.getPayments(orders, payments -> {
             notificationService.sendSummary(user, orders, payments, result -> {
-                // 处理结果...
+                // Process results...
             });
         });
     });
 });
 ```
 
-## 2. Reactor中的嵌套问题
+## 2. Nesting Issues in Reactor
 
 ```java
-// Reactor中的嵌套
+// Nesting in Reactor
 Mono<User> userMono = userRepository.findById(userId);
 userMono.flatMap(user -> {
     return orderRepository.findByUserId(user.getId())
@@ -77,10 +77,10 @@ userMono.flatMap(user -> {
 });
 ```
 
-## 3. Mutiny中的嵌套问题
+## 3. Nesting Issues in Mutiny
 
 ```java
-// Mutiny中的嵌套
+// Nesting in Mutiny
 Uni<User> userUni = userRepo.findByUserId(userId);
 userUni.onItem().transformToUni(user -> {
     return orderRepo.findByUser(user)
@@ -93,12 +93,12 @@ userUni.onItem().transformToUni(user -> {
 });
 ```
 
-## 解决方案
+## Solutions
 
-### 使用Reactor的优雅解决方案
+### Using Reactor's Elegant Solution
 
 ```java
-// 使用Reactor的流畅API
+// Using Reactor's fluent API
 userRepository.findById(userId)
     .flatMap(user -> orderRepository.findByUserId(user.getId()))
     .flatMap(orders -> paymentRepository.findByOrderIds(extractOrderIds(orders)))
@@ -106,10 +106,10 @@ userRepository.findById(userId)
     .subscribe();
 ```
 
-### 使用Mutiny的优雅解决方案
+### Using Mutiny's Elegant Solution
 
 ```java
-// 使用Mutiny的链式调用
+// Using Mutiny's chain calls
 userRepo.findByUserId(userId)
     .onItem().transformToUni(user -> orderRepo.findByUser(user))
     .onItem().transformToUni(orders -> paymentRepo.findByOrders(orders))
@@ -117,9 +117,9 @@ userRepo.findByUserId(userId)
     .subscribe().with(...);
 ```
 
-### 更高级的解决方案
+### More Advanced Solutions
 
-1. **组合操作符**：
+1. **Combination operators**:
    ```java
    // Reactor
    Mono.zip(
@@ -138,9 +138,9 @@ userRepo.findByUserId(userId)
            notificationService.sendSummary(tuple.getItem1(), tuple.getItem2(), tuple.getItem3()));
    ```
 
-2. **使用中间DTO**：
+2. **Use intermediate DTO**:
    ```java
-   // 创建一个中间对象承载所有数据
+   // Create an intermediate object to carry all data
    userRepo.findByUserId(userId)
        .onItem().transformToUni(user -> orderRepo.findByUser(user)
            .onItem().transform(orders -> new UserData(user, orders)))
@@ -150,9 +150,9 @@ userRepo.findByUserId(userId)
            notificationService.sendSummary(enrichedData));
    ```
 
-3. **自定义操作符**：
+3. **Custom operators**:
    ```java
-   // 创建可重用的操作链
+   // Create reusable operation chains
    public static Uni<SummaryData> prepareUserSummary(String userId) {
        return userRepo.findByUserId(userId)
            .onItem().transformToUni(user -> orderRepo.findByUser(user))
@@ -161,23 +161,24 @@ userRepo.findByUserId(userId)
    }
    ```
 
-## 最佳实践建议
+## Best Practice Recommendations
 
-1. **保持异步操作扁平化**：尽量避免深层嵌套，使用链式调用
-2. **合理使用zip/combine**：当操作间没有依赖时并行执行
-3. **提取方法**：将长链拆分为有意义的子方法
-4. **考虑上下文传递**：使用Tuple或自定义DTO传递多个步骤的数据
-5. **错误处理**：在适当层级添加错误处理，避免每个步骤都处理
+1. **Keep asynchronous operations flat**: Try to avoid deep nesting, use chain calls
+2. **Use zip/combine reasonably**: Execute in parallel when operations have no dependencies
+3. **Extract methods**: Split long chains into meaningful sub-methods
+4. **Consider context passing**: Use Tuple or custom DTO to pass data from multiple steps
+5. **Error handling**: Add error handling at appropriate levels, avoid handling at every step
 
-这些模式可以帮助您避免Java响应式编程中的嵌套地狱，特别是在使用Reactor和Mutiny这样的库时。
+These patterns can help you avoid nested hell in Java reactive programming, especially when using libraries like Reactor and Mutiny.
 
 ---
-# Rust/Tokio中真正的异步嵌套解决方案
 
-## 1. 真正的问题场景（多层嵌套）
+# True Asynchronous Nesting Solutions in Rust/Tokio
+
+## 1. Real Problem Scenarios (Multi-level Nesting)
 
 ```rust
-// 真正的嵌套地狱示例
+// Real nested hell example
 async fn process_order() -> Result<(), Box<dyn Error>> {
     let db = Database::connect().await?;
     db.transaction(|tx| async move {
@@ -189,7 +190,7 @@ async fn process_order() -> Result<(), Box<dyn Error>> {
                 let payment = Payment::process(&tx, &order).await?;
                 if payment.success {
                     Notification::send(&tx, &user, &order).await?;
-                    // 更多嵌套...
+                    // More nesting...
                 }
             }
         }
@@ -198,9 +199,9 @@ async fn process_order() -> Result<(), Box<dyn Error>> {
 }
 ```
 
-## 2. 真正的解决方案
+## 2. Real Solutions
 
-### 方案1：提前返回扁平化
+### Solution 1: Early Return Flattening
 
 ```rust
 async fn process_order() -> Result<(), Box<dyn Error>> {
@@ -208,7 +209,7 @@ async fn process_order() -> Result<(), Box<dyn Error>> {
     db.transaction(|tx| async move {
         let user = User::find(&tx, user_id).await?;
         if !user.is_active() {
-            return Ok(()); // 提前返回
+            return Ok(()); // Early return
         }
         
         let order = Order::create(&tx, &user).await?;
@@ -228,7 +229,7 @@ async fn process_order() -> Result<(), Box<dyn Error>> {
 }
 ```
 
-### 方案2：函数拆分
+### Solution 2: Function Splitting
 
 ```rust
 async fn process_payment(tx: &Transaction<'_>, user: &User, order: &Order) -> Result<(), Box<dyn Error>> {
@@ -257,7 +258,7 @@ async fn process_order() -> Result<(), Box<dyn Error>> {
 }
 ```
 
-### 方案3：使用`and_then`组合器
+### Solution 3: Using `and_then` Combinator
 
 ```rust
 use futures::future::TryFutureExt;
@@ -291,7 +292,7 @@ async fn process_order() -> Result<(), Box<dyn Error>> {
 }
 ```
 
-### 方案4：使用自定义错误处理和上下文对象
+### Solution 4: Using Custom Error Handling and Context Object
 
 ```rust
 struct ProcessingContext<'a> {
@@ -332,22 +333,22 @@ async fn process_order() -> Result<(), Box<dyn Error>> {
 }
 ```
 
-## 3. 关键区别说明
+## 3. Key Differences Explained
 
-1. **原始问题代码**：
-    - 多层嵌套的if-else和await
-    - 深度缩进导致可读性差
-    - 难以添加新逻辑
+1. **Original Problem Code**:
+    - Multi-level nested if-else and await
+    - Deep indentation leads to poor readability
+    - Difficult to add new logic
 
-2. **解决方案代码**：
-    - 使用提前返回减少嵌套层级
-    - 将逻辑拆分为小函数
-    - 使用组合器管理异步流程
-    - 引入上下文对象管理状态
+2. **Solution Code**:
+    - Use early returns to reduce nesting levels
+    - Split logic into small functions
+    - Use combinators to manage asynchronous flow
+    - Introduce context objects to manage state
 
-## 4. Tokio特有建议
+## 4. Tokio-Specific Recommendations
 
-1. 对于IO密集型并行操作，使用`tokio::try_join!`：
+1. For IO-intensive parallel operations, use `tokio::try_join!`:
    ```rust
    async fn load_data() -> Result<(Data1, Data2), Error> {
        let (data1, data2) = tokio::try_join!(
@@ -358,7 +359,7 @@ async fn process_order() -> Result<(), Box<dyn Error>> {
    }
    ```
 
-2. 使用`tokio::select!`处理竞态条件：
+2. Use `tokio::select!` to handle race conditions:
    ```rust
    async fn fetch_with_timeout() -> Result<Data, Error> {
        tokio::select! {
@@ -370,48 +371,48 @@ async fn process_order() -> Result<(), Box<dyn Error>> {
    }
    ```
 
-这些模式展示了Rust/Tokio中处理异步嵌套问题的真正有效方法，与最初展示的简单示例有本质区别。
+These patterns demonstrate truly effective methods for handling asynchronous nesting problems in Rust/Tokio, which are fundamentally different from the simple examples initially shown.
 
 ---
 
-# JavaScript 中的异步嵌套地狱及解决方案
+# JavaScript Asynchronous Nesting Hell and Solutions
 
-JavaScript 由于历史原因和其单线程异步特性，特别容易出现回调地狱(Callback Hell)问题。以下是典型例子和现代解决方案。
+Due to historical reasons and its single-threaded asynchronous nature, JavaScript is particularly prone to callback hell problems. Here are typical examples and modern solutions.
 
-## 1. 经典回调地狱示例
+## 1. Classic Callback Hell Example
 
 ```javascript
-// 深度嵌套的回调地狱
+// Deep nested callback hell
 getUser(userId, function(user) {
   getOrders(user.id, function(orders) {
     getPayments(orders[0].id, function(payments) {
       generateReport(user, orders, payments, function(report) {
         sendReport(report, function(response) {
           notifyUser(user.id, function() {
-            console.log('整个过程完成');
+            console.log('Whole process completed');
           }, function(err) {
-            console.error('通知失败', err);
+            console.error('Notification failed', err);
           });
         }, function(err) {
-          console.error('发送报告失败', err);
+          console.error('Send report failed', err);
         });
       }, function(err) {
-        console.error('生成报告失败', err);
+        console.error('Generate report failed', err);
       });
     }, function(err) {
-      console.error('获取支付失败', err);
+      console.error('Get payments failed', err);
     });
   }, function(err) {
-    console.error('获取订单失败', err);
+    console.error('Get orders failed', err);
   });
 }, function(err) {
-  console.error('获取用户失败', err);
+  console.error('Get user failed', err);
 });
 ```
 
-## 2. 现代解决方案
+## 2. Modern Solutions
 
-### 方案1: 使用 Promise 链式调用
+### Solution 1: Using Promise Chain Calls
 
 ```javascript
 getUser(userId)
@@ -420,11 +421,11 @@ getUser(userId)
   .then(payments => generateReport(payments))
   .then(report => sendReport(report))
   .then(() => notifyUser(userId))
-  .then(() => console.log('整个过程完成'))
-  .catch(err => console.error('流程出错:', err));
+  .then(() => console.log('Whole process completed'))
+  .catch(err => console.error('Process error:', err));
 ```
 
-### 方案2: 使用 async/await 语法
+### Solution 2: Using async/await Syntax
 
 ```javascript
 async function processUserReport(userId) {
@@ -435,17 +436,17 @@ async function processUserReport(userId) {
     const report = await generateReport(user, orders, payments);
     await sendReport(report);
     await notifyUser(user.id);
-    console.log('整个过程完成');
+    console.log('Whole process completed');
   } catch (err) {
-    console.error('流程出错:', err);
+    console.error('Process error:', err);
   }
 }
 ```
 
-### 方案3: 并行处理独立任务
+### Solution 3: Parallel Processing of Independent Tasks
 
 ```javascript
-// 使用 Promise.all 并行处理
+// Using Promise.all for parallel processing
 async function getUserDashboard(userId) {
   try {
     const [user, orders, notifications] = await Promise.all([
@@ -457,13 +458,13 @@ async function getUserDashboard(userId) {
     const dashboard = { user, orders, notifications };
     return dashboard;
   } catch (err) {
-    console.error('加载仪表盘失败:', err);
+    console.error('Load dashboard failed:', err);
     throw err;
   }
 }
 ```
 
-### 方案4: 使用中间函数拆分
+### Solution 4: Using Intermediate Function Splitting
 
 ```javascript
 async function getUserData(userId) {
@@ -485,14 +486,14 @@ async function fullProcess(userId) {
     await sendReport(report);
     await notifyUser(user.id);
   } catch (err) {
-    console.error('流程出错:', err);
+    console.error('Process error:', err);
   }
 }
 ```
 
-## 3. 高级模式
+## 3. Advanced Patterns
 
-### 使用 async 库控制复杂流程
+### Using async Library to Control Complex Flow
 
 ```javascript
 const async = require('async');
@@ -516,14 +517,14 @@ async.auto({
   }]
 }, (err, results) => {
   if (err) {
-    console.error('流程出错:', err);
+    console.error('Process error:', err);
   } else {
-    console.log('整个过程完成', results);
+    console.log('Whole process completed', results);
   }
 });
 ```
 
-### 使用 RxJS 处理复杂异步流
+### Using RxJS to Handle Complex Asynchronous Streams
 
 ```javascript
 const { from } = require('rxjs');
@@ -540,20 +541,20 @@ from(getUser(userId))
     mergeMap(({ user, orders, payments }) => from(generateReport(user, orders, payments))),
     mergeMap(report => from(sendReport(report))),
     catchError(err => {
-      console.error('流程出错:', err);
+      console.error('Process error:', err);
       return throwError(err);
     })
   )
-  .subscribe(() => console.log('整个过程完成'));
+  .subscribe(() => console.log('Whole process completed'));
 ```
 
-## 4. 最佳实践建议
+## 4. Best Practice Recommendations
 
-1. **优先使用 async/await**：这是目前最清晰的异步代码编写方式
-2. **合理拆分函数**：避免单个函数处理太多逻辑
-3. **并行独立操作**：使用 Promise.all 提高性能
-4. **统一错误处理**：使用 try/catch 或 .catch() 集中处理错误
-5. **考虑使用异步库**：对于复杂流程，async 或 RxJS 可以提供更好的控制
-6. **避免混合使用回调/Promise**：保持代码风格一致
+1. **Prioritize async/await**: This is currently the clearest way to write asynchronous code
+2. **Split functions reasonably**: Avoid having a single function handle too much logic
+3. **Parallelize independent operations**: Use Promise.all to improve performance
+4. **Unified error handling**: Use try/catch or .catch() to handle errors centrally
+5. **Consider using asynchronous libraries**: For complex flows, async or RxJS can provide better control
+6. **Avoid mixing callbacks/Promises**: Keep code style consistent
 
-这些方案展示了如何将深度嵌套的 JavaScript 异步代码转化为更易读、易维护的形式。
+These solutions demonstrate how to transform deeply nested JavaScript asynchronous code into more readable and maintainable forms.

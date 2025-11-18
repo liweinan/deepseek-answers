@@ -1,134 +1,134 @@
-# Kubernetes 速查表 (Cheatsheet)
+# Kubernetes Cheatsheet
 
-## 基础命令
-
-```bash
-kubectl version          # 查看客户端和服务器版本
-kubectl cluster-info     # 显示集群信息
-kubectl get nodes        # 查看所有节点
-kubectl config view      # 查看当前配置
-kubectl api-resources    # 查看所有API资源类型
-```
-
-## 命名空间(Namespace)操作
+## Basic Commands
 
 ```bash
-kubectl get ns                     # 查看所有命名空间
-kubectl create ns <namespace>      # 创建命名空间
-kubectl delete ns <namespace>      # 删除命名空间
-kubectl config set-context --current --namespace=<namespace> # 设置默认命名空间
+kubectl version          # View client and server versions
+kubectl cluster-info     # Display cluster information
+kubectl get nodes        # View all nodes
+kubectl config view      # View current configuration
+kubectl api-resources    # View all API resource types
 ```
 
-## Pod操作
+## Namespace Operations
 
 ```bash
-kubectl get pods [-n <namespace>]          # 查看Pod列表
-kubectl get pods -o wide                   # 查看Pod详情(包括节点信息)
-kubectl describe pod <pod-name>            # 查看Pod详细信息
-kubectl logs <pod-name> [-c <container>]   # 查看Pod日志
-kubectl exec -it <pod-name> -- /bin/bash   # 进入Pod容器
-kubectl delete pod <pod-name>              # 删除Pod
-kubectl top pod <pod-name>                 # 查看Pod资源使用情况
+kubectl get ns                     # View all namespaces
+kubectl create ns <namespace>      # Create namespace
+kubectl delete ns <namespace>      # Delete namespace
+kubectl config set-context --current --namespace=<namespace> # Set default namespace
 ```
 
-## Deployment操作
+## Pod Operations
 
 ```bash
-kubectl get deployments                    # 查看所有Deployment
-kubectl describe deployment <deploy-name>  # 查看Deployment详情
-kubectl create deployment <name> --image=<image>  # 创建Deployment
-kubectl scale deployment <deploy-name> --replicas=3  # 扩缩容
-kubectl edit deployment <deploy-name>      # 编辑Deployment配置
-kubectl rollout status deployment/<deploy-name>  # 查看滚动更新状态
-kubectl rollout history deployment/<deploy-name> # 查看更新历史
-kubectl rollout undo deployment/<deploy-name>    # 回滚到上一版本
-kubectl rollout undo deployment/<deploy-name> --to-revision=2 # 回滚到指定版本
-kubectl delete deployment <deploy-name>    # 删除Deployment
+kubectl get pods [-n <namespace>]          # View Pod list
+kubectl get pods -o wide                   # View Pod details (including node information)
+kubectl describe pod <pod-name>            # View Pod detailed information
+kubectl logs <pod-name> [-c <container>]   # View Pod logs
+kubectl exec -it <pod-name> -- /bin/bash   # Enter Pod container
+kubectl delete pod <pod-name>              # Delete Pod
+kubectl top pod <pod-name>                 # View Pod resource usage
 ```
 
-## Service操作
+## Deployment Operations
 
 ```bash
-kubectl get services               # 查看所有Service
-kubectl expose deployment <deploy-name> --port=80 --target-port=8080 --type=NodePort # 创建Service
-kubectl describe service <svc-name> # 查看Service详情
-kubectl delete service <svc-name>  # 删除Service
+kubectl get deployments                    # View all Deployments
+kubectl describe deployment <deploy-name>  # View Deployment details
+kubectl create deployment <name> --image=<image>  # Create Deployment
+kubectl scale deployment <deploy-name> --replicas=3  # Scale up/down
+kubectl edit deployment <deploy-name>      # Edit Deployment configuration
+kubectl rollout status deployment/<deploy-name>  # View rolling update status
+kubectl rollout history deployment/<deploy-name> # View update history
+kubectl rollout undo deployment/<deploy-name>    # Rollback to previous version
+kubectl rollout undo deployment/<deploy-name> --to-revision=2 # Rollback to specific version
+kubectl delete deployment <deploy-name>    # Delete Deployment
 ```
 
-## ConfigMap和Secret操作
+## Service Operations
+
+```bash
+kubectl get services               # View all Services
+kubectl expose deployment <deploy-name> --port=80 --target-port=8080 --type=NodePort # Create Service
+kubectl describe service <svc-name> # View Service details
+kubectl delete service <svc-name>  # Delete Service
+```
+
+## ConfigMap and Secret Operations
 
 ```bash
 # ConfigMap
-kubectl create configmap <name> --from-literal=key=value  # 从字面值创建
-kubectl create configmap <name> --from-file=path/to/file  # 从文件创建
-kubectl get configmaps             # 查看所有ConfigMap
-kubectl describe configmap <name>  # 查看ConfigMap详情
+kubectl create configmap <name> --from-literal=key=value  # Create from literal
+kubectl create configmap <name> --from-file=path/to/file  # Create from file
+kubectl get configmaps             # View all ConfigMaps
+kubectl describe configmap <name>  # View ConfigMap details
 
 # Secret
-kubectl create secret generic <name> --from-literal=key=value  # 创建generic secret
-kubectl create secret docker-registry <name> --docker-server=<server> --docker-username=<user> --docker-password=<pwd> # 创建docker registry secret
-kubectl get secrets               # 查看所有Secret
-kubectl describe secret <name>    # 查看Secret详情
+kubectl create secret generic <name> --from-literal=key=value  # Create generic secret
+kubectl create secret docker-registry <name> --docker-server=<server> --docker-username=<user> --docker-password=<pwd> # Create docker registry secret
+kubectl get secrets               # View all Secrets
+kubectl describe secret <name>    # View Secret details
 ```
 
-## 状态管理(StatefulSet)
+## StatefulSet Operations
 
 ```bash
-kubectl get statefulsets          # 查看所有StatefulSet
-kubectl describe statefulset <name> # 查看StatefulSet详情
-kubectl delete statefulset <name> # 删除StatefulSet
+kubectl get statefulsets          # View all StatefulSets
+kubectl describe statefulset <name> # View StatefulSet details
+kubectl delete statefulset <name> # Delete StatefulSet
 ```
 
-## 持久化存储(PV/PVC)
+## Persistent Storage (PV/PVC)
 
 ```bash
-kubectl get pv                    # 查看持久卷(PersistentVolume)
-kubectl get pvc                   # 查看持久卷声明(PersistentVolumeClaim)
-kubectl describe pvc <pvc-name>   # 查看PVC详情
+kubectl get pv                    # View PersistentVolumes
+kubectl get pvc                   # View PersistentVolumeClaims
+kubectl describe pvc <pvc-name>   # View PVC details
 ```
 
-## 工作负载管理
+## Workload Management
 
 ```bash
 # Job
-kubectl get jobs                  # 查看所有Job
-kubectl describe job <job-name>   # 查看Job详情
+kubectl get jobs                  # View all Jobs
+kubectl describe job <job-name>   # View Job details
 
 # CronJob
-kubectl get cronjobs              # 查看所有CronJob
-kubectl describe cronjob <name>   # 查看CronJob详情
+kubectl get cronjobs              # View all CronJobs
+kubectl describe cronjob <name>   # View CronJob details
 ```
 
-## 网络策略(NetworkPolicy)
+## Network Policy (NetworkPolicy)
 
 ```bash
-kubectl get networkpolicies       # 查看所有网络策略
-kubectl describe networkpolicy <name> # 查看网络策略详情
+kubectl get networkpolicies       # View all network policies
+kubectl describe networkpolicy <name> # View network policy details
 ```
 
-## 资源配额和限制
+## Resource Quotas and Limits
 
 ```bash
-kubectl get quota                 # 查看资源配额
-kubectl describe quota <name>     # 查看配额详情
-kubectl get limitranges           # 查看限制范围
+kubectl get quota                 # View resource quotas
+kubectl describe quota <name>     # View quota details
+kubectl get limitranges           # View limit ranges
 ```
 
-## 调试和故障排查
+## Debugging and Troubleshooting
 
 ```bash
-kubectl get events --sort-by=.metadata.creationTimestamp  # 查看事件(按时间排序)
-kubectl get pods --field-selector=status.phase=Running    # 过滤Pod状态
-kubectl port-forward <pod-name> 8080:80  # 端口转发
-kubectl cp <pod-name>:/path/to/file ./local-file  # 从Pod复制文件
-kubectl apply -f <file.yaml>      # 应用YAML配置
-kubectl delete -f <file.yaml>     # 删除YAML定义的资源
-kubectl explain <resource>        # 查看资源定义文档
+kubectl get events --sort-by=.metadata.creationTimestamp  # View events (sorted by time)
+kubectl get pods --field-selector=status.phase=Running    # Filter Pod status
+kubectl port-forward <pod-name> 8080:80  # Port forwarding
+kubectl cp <pod-name>:/path/to/file ./local-file  # Copy file from Pod
+kubectl apply -f <file.yaml>      # Apply YAML configuration
+kubectl delete -f <file.yaml>     # Delete resources defined in YAML
+kubectl explain <resource>        # View resource definition documentation
 ```
 
-## 常用YAML模板
+## Common YAML Templates
 
-### Pod示例
+### Pod Example
 
 ```yaml
 apiVersion: v1
@@ -145,7 +145,7 @@ spec:
     - containerPort: 80
 ```
 
-### Deployment示例
+### Deployment Example
 
 ```yaml
 apiVersion: apps/v1
@@ -169,7 +169,7 @@ spec:
         - containerPort: 80
 ```
 
-### Service示例(NodePort)
+### Service Example (NodePort)
 
 ```yaml
 apiVersion: v1
@@ -187,7 +187,7 @@ spec:
       nodePort: 30007
 ```
 
-### ConfigMap示例
+### ConfigMap Example
 
 ```yaml
 apiVersion: v1
@@ -200,7 +200,7 @@ data:
     key2=value2
 ```
 
-### Secret示例
+### Secret Example
 
 ```yaml
 apiVersion: v1
@@ -209,11 +209,11 @@ metadata:
   name: app-secret
 type: Opaque
 data:
-  username: YWRtaW4=  # base64编码
+  username: YWRtaW4=  # base64 encoded
   password: MWYyZDFlMmU2N2Rm
 ```
 
-### PersistentVolumeClaim示例
+### PersistentVolumeClaim Example
 
 ```yaml
 apiVersion: v1
@@ -228,61 +228,60 @@ spec:
       storage: 1Gi
 ```
 
-## 常用技巧
+## Common Tips
 
-1. **快速创建Pod并测试**
+1. **Quickly create Pod and test**
    ```bash
    kubectl run -it --rm --image=busybox test-pod -- sh
    ```
 
-2. **查看Pod的环境变量**
+2. **View Pod environment variables**
    ```bash
    kubectl exec <pod-name> -- env
    ```
 
-3. **强制删除卡在Terminating状态的资源**
+3. **Force delete resources stuck in Terminating state**
    ```bash
    kubectl delete pod <pod-name> --grace-period=0 --force
    ```
 
-4. **查看Pod的资源请求和限制**
+4. **View Pod resource requests and limits**
    ```bash
    kubectl get pod <pod-name> -o json | jq '.spec.containers[].resources'
    ```
 
-5. **查看Pod调度事件**
+5. **View Pod scheduling events**
    ```bash
    kubectl get events --field-selector involvedObject.name=<pod-name>
    ```
 
-6. **使用别名提高效率**
+6. **Use aliases to improve efficiency**
    ```bash
    alias k='kubectl'
    alias kgp='kubectl get pods'
    alias kgs='kubectl get services'
    ```
 
-7. **输出为YAML或JSON格式**
+7. **Output in YAML or JSON format**
    ```bash
    kubectl get pod <pod-name> -o yaml
    kubectl get pod <pod-name> -o json
    ```
 
-8. **标签选择器查询**
+8. **Label selector queries**
    ```bash
    kubectl get pods -l app=nginx
    kubectl get pods -l 'environment in (production, staging)'
    ```
 
-9. **查看Pod的IP地址**
+9. **View Pod IP addresses**
    ```bash
    kubectl get pod -o jsonpath='{.items[*].status.podIP}'
    ```
 
-10. **批量删除资源**
+10. **Batch delete resources**
     ```bash
     kubectl delete pods,services -l name=myLabel
     ```
 
-这个Kubernetes速查表涵盖了日常使用中最常用的命令和配置，可以作为快速参考使用。根据你的具体使用场景，可能需要更深入地了解某些特定领域。
-
+This Kubernetes cheatsheet covers the most commonly used commands and configurations in daily use, and can be used as a quick reference. Depending on your specific use cases, you may need to gain deeper understanding of certain specific areas.

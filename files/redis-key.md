@@ -1,44 +1,44 @@
-# Redis 键空间通知（Keyspace Notifications）
+# Redis Keyspace Notifications
 
-Redis 键空间通知是一种发布/订阅机制，允许客户端通过订阅频道来接收 Redis 数据库中键（key）的特定事件通知。这种功能对于构建实时应用、数据同步系统和监控工具非常有用。
+Redis keyspace notifications are a publish/subscribe mechanism that allows clients to receive specific event notifications about keys in the Redis database by subscribing to channels. This feature is very useful for building real-time applications, data synchronization systems, and monitoring tools.
 
-## 基本概念
+## Basic Concepts
 
-键空间通知有两种类型的事件：
-1. **键空间通知（Keyspace events）**：关注键本身的操作，如 `del`、`expire` 等
-2. **键事件通知（Key-event events）**：关注事件本身，如 `expired`、`evicted` 等
+Keyspace notifications have two types of events:
+1. **Keyspace events**: Focus on operations on the key itself, such as `del`, `expire`, etc.
+2. **Key-event events**: Focus on the event itself, such as `expired`, `evicted`, etc.
 
-## 启用键空间通知
+## Enabling Keyspace Notifications
 
-默认情况下 Redis 不启用键空间通知，需要通过配置启用：
+By default, Redis does not enable keyspace notifications and needs to be configured:
 
 ```bash
-# 在 redis.conf 中配置
-notify-keyspace-events "参数"
+# Configure in redis.conf
+notify-keyspace-events "parameters"
 
-# 或者运行时配置
-CONFIG SET notify-keyspace-events "参数"
+# Or configure at runtime
+CONFIG SET notify-keyspace-events "parameters"
 ```
 
-## 通知参数
+## Notification Parameters
 
-参数由以下字符组合而成：
-- `K`：启用键空间通知
-- `E`：启用键事件通知
-- `g`：通用命令（如 DEL、EXPIRE 等）
-- `$`：字符串命令
-- `l`：列表命令
-- `s`：集合命令
-- `h`：哈希命令
-- `z`：有序集合命令
-- `x`：过期事件
-- `e`：驱逐事件（内存不足时）
-- `A`：所有事件（相当于 `g$lshzxe` 的别名）
+Parameters are combinations of the following characters:
+- `K`: Enable keyspace notifications
+- `E`: Enable key-event notifications
+- `g`: Generic commands (like DEL, EXPIRE, etc.)
+- `$`: String commands
+- `l`: List commands
+- `s`: Set commands
+- `h`: Hash commands
+- `z`: Sorted set commands
+- `x`: Expiration events
+- `e`: Eviction events (when memory is insufficient)
+- `A`: All events (equivalent to alias for `g$lshzxe`)
 
-常见配置示例：
-- `"AKE"`：所有键空间和键事件通知
-- `"Ex"`：仅启用键事件中的过期通知
-- `"K$"`：仅启用键空间中的字符串操作通知
+Common configuration examples:
+- `"AKE"`: All keyspace and key-event notifications
+- `"Ex"`: Only enable expiration notifications in key events
+- `"K$"`: Only enable string operation notifications in keyspace
 
 ## 订阅通知
 

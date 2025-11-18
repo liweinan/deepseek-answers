@@ -1,8 +1,8 @@
-# 是的，Rust 的引用（references）比裸指针（raw pointers）更安全。以下是原因：
+# Yes, Rust references are safer than raw pointers. Here are the reasons:
 
-1. **所有权和借用规则**：Rust 的引用受到严格的编译期所有权和借用规则约束。引用分为两种：
-    - 不可变引用（`&T`）：允许多个不可变引用同时存在，但不能修改数据。
-    - 可变引用（`&mut T`）：只能有一个可变引用，且不能与任何其他引用（包括不可变引用）同时存在。
+1. **Ownership and Borrowing Rules**: Rust references are subject to strict compile-time ownership and borrowing rules. References are divided into two types:
+    - Immutable references (`&T`): Allow multiple immutable references to exist simultaneously, but cannot modify data.
+    - Mutable references (`&mut T`): Only one mutable reference can exist, and it cannot coexist with any other references (including immutable references).
       这些规则防止了数据竞争（data race）和未定义行为。
 
 2. **生命周期检查**：Rust 的引用有明确的生命周期（lifetime），编译器确保引用不会指向已释放的内存，从而避免悬垂指针（dangling pointers）问题。

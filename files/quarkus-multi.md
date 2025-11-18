@@ -1,17 +1,17 @@
-# 在 Quarkus REST 中，使用 `Multi<String>` 和 `String` 作为返回类型会显著影响客户端的处理方式，主要体现在响应格式、传输方式和客户端的消费方式上。以下是详细分析和对客户端的影响：
+# In Quarkus REST, using `Multi<String>` and `String` as return types significantly affects how clients handle the response, mainly in terms of response format, transmission method, and client consumption patterns. Here's a detailed analysis and the impact on clients:
 
 ---
 
-### 1. **返回类型：`String`**
-- **行为**：
-    - 当方法返回 `String` 时，Quarkus REST 会将该字符串作为**单一的响应实体**发送给客户端。
-    - 默认情况下，响应的媒体类型（Media Type）为 `text/plain`，除非通过 `@Produces` 注解指定为其他类型（如 `application/json`）。
-    - 响应是一次性传输的，客户端接收到完整的字符串后处理。
-- **客户端影响**：
-    - **简单性**：客户端只需处理一个完整的字符串，适合简单的、静态的响应场景。
-    - **同步处理**：客户端通常以同步的方式接收和解析响应，适合数据量较小且不需要流式处理的场景。
-    - **局限性**：如果响应数据量较大，客户端需要等待整个响应加载完成，可能会增加延迟或内存使用量。
-- **示例代码**：
+### 1. **Return Type: `String`**
+- **Behavior**:
+    - When a method returns `String`, Quarkus REST sends the string as a **single response entity** to the client.
+    - By default, the response media type is `text/plain`, unless specified as another type (like `application/json`) through the `@Produces` annotation.
+    - The response is transmitted all at once, and the client processes the complete string after receiving it.
+- **Client Impact**:
+    - **Simplicity**: Clients only need to handle a complete string, suitable for simple, static response scenarios.
+    - **Synchronous Processing**: Clients typically receive and parse responses synchronously, suitable for scenarios with small data volumes that don't require streaming.
+    - **Limitations**: If the response data volume is large, clients need to wait for the entire response to load, which may increase latency or memory usage.
+- **Example Code**:
   ```java
   @GET
   @Path("/hello")
@@ -20,24 +20,24 @@
       return "Hello, World!";
   }
   ```
-    - **客户端接收**：
-        - 响应为纯文本：`"Hello, World!"`
-        - 客户端直接读取整个字符串。
+    - **Client Reception**:
+        - Response is plain text: `"Hello, World!"`
+        - Client reads the entire string directly.
 
 ---
 
-### 2. **返回类型：`Multi<String>`**
-- **行为**：
-    - `Multi<String>` 是 Quarkus 集成的 Mutiny 响应式流类型，用于处理**异步、流式数据**。
-    - 默认情况下，Quarkus REST 会将 `Multi<String>` 的每个元素作为单独的项发送，通常以 JSON 数组形式（`application/json`）包装，除非使用 `@Stream` 注解改变行为。
-    - 如果不使用 `@Stream` 注解，Quarkus 会等待 `Multi` 流收集所有元素，生成一个完整的 `List<String>`，然后以 JSON 数组形式返回。
-    - 如果使用 `@Stream` 注解（例如 `@Stream(Stream.MODE.GENERAL)` 或 `@Produces(MediaType.SERVER_SENT_EVENTS)`），可以实现真正的流式传输，客户端可以逐个接收 `Multi` 的元素。
-- **客户端影响**：
-    - **流式处理**：如果使用流式传输（如 SSE 或分块传输），客户端可以逐个处理 `Multi` 发出的元素，适合大数据量或实时数据场景（如日志流、事件流）。
-    - **JSON 数组包装**：如果没有 `@Stream` 注解，客户端会收到一个 JSON 数组（如 `["item1", "item2", ...]`），需要解析整个数组，可能增加客户端的处理复杂性。
-    - **响应式支持**：客户端需要支持流式协议（如 SSE）或分块传输（如 `Transfer-Encoding: chunked`），否则可能无法充分利用流式优势。
-    - **延迟和内存**：流式传输可以降低服务器和客户端的内存使用量，并减少响应延迟，尤其是当数据量大或生成速度慢时。
-- **示例代码**：
+### 2. **Return Type: `Multi<String>`**
+- **Behavior**:
+    - `Multi<String>` is Quarkus' integrated Mutiny reactive stream type, used for handling **asynchronous, streaming data**.
+    - By default, Quarkus REST sends each element of `Multi<String>` as separate items, typically wrapped in JSON array format (`application/json`), unless the `@Stream` annotation is used to change behavior.
+    - Without the `@Stream` annotation, Quarkus waits for the `Multi` stream to collect all elements, generates a complete `List<String>`, and returns it as a JSON array.
+    - With `@Stream` annotation (e.g., `@Stream(Stream.MODE.GENERAL)` or `@Produces(MediaType.SERVER_SENT_EVENTS)`), true streaming can be achieved, allowing clients to receive `Multi` elements one by one.
+- **Client Impact**:
+    - **Streaming Processing**: If streaming transmission is used (like SSE or chunked transfer), clients can process elements emitted by `Multi` one by one, suitable for large data volumes or real-time data scenarios (like log streams, event streams).
+    - **JSON Array Wrapping**: Without `@Stream` annotation, clients receive a JSON array (like `["item1", "item2", ...]`), requiring parsing of the entire array, which may increase client processing complexity.
+    - **Reactive Support**: Clients need to support streaming protocols (like SSE) or chunked transfer (like `Transfer-Encoding: chunked`), otherwise they may not fully utilize streaming advantages.
+    - **Latency and Memory**: Streaming transmission can reduce memory usage on both server and client sides, and reduce response latency, especially when data volume is large or generation speed is slow.
+- **Example Code**:
   ```java
   @GET
   @Path("/stream")
@@ -46,9 +46,9 @@
       return Multi.createFrom().items("item1", "item2", "item3");
   }
   ```
-    - **客户端接收（无 `@Stream`）**：
-        - 响应为 JSON 数组：`["item1", "item2", "item3"]`
-        - 客户端需要解析整个数组。
+    - **Client Reception (without `@Stream`)**:
+        - Response is JSON array: `["item1", "item2", "item3"]`
+        - Client needs to parse the entire array.
   ```java
   @GET
   @Path("/stream-sse")
@@ -57,83 +57,83 @@
       return Multi.createFrom().items("item1", "item2", "item3");
   }
   ```
-    - **客户端接收（SSE）**：
-        - 响应为逐条事件流：
+    - **Client Reception (SSE)**:
+        - Response is individual event stream:
           ```
           data: item1
           data: item2
           data: item3
           ```
-        - 客户端需要支持 SSE 协议，逐条处理事件。
+        - Client needs to support SSE protocol and process events one by one.
 
 ---
 
-### 3. **主要差异和对客户端的影响**
-| 特性                  | `String` 返回类型                              | `Multi<String>` 返回类型                          |
-|-----------------------|----------------------------------------------|-----------------------------------------------|
-| **响应格式**          | 单一字符串（`text/plain` 或指定类型）          | 默认 JSON 数组，或流式数据（SSE、分块传输等） |
-| **传输方式**          | 一次性传输，完整响应                          | 可流式传输，逐个元素发送                     |
-| **客户端处理**        | 简单，适合静态数据                            | 需支持流式处理或解析 JSON 数组               |
-| **适用场景**          | 小数据量、简单响应                            | 大数据量、实时数据、异步流                   |
-| **内存使用**          | 可能需要更多内存（大响应时）                  | 流式传输可降低内存使用                       |
-| **延迟**              | 大响应可能导致更高延迟                        | 流式传输可降低延迟                           |
-| **客户端复杂性**      | 低，标准 HTTP 客户端即可                      | 较高，可能需要 SSE 或分块传输支持            |
+### 3. **Main Differences and Client Impact**
+| Feature                  | `String` Return Type                              | `Multi<String>` Return Type                          |
+|--------------------------|--------------------------------------------------|---------------------------------------------------|
+| **Response Format**      | Single string (`text/plain` or specified type)   | Default JSON array, or streaming data (SSE, chunked transfer, etc.) |
+| **Transmission Method**  | One-time transmission, complete response         | Can stream transmission, send elements one by one |
+| **Client Processing**    | Simple, suitable for static data                 | Requires streaming processing or JSON array parsing |
+| **Applicable Scenarios** | Small data volume, simple responses              | Large data volumes, real-time data, async streams |
+| **Memory Usage**         | May require more memory (for large responses)    | Streaming can reduce memory usage                 |
+| **Latency**              | Large responses may cause higher latency         | Streaming can reduce latency                      |
+| **Client Complexity**    | Low, standard HTTP client is sufficient          | Higher, may need SSE or chunked transfer support  |
 
 ---
 
-### 4. **客户端的具体影响**
-- **开发复杂性**：
-    - 使用 `String` 时，客户端只需处理单一响应，开发简单，适合 REST API 的标准 HTTP 客户端（如 `fetch`、Axios、RestTemplate`）。
-    - 使用 `Multi<String>` 时，客户端可能需要处理 JSON 数组或流式数据：
-        - 如果是 JSON 数组，客户端需要解析整个数组，逻辑与处理 `List<String>` 类似。
-        - 如果是 SSE 或分块传输，客户端需要支持相应协议（如 JavaScript 的 `EventSource`、Java 的 `WebClient` 或 `HttpClient`），增加了开发复杂性。
-- **性能**：
-    - 对于大数据量，`Multi<String>` 的流式传输可以显著降低客户端的内存占用和等待时间。
-    - `String` 返回可能导致客户端在接收大响应时出现性能瓶颈。
-- **协议支持**：
-    - `String` 返回适用于所有 HTTP 客户端。
-    - `Multi<String>` 的流式传输（如 SSE）需要客户端支持特定协议，传统客户端可能无法直接处理。
-- **错误处理**：
-    - `String` 返回的错误通常通过 HTTP 状态码和响应体传递，客户端处理简单。
-    - `Multi<String>` 的流式传输可能在流中途发生错误，客户端需要实现流式错误处理逻辑（如监听 `onError` 事件）。
+### 4. **Specific Client Impact**
+- **Development Complexity**:
+    - When using `String`, clients only need to handle a single response, development is simple, suitable for standard HTTP clients for REST APIs (like `fetch`, Axios, `RestTemplate`).
+    - When using `Multi<String>`, clients may need to handle JSON arrays or streaming data:
+        - If it's a JSON array, clients need to parse the entire array, similar logic to handling `List<String>`.
+        - If it's SSE or chunked transfer, clients need to support corresponding protocols (like JavaScript's `EventSource`, Java's `WebClient` or `HttpClient`), increasing development complexity.
+- **Performance**:
+    - For large data volumes, streaming transmission of `Multi<String>` can significantly reduce client memory usage and waiting time.
+    - `String` returns may cause client performance bottlenecks when receiving large responses.
+- **Protocol Support**:
+    - `String` returns work with all HTTP clients.
+    - Streaming transmission of `Multi<String>` (like SSE) requires client support for specific protocols, traditional clients may not handle directly.
+- **Error Handling**:
+    - Errors from `String` returns are usually passed through HTTP status codes and response body, simple for clients to handle.
+    - Streaming transmission of `Multi<String>` may encounter errors mid-stream, clients need to implement streaming error handling logic (like listening to `onError` events).
 
 ---
 
-### 5. **如何选择**
-- **使用 `String` 的场景**：
-    - 响应数据量小且固定。
-    - 客户端无需流式处理，期望一次性接收完整响应。
-    - 客户端是传统 HTTP 客户端，不支持流式协议。
-    - 示例：返回简单的欢迎消息、状态信息等。
-- **使用 `Multi<String>` 的场景**：
-    - 响应数据量大或动态生成（如日志流、实时事件）。
-    - 需要低延迟的实时数据传输。
-    - 客户端支持流式协议（如 SSE、WebSocket 或分块传输）。
-    - 示例：实时日志流、事件推送、长列表的分页加载。
-- **优化 `Multi<String>` 的响应**：
-    - 使用 `@Stream` 注解或 `@Produces(MediaType.SERVER_SENT_EVENTS)` 实现真正的流式传输，避免 JSON 数组包装。
-    - 如果客户端需要 JSON 对象流而不是数组，可以设置 `RestMulti.encodeAsArray(false)`，但需确保客户端能处理非标准 JSON 流。
+### 5. **How to Choose**
+- **Scenarios for using `String`**:
+    - Response data volume is small and fixed.
+    - Client doesn't need streaming processing, expects to receive complete response at once.
+    - Client is traditional HTTP client, doesn't support streaming protocols.
+    - Examples: returning simple welcome messages, status information, etc.
+- **Scenarios for using `Multi<String>`**:
+    - Response data volume is large or dynamically generated (like log streams, real-time events).
+    - Need low-latency real-time data transmission.
+    - Client supports streaming protocols (like SSE, WebSocket or chunked transfer).
+    - Examples: real-time log streams, event push, paginated loading of long lists.
+- **Optimizing `Multi<String>` Response**:
+    - Use `@Stream` annotation or `@Produces(MediaType.SERVER_SENT_EVENTS)` to achieve true streaming transmission, avoiding JSON array wrapping.
+    - If clients need JSON object streams instead of arrays, you can set `RestMulti.encodeAsArray(false)`, but ensure clients can handle non-standard JSON streams.
 
 ---
 
-### 6. **示例客户端代码**
-- **处理 `String` 返回**（JavaScript 客户端）：
+### 6. **Example Client Code**
+- **Handling `String` Return** (JavaScript client):
   ```javascript
   fetch('/hello')
       .then(response => response.text())
-      .then(data => console.log(data)); // 输出: Hello, World!
+      .then(data => console.log(data)); // Output: Hello, World!
   ```
-- **处理 `Multi<String>` 返回（JSON 数组，JavaScript 客户端）**：
+- **Handling `Multi<String>` Return (JSON Array, JavaScript Client)**:
   ```javascript
   fetch('/stream')
       .then(response => response.json())
-      .then(data => console.log(data)); // 输出: ["item1", "item2", "item3"]
+      .then(data => console.log(data)); // Output: ["item1", "item2", "item3"]
   ```
-- **处理 `Multi<String>` 返回（SSE，JavaScript 客户端）**：
+- **Handling `Multi<String>` Return (SSE, JavaScript Client)**:
   ```javascript
   const source = new EventSource('/stream-sse');
   source.onmessage = event => {
-      console.log(event.data); // 逐条输出: item1, item2, item3
+      console.log(event.data); // Output one by one: item1, item2, item3
   };
   source.onerror = () => {
       console.error('Stream error');
@@ -143,17 +143,17 @@
 
 ---
 
-### 7. **注意事项**
-- **JSON 包装问题**：`Multi<String>` 默认以 JSON 数组返回，可能不符合客户端期望（如需要单个对象流）。可通过 `RestMulti.encodeAsArray(false)` 或 SSE 解决，但需验证客户端兼容性。[](https://stackoverflow.com/questions/74237400/quarkus-rest-api-with-multistring-and-application-json-return-type-adds-additi)
-- **媒体类型**：明确指定 `@Produces` 注解（如 `MediaType.APPLICATION_JSON` 或 `MediaType.SERVER_SENT_EVENTS`），避免客户端解析错误。
-- **客户端兼容性**：在选择 `Multi<String>` 的流式传输时，需确认客户端支持相应协议（如 SSE）。传统客户端可能需要额外的库或适配。
-- **性能调优**：对于高并发场景，使用 `Multi<String>` 的流式传输可以减少服务器和客户端的资源占用，但需调整 `quarkus.http.limits.max-body-size` 或连接池配置以优化性能。[](https://github.com/quarkusio/quarkus/discussions/28785)
+### 7. **Notes**
+- **JSON Wrapping Issue**: `Multi<String>` returns as JSON array by default, which may not meet client expectations (like needing individual object streams). Can be resolved through `RestMulti.encodeAsArray(false)` or SSE, but client compatibility needs verification.[](https://stackoverflow.com/questions/74237400/quarkus-rest-api-with-multistring-and-application-json-return-type-adds-additi)
+- **Media Type**: Clearly specify `@Produces` annotation (like `MediaType.APPLICATION_JSON` or `MediaType.SERVER_SENT_EVENTS`) to avoid client parsing errors.
+- **Client Compatibility**: When choosing streaming transmission for `Multi<String>`, confirm client supports corresponding protocols (like SSE). Traditional clients may need additional libraries or adaptation.
+- **Performance Tuning**: For high concurrency scenarios, streaming transmission using `Multi<String>` can reduce resource usage on both server and client, but needs adjustment of `quarkus.http.limits.max-body-size` or connection pool configuration for optimization.[](https://github.com/quarkusio/quarkus/discussions/28785)
 
 ---
 
-### 8. **结论**
-- **使用 `String`** 适合简单、静态的响应场景，客户端处理逻辑简单，但不适合大数据量或实时流。
-- **使用 `Multi<String>`** 适合异步、流式数据场景，能显著提升性能和实时性，但客户端需要支持流式协议或处理 JSON 数组，开发复杂性较高。
-- **建议**：根据客户端能力和业务需求选择合适的返回类型。如果客户端支持流式处理且数据量较大，优先使用 `Multi<String>` 配合 SSE 或分块传输；否则，使用 `String` 保持简单性。
+### 8. **Conclusion**
+- **Using `String`** is suitable for simple, static response scenarios, with simple client processing logic, but not suitable for large data volumes or real-time streams.
+- **Using `Multi<String>`** is suitable for asynchronous, streaming data scenarios, can significantly improve performance and real-time capability, but clients need to support streaming protocols or handle JSON arrays, with higher development complexity.
+- **Recommendation**: Choose appropriate return type based on client capabilities and business requirements. If client supports streaming processing and data volume is large, prioritize using `Multi<String>` with SSE or chunked transfer; otherwise, use `String` to maintain simplicity.
 
 如果需要进一步的代码示例或针对特定客户端的适配方案，请提供更多细节！

@@ -1,7 +1,7 @@
-# 在 Rust 中，是否需要在比较或操作时使用星号（`*`）解引用，取决于数据结构的类型以及它们是否是指针或智能指针类型。星号用于解引用那些**间接访问数据**的类型（例如指针或智能指针），以获取底层数据。以下是 Rust 中常见需要使用星号解引用的数据结构和场景，以及相关说明：
+# In Rust, whether you need to use the asterisk (`*`) for dereferencing in comparisons or operations depends on the data structure type and whether they are pointer or smart pointer types. The asterisk is used to dereference types that **indirectly access data** (such as pointers or smart pointers) to obtain the underlying data. Below are common data structures and scenarios in Rust that require asterisk dereferencing, along with related explanations:
 
-### 1. 指针类型
-这些类型本质上是指向数据的内存地址，访问其数据需要解引用。
+### 1. Pointer Types
+These types essentially point to memory addresses of data, and accessing their data requires dereferencing.
 
 #### (1) 裸指针
 - **类型**: `*const T`（不可变裸指针）和 `*mut T`（可变裸指针）

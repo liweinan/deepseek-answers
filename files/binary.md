@@ -1,187 +1,189 @@
-# 学习二进制时，选择 **Python** 还是 **C** 取决于你的学习目标和应用场景。以下是具体对比和建议：
+# Learning Binary: Python vs C
+
+When learning binary, choosing between **Python** and **C** depends on your learning goals and application scenarios. Here is a detailed comparison and recommendation:
 
 ---
 
-### **1. 如果你是初学者或想快速理解二进制概念**
-- **推荐 Python**
-    - **优势**：
-        - 语法简单，无需处理底层细节（如内存管理），能更专注于二进制逻辑。
-        - 内置函数（如 `bin()`, `int()`, `format()`）可直接转换二进制、十进制、十六进制。
-        - 适合快速验证算法（如位运算、补码表示等）。
-    - **示例**：
+### **1. If you are a beginner or want to quickly understand binary concepts**
+- **Recommend Python**
+    - **Advantages**:
+        - Simple syntax, no need to deal with low-level details (like memory management), can focus more on binary logic.
+        - Built-in functions (like `bin()`, `int()`, `format()`) can directly convert between binary, decimal, and hexadecimal.
+        - Suitable for quickly verifying algorithms (like bit operations, complement representation, etc.).
+    - **Example**:
       ```python
-      # 十进制转二进制
-      print(bin(42))          # 输出: 0b101010
-      # 二进制字符串转十进制
-      print(int('101010', 2))  # 输出: 42
-      # 位运算
-      print(42 & 0b1111)       # 输出: 10（按位与）
+      # Decimal to binary
+      print(bin(42))          # Output: 0b101010
+      # Binary string to decimal
+      print(int('101010', 2))  # Output: 42
+      # Bit operations
+      print(42 & 0b1111)       # Output: 10 (bitwise AND)
       ```
 
 ---
 
-### **2. 如果你想深入计算机底层（如内存、硬件）**
-- **推荐 C**
-    - **优势**：
-        - 直接操作内存（如指针、位域），理解二进制在硬件中的真实存储形式。
-        - 适合学习系统编程、嵌入式开发或性能优化场景。
-    - **示例**：
+### **2. If you want to go deep into computer low-level (like memory, hardware)**
+- **Recommend C**
+    - **Advantages**:
+        - Direct memory manipulation (like pointers, bit fields), understanding the real storage form of binary in hardware.
+        - Suitable for learning system programming, embedded development, or performance optimization scenarios.
+    - **Example**:
       ```c
       #include <stdio.h>
       int main() {
           int a = 42;
           printf("Binary: ");
           for (int i = sizeof(a) * 8 - 1; i >= 0; i--) {
-              printf("%d", (a >> i) & 1);  // 手动打印二进制位
+              printf("%d", (a >> i) & 1);  // Manually print binary bits
           }
           return 0;
       }
       ```
-    - **注意**：C 需要自行处理二进制细节（如位移、掩码），适合对底层感兴趣的学习者。
+    - **Note**: C requires handling binary details manually (like bit shifting, masking), suitable for learners interested in low-level details.
 
 ---
 
-### **3. 结合使用效果更佳**
-- **先用 Python 理解概念**，再用 **C 实践底层**：
-    - 例如，用 Python 模拟补码运算，再用 C 验证内存中的实际存储方式。
+### **3. Combined use is more effective**
+- **First use Python to understand concepts**, then use **C for low-level practice**:
+    - For example, use Python to simulate complement operations, then use C to verify the actual storage in memory.
 
 ---
 
-### **4. 其他工具推荐**
-- **辅助工具**：
-    - 无论选择哪种语言，可用 **计算器工具**（如 Windows 程序员模式）快速查看二进制表示。
-    - 在线工具（如 [Compiler Explorer](https://godbolt.org/)）实时观察 C 代码的汇编和内存布局。
+### **4. Other tool recommendations**
+- **Auxiliary tools**:
+    - Regardless of the language, you can use **calculator tools** (like Windows programmer mode) to quickly view binary representations.
+    - Online tools (like [Compiler Explorer](https://godbolt.org/)) to observe C code assembly and memory layout in real time.
 
 ---
 
-### **总结建议**
-- **目标**：
-    - 快速学习/应用 → **Python**
-    - 深入计算机系统 → **C**
-- **语言不是关键**，二进制本身的概念（如原码/反码/补码、位移、位操作）才是核心，掌握后可以轻松切换语言。
+### **Summary recommendation**
+- **Goal**:
+    - Quick learning/application → **Python**
+    - Deep computer systems → **C**
+- **Language is not the key**, the concept of binary itself (like original code/inverse code/complement, bit shifting, bit operations) is the core. Once mastered, you can easily switch languages.
 
-在 Python 中，二进制操作（如位运算、进制转换、位移等）常用于算法优化、硬件交互或数据处理。以下是一些实用的 **二进制操作示例**，涵盖基础到进阶用法：
+In Python, binary operations (like bit operations, base conversion, bit shifting, etc.) are commonly used for algorithm optimization, hardware interaction, or data processing. Here are some practical **binary operation examples**, covering basic to advanced usage:
 
 ---
 
-### **1. 进制转换**
-#### 十进制 ↔ 二进制
+### **1. Base Conversion**
+#### Decimal ↔ Binary
 ```python
 num = 42
-# 十进制转二进制字符串（带 '0b' 前缀）
-bin_str = bin(num)        # 输出: '0b101010'
-# 去掉前缀并补零到8位
-bin_str_filled = format(num, '08b')  # 输出: '00101010'
+# Decimal to binary string (with '0b' prefix)
+bin_str = bin(num)        # Output: '0b101010'
+# Remove prefix and pad to 8 bits
+bin_str_filled = format(num, '08b')  # Output: '00101010'
 
-# 二进制字符串转十进制
-decimal = int('101010', 2)  # 输出: 42
+# Binary string to decimal
+decimal = int('101010', 2)  # Output: 42
 ```
 
-#### 十六进制 ↔ 二进制
+#### Hexadecimal ↔ Binary
 ```python
 hex_num = 0x2A
-bin_str = bin(hex_num)     # 输出: '0b101010'
+bin_str = bin(hex_num)     # Output: '0b101010'
 
-# 二进制转十六进制
-hex_str = hex(0b101010)    # 输出: '0x2a'
+# Binary to hexadecimal
+hex_str = hex(0b101010)    # Output: '0x2a'
 ```
 
 ---
 
-### **2. 位运算**
-#### 按位与（`&`）、或（`|`）、异或（`^`）、非（`~`）
+### **2. Bit Operations**
+#### Bitwise AND (`&`), OR (`|`), XOR (`^`), NOT (`~`)
 ```python
 a, b = 0b1100, 0b1010
-# 按位与（同1为1）
-print(bin(a & b))          # 输出: 0b1000
-# 按位或（有1为1）
-print(bin(a | b))          # 输出: 0b1110
-# 按位异或（不同为1）
-print(bin(a ^ b))          # 输出: 0b0110
-# 按位取反（注意Python的补码表示）
-print(bin(~a & 0xFF))      # 输出: 0b11110011（限制8位）
+# Bitwise AND (1 if both are 1)
+print(bin(a & b))          # Output: 0b1000
+# Bitwise OR (1 if either is 1)
+print(bin(a | b))          # Output: 0b1110
+# Bitwise XOR (1 if different)
+print(bin(a ^ b))          # Output: 0b0110
+# Bitwise NOT (note Python's complement representation)
+print(bin(~a & 0xFF))      # Output: 0b11110011 (limited to 8 bits)
 ```
 
-#### 位移操作（`<<` 左移、`>>` 右移）
+#### Bit shifting (`<<` left shift, `>>` right shift)
 ```python
 x = 0b0001  # 1
-# 左移2位（相当于乘以4）
-print(bin(x << 2))        # 输出: 0b100 (4)
-# 右移1位（相当于除以2）
-print(bin(x >> 1))        # 输出: 0b0 (0)
+# Left shift 2 bits (equivalent to multiplying by 4)
+print(bin(x << 2))        # Output: 0b100 (4)
+# Right shift 1 bit (equivalent to dividing by 2)
+print(bin(x >> 1))        # Output: 0b0 (0)
 ```
 
 ---
 
-### **3. 二进制掩码操作**
-#### 检查特定位是否为1
+### **3. Binary Mask Operations**
+#### Check if specific bit is 1
 ```python
 num = 0b101010
 mask = 0b001000
 if num & mask:
-    print("第3位是1")      # 会输出
+    print("Bit 3 is 1")      # Will output
 ```
 
-#### 设置特定位为1或0
+#### Set specific bit to 1 or 0
 ```python
 num = 0b101010
-# 设置第2位为1
-num |= 0b000010           # 结果: 0b101010 | 0b000010 = 0b101010
-# 设置第3位为0
-num &= ~0b001000          # 结果: 0b101010 & 0b110111 = 0b100010
+# Set bit 2 to 1
+num |= 0b000010           # Result: 0b101010 | 0b000010 = 0b101010
+# Set bit 3 to 0
+num &= ~0b001000          # Result: 0b101010 & 0b110111 = 0b100010
 ```
 
 ---
 
-### **4. 实战应用示例**
-#### 统计二进制中1的个数
+### **4. Practical Application Examples**
+#### Count number of 1s in binary
 ```python
 def count_ones(n):
-    return bin(n).count('1')  # 或使用 n.bit_count()（Python 3.10+）
-print(count_ones(0b101011))   # 输出: 4
+    return bin(n).count('1')  # Or use n.bit_count() (Python 3.10+)
+print(count_ones(0b101011))   # Output: 4
 ```
 
-#### 判断奇偶性
+#### Check odd or even
 ```python
 n = 5
 if n & 1:
-    print("奇数")            # 输出: 奇数
+    print("Odd")            # Output: Odd
 ```
 
-#### 交换两个变量的值（无需临时变量）
+#### Swap two variables without temporary variable
 ```python
 a, b = 5, 3
 a ^= b  # a = a ^ b
-b ^= a  # b = b ^ a (此时b变为原a的值)
-a ^= b  # a = a ^ b (此时a变为原b的值)
-print(a, b)  # 输出: 3 5
+b ^= a  # b = b ^ a (now b becomes original a value)
+a ^= b  # a = a ^ b (now a becomes original b value)
+print(a, b)  # Output: 3 5
 ```
 
-#### 生成所有子集（位掩码法）
+#### Generate all subsets (bitmask method)
 ```python
 nums = [1, 2, 3]
 n = len(nums)
-for mask in range(1 << n):  # 2^n种可能
+for mask in range(1 << n):  # 2^n possibilities
     subset = [nums[i] for i in range(n) if (mask >> i) & 1]
     print(subset)
-# 输出: [], [1], [2], [1,2], [3], [1,3], [2,3], [1,2,3]
+# Output: [], [1], [2], [1,2], [3], [1,3], [2,3], [1,2,3]
 ```
 
 ---
 
-### **5. 进阶技巧**
-#### 快速计算2的幂次
+### **5. Advanced Techniques**
+#### Quickly calculate powers of 2
 ```python
 power = 1 << 3  # 2^3 = 8
 ```
 
-#### 提取最低位的1（Lowest Set Bit）
+#### Extract lowest set bit (Lowest Set Bit)
 ```python
 x = 0b101100
-lowest_bit = x & -x        # 输出: 0b000100 (4)
+lowest_bit = x & -x        # Output: 0b000100 (4)
 ```
 
-#### 判断是否为2的幂
+#### Check if power of 2
 ```python
 def is_power_of_two(n):
     return n > 0 and (n & (n - 1)) == 0
@@ -190,145 +192,145 @@ print(is_power_of_two(16))  # True
 
 ---
 
-### **注意事项**
-- Python 的整数理论上无限长，但实际应用中需注意位数限制（如用 `& 0xFF` 限制为8位）。
-- 位运算在算法竞赛中常用于状态压缩、优化计算（如快速幂）。
+### **Notes**
+- Python integers are theoretically unlimited in length, but in practical applications, pay attention to bit length limitations (like using `& 0xFF` to limit to 8 bits).
+- Bit operations are commonly used in algorithm competitions for state compression and optimization (like fast exponentiation).
 
-掌握这些操作能显著提升代码效率，尤其在处理**位掩码、状态压缩、二进制编码**等问题时！
+Mastering these operations can significantly improve code efficiency, especially when dealing with **bitmask, state compression, binary encoding** and other issues!
 
-在计算机科学中，**掩码（Mask）、状态压缩（State Compression）和二进制编码（Binary Encoding）** 是利用二进制位操作高效处理数据的关键技术，尤其在算法优化、系统设计和硬件交互中广泛应用。以下是详细解析和示例：
+In computer science, **mask (Mask), state compression (State Compression), and binary encoding (Binary Encoding)** are key technologies that use binary bit operations to efficiently process data, widely used in algorithm optimization, system design, and hardware interaction. Here is a detailed analysis and examples:
 
 ---
 
-### **1. 掩码（Mask）**
-#### **概念**
-掩码是通过**位运算**（如 `AND`、`OR`、`XOR`、`NOT`）来提取、设置或修改数据的特定位模式的工具。  
-**核心用途**：
-- 检查/修改某一位的状态
-- 批量操作多个位
+### **1. Mask (Mask)**
+#### **Concept**
+Masks are tools that extract, set, or modify specific bit patterns in data through **bit operations** (like `AND`, `OR`, `XOR`, `NOT`).  
+**Core uses**:
+- Check/modify the state of a specific bit
+- Batch operations on multiple bits
 
-#### **常见操作示例**
+#### **Common Operation Examples**
 ```python
-# 定义掩码：第3位（从0开始计数）
+# Define mask: bit 3 (counting from 0)
 mask = 0b001000  
 
 num = 0b101010  # 42
 
-# 检查第3位是否为1
+# Check if bit 3 is 1
 if num & mask:
-    print("第3位是1")  # 输出
+    print("Bit 3 is 1")  # Output
 
-# 将第3位设为1
-num |= mask     # 结果: 0b101010 | 0b001000 = 0b101010（不变，因为原本就是1）
+# Set bit 3 to 1
+num |= mask     # Result: 0b101010 | 0b001000 = 0b101010 (unchanged, was already 1)
 
-# 将第3位清零
-num &= ~mask    # 结果: 0b101010 & 0b110111 = 0b100010（34）
+# Clear bit 3
+num &= ~mask    # Result: 0b101010 & 0b110111 = 0b100010 (34)
 
-# 切换第3位的状态（1变0，0变1）
-num ^= mask     # 结果: 0b100010 ^ 0b001000 = 0b101010（42）
+# Toggle bit 3 state (1 to 0, 0 to 1)
+num ^= mask     # Result: 0b100010 ^ 0b001000 = 0b101010 (42)
 ```
 
 ---
 
-### **2. 状态压缩（State Compression）**
-#### **概念**
-将多个状态（如布尔值、枚举）压缩到一个整数的二进制位中，以节省空间并加速操作。  
-**典型场景**：
-- 子集生成（如组合问题）
-- 动态规划的状态表示（如DP中的状态机）
-- 图的访问标记（如DFS中的visited数组）
+### **2. State Compression (State Compression)**
+#### **Concept**
+Compress multiple states (like boolean values, enums) into the binary bits of an integer to save space and speed up operations.  
+**Typical scenarios**:
+- Subset generation (like combination problems)
+- State representation in dynamic programming (like state machines in DP)
+- Graph visit marking (like visited arrays in DFS)
 
-#### **示例：子集生成**
+#### **Example: Subset Generation**
 ```python
 nums = ['A', 'B', 'C']
 n = len(nums)
 
-# 用二进制位表示是否选中元素（1选，0不选）
-for mask in range(1 << n):  # 遍历所有可能的子集（2^n种）
+# Use binary bits to represent whether elements are selected (1 selected, 0 not selected)
+for mask in range(1 << n):  # Iterate through all possible subsets (2^n possibilities)
     subset = [nums[i] for i in range(n) if (mask >> i) & 1]
     print(subset)
 
-# 输出：
+# Output:
 # [], ['A'], ['B'], ['A', 'B'], ['C'], ['A', 'C'], ['B', 'C'], ['A', 'B', 'C']
 ```
 
-#### **示例：动态规划（旅行商问题 TSP）**
+#### **Example: Dynamic Programming (Traveling Salesman Problem TSP)**
 ```python
-# 用二进制表示访问过的城市（假设最多16个城市）
+# Use binary to represent visited cities (assuming max 16 cities)
 dp = [[float('inf')] * 16 for _ in range(1 << 16)]
-dp[1][0] = 0  # 初始状态：只访问过城市0，当前位于城市0
+dp[1][0] = 0  # Initial state: only visited city 0, currently at city 0
 
-# 状态转移：mask的二进制位1表示已访问的城市
+# State transition: binary bit 1 represents visited cities
 for mask in range(1 << 16):
     for u in range(16):
-        if (mask >> u) & 1:  # 当前城市u必须已访问
+        if (mask >> u) & 1:  # Current city u must have been visited
             for v in range(16):
-                if not (mask >> v) & 1:  # 城市v未访问
+                if not (mask >> v) & 1:  # City v not visited
                     new_mask = mask | (1 << v)
                     dp[new_mask][v] = min(dp[new_mask][v], dp[mask][u] + dist[u][v])
 ```
 
 ---
 
-### **3. 二进制编码（Binary Encoding）**
-#### **概念**
-将复杂数据（如枚举、权限、配置）映射为二进制位，通过位操作高效存储和解析。  
-**常见应用**：
-- 权限控制系统（如Linux文件权限）
-- 网络协议头字段
-- 硬件寄存器配置
+### **3. Binary Encoding (Binary Encoding)**
+#### **Concept**
+Map complex data (like enums, permissions, configurations) to binary bits, efficiently store and parse through bit operations.  
+**Common applications**:
+- Permission control systems (like Linux file permissions)
+- Network protocol header fields
+- Hardware register configuration
 
-#### **示例：权限系统**
+#### **Example: Permission System**
 ```python
-# 定义权限标志
+# Define permission flags
 READ = 0b001  # 1
 WRITE = 0b010 # 2
 EXECUTE = 0b100 # 4
 
-user_permission = 0b011  # 可读 + 可写
+user_permission = 0b011  # Readable + Writable
 
-# 检查权限
+# Check permissions
 def has_permission(perm, flag):
     return perm & flag
 
 if has_permission(user_permission, READ):
-    print("可读")  # 输出
+    print("Readable")  # Output
 
-# 添加权限
-user_permission |= EXECUTE  # 结果: 0b111（可读+可写+可执行）
+# Add permission
+user_permission |= EXECUTE  # Result: 0b111 (Readable + Writable + Executable)
 
-# 移除权限
-user_permission &= ~WRITE   # 结果: 0b101（可读+可执行）
+# Remove permission
+user_permission &= ~WRITE   # Result: 0b101 (Readable + Executable)
 ```
 
-#### **示例：RGB颜色编码**
+#### **Example: RGB Color Encoding**
 ```python
-# 将RGB值（每个分量8位）压缩为32位整数
+# Compress RGB values (8 bits per component) into 32-bit integer
 def rgb_to_int(r, g, b):
     return (r << 16) | (g << 8) | b
 
 color = rgb_to_int(255, 128, 64)  # 0xFF8040
 
-# 从整数解码RGB
+# Decode RGB from integer
 def int_to_rgb(value):
     r = (value >> 16) & 0xFF
     g = (value >> 8) & 0xFF
     b = value & 0xFF
     return r, g, b
 
-print(int_to_rgb(color))  # 输出: (255, 128, 64)
+print(int_to_rgb(color))  # Output: (255, 128, 64)
 ```
 
 ---
 
-### **4. 综合应用：位图（Bitmap）**
-用二进制位表示大规模布尔数组，节省内存。  
-**示例**：
+### **4. Comprehensive Application: Bitmap (Bitmap)**
+Use binary bits to represent large-scale boolean arrays, saving memory.  
+**Example**:
 ```python
 class Bitmap:
     def __init__(self, size):
         self.size = size
-        self.bits = [0] * ((size + 31) // 32)  # 用32位整数数组存储
+        self.bits = [0] * ((size + 31) // 32)  # Store in 32-bit integer array
 
     def set_bit(self, pos):
         idx = pos // 32
@@ -340,19 +342,19 @@ class Bitmap:
         offset = pos % 32
         return (self.bits[idx] >> offset) & 1
 
-# 使用示例
+# Usage example
 bitmap = Bitmap(100)
 bitmap.set_bit(42)
-print(bitmap.get_bit(42))  # 输出: 1
+print(bitmap.get_bit(42))  # Output: 1
 ```
 
 ---
 
-### **关键总结**
-| 技术          | 核心思想                           | 典型应用场景               |
+### **Key Summary**
+| Technique          | Core Idea                           | Typical Application Scenarios               |
 |---------------|-----------------------------------|---------------------------|
-| **掩码**      | 通过位运算精准控制特定位           | 权限管理、硬件寄存器配置   |
-| **状态压缩**  | 用二进制位表示多个状态，减少空间   | 动态规划、组合问题、图遍历 |
-| **二进制编码**| 将结构化数据映射为二进制整数       | 协议设计、颜色编码         |
+| **Mask**      | Precisely control specific bits through bit operations           | Permission management, hardware register configuration   |
+| **State Compression**  | Use binary bits to represent multiple states, reduce space   | Dynamic programming, combination problems, graph traversal |
+| **Binary Encoding**  | Map structured data to binary integers       | Protocol design, color encoding         |
 
-掌握这些技术能显著提升算法效率和代码简洁性，尤其在**竞赛、系统编程、嵌入式开发**中至关重要！
+Mastering these techniques can significantly improve algorithm efficiency and code conciseness, especially crucial in **competitions, system programming, embedded development**!

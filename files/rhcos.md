@@ -1,9 +1,9 @@
-# Red Hat Enterprise Linux CoreOS（RHCOS）是红帽公司推出的一种轻量级、专为容器化工作负载设计的操作系统，主要用于支持 OpenShift Container Platform（OCP）。以下是对 RHCOS 的简要介绍：
+# Red Hat Enterprise Linux CoreOS (RHCOS) is a lightweight operating system launched by Red Hat, specifically designed for containerized workloads, mainly used to support OpenShift Container Platform (OCP). The following is a brief introduction to RHCOS:
 
-### 核心特点
-1. **不可变系统（Immutable System）**：
-    - RHCOS 采用只读文件系统设计，操作系统组件不可直接修改。这种“不可变”架构通过替换整个系统镜像（而非逐个补丁）进行更新，确保一致性、稳定性和安全性。[](https://juejin.cn/s/redhat%2520coreos)[](https://www.redhat.com/en/blog/red-hat-enterprise-linux-coreos-customization)
-    - 更新过程基于原子操作，支持回滚到先前版本，降低更新失败风险。[](https://dockone.io/article/1026)
+### Core Features
+1. **Immutable System**:
+    - RHCOS adopts a read-only file system design, where operating system components cannot be directly modified. This "immutable" architecture updates by replacing the entire system image (rather than individual patches), ensuring consistency, stability, and security.[](https://juejin.cn/s/redhat%2520coreos)[](https://www.redhat.com/en/blog/red-hat-enterprise-linux-coreos-customization)
+    - The update process is based on atomic operations, supporting rollback to previous versions, reducing update failure risks.[](https://dockone.io/article/1026)
 
 2. **容器优化**：
     - RHCOS 专为运行容器化应用而设计，内置 CRI-O 容器运行时（替代 Docker），提供更小占用空间和更低攻击面，专为 Kubernetes 平台优化。[](https://docs.redhat.com/en/documentation/openshift_container_platform/4.8/html/architecture/architecture-rhcos)[](https://access.redhat.com/documentation/en-us/openshift_container_platform/4.8/html/architecture/architecture-rhcos)

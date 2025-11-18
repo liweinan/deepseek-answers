@@ -1,17 +1,17 @@
 
-# Rust 语言速查表（中文版）
+# Rust Language Cheatsheet (Chinese Version)
 
-Rust 是一门注重安全、性能和并发性的系统编程语言。本速查表涵盖了 Rust 的核心概念、语法和常用模式，适合初学者和有经验的开发者快速参考。
+Rust is a systems programming language that focuses on safety, performance, and concurrency. This cheatsheet covers Rust's core concepts, syntax, and common patterns, suitable for both beginners and experienced developers for quick reference.
 
 ---
 
-## 变量与数据类型
+## Variables and Data Types
 
-### 变量声明
-- **不可变变量**（默认）：使用 `let` 声明，值不可更改。
-- **可变变量**：使用 `let mut` 声明，允许修改值。
-- **常量**：使用 `const` 声明，值在编译时确定，且不可更改。
-- **静态变量**：使用 `static` 声明，具有固定内存地址和全局生命周期。
+### Variable Declaration
+- **Immutable variables** (default): Declared with `let`, values cannot be changed.
+- **Mutable variables**: Declared with `let mut`, allow value modification.
+- **Constants**: Declared with `const`, values determined at compile time and cannot be changed.
+- **Static variables**: Declared with `static`, have fixed memory addresses and global lifetimes.
 
 ```rust
 // 不可变变量

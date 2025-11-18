@@ -1,50 +1,50 @@
-# JavaScript 的 **解构赋值**（Destructuring Assignment）是一种简洁的语法，用于从数组或对象中提取值，并将其赋值给变量。它让代码更简洁、可读，避免了繁琐的索引或属性访问。以下是关于解构赋值的详细介绍：
+# JavaScript **Destructuring Assignment** is a concise syntax for extracting values from arrays or objects and assigning them to variables. It makes code more concise and readable, avoiding cumbersome indexing or property access. Here is a detailed introduction to destructuring assignment:
 
 ---
 
-### 1. **数组解构**
-数组解构允许你从数组中提取元素并赋值给变量，按照数组的索引顺序进行匹配。
+### 1. **Array Destructuring**
+Array destructuring allows you to extract elements from an array and assign them to variables, matching by array index order.
 
-#### 基本语法
+#### Basic Syntax
 ```javascript
 const [var1, var2, ...rest] = array;
 ```
 
-#### 示例
+#### Examples
 ```javascript
-// 基本解构
+// Basic destructuring
 const numbers = [1, 2, 3];
 const [a, b, c] = numbers;
 console.log(a); // 1
 console.log(b); // 2
 console.log(c); // 3
 
-// 跳过元素
+// Skip elements
 const [x, , z] = numbers;
 console.log(x); // 1
 console.log(z); // 3
 
-// 使用 rest 运算符收集剩余元素
+// Use rest operator to collect remaining elements
 const [first, ...rest] = numbers;
 console.log(first); // 1
 console.log(rest); // [2, 3]
 
-// 默认值
+// Default values
 const [p, q, r = 10] = [1, 2];
 console.log(p); // 1
 console.log(q); // 2
-console.log(r); // 10（默认值）
+console.log(r); // 10 (default value)
 ```
 
-#### 应用场景
-- 交换变量：
+#### Application Scenarios
+- Variable swapping:
 ```javascript
 let a = 1, b = 2;
 [a, b] = [b, a];
 console.log(a); // 2
 console.log(b); // 1
 ```
-- 函数返回多值：
+- Function returning multiple values:
 ```javascript
 function getPoint() {
   return [10, 20];
@@ -55,38 +55,38 @@ console.log(x, y); // 10 20
 
 ---
 
-### 2. **对象解构**
-对象解构允许你从对象中提取属性值并赋值给变量，可以直接使用属性名或自定义变量名。
+### 2. **Object Destructuring**
+Object destructuring allows you to extract property values from an object and assign them to variables, you can use property names directly or custom variable names.
 
-#### 基本语法
+#### Basic Syntax
 ```javascript
 const { key1, key2, ...rest } = object;
 ```
 
-#### 示例
+#### Examples
 ```javascript
-// 基本解构
+// Basic destructuring
 const person = { name: 'Alice', age: 25 };
 const { name, age } = person;
 console.log(name); // 'Alice'
 console.log(age); // 25
 
-// 重命名变量
+// Rename variables
 const { name: userName, age: userAge } = person;
 console.log(userName); // 'Alice'
 console.log(userAge); // 25
 
-// 默认值
+// Default values
 const { name, role = 'Guest' } = person;
 console.log(name); // 'Alice'
-console.log(role); // 'Guest'（默认值）
+console.log(role); // 'Guest' (default value)
 
-// rest 运算符
+// rest operator
 const { name, ...rest } = person;
 console.log(rest); // { age: 25 }
 ```
 
-#### 嵌套解构
+#### Nested Destructuring
 ```javascript
 const user = {
   id: 1,
@@ -99,10 +99,10 @@ console.log(age); // 30
 
 ---
 
-### 3. **函数参数解构**
-解构可以直接用于函数参数，简化参数处理。
+### 3. **Function Parameter Destructuring**
+Destructuring can be used directly in function parameters to simplify parameter handling.
 
-#### 示例
+#### Examples
 ```javascript
 function printUser({ name, age = 18 }) {
   console.log(`Name: ${name}, Age: ${age}`);
@@ -111,7 +111,7 @@ const user = { name: 'Charlie', age: 22 };
 printUser(user); // Name: Charlie, Age: 22
 ```
 
-#### 数组参数解构
+#### Array Parameter Destructuring
 ```javascript
 function sum([a, b, c = 0]) {
   return a + b + c;
@@ -122,113 +122,113 @@ console.log(sum([1, 2, 3])); // 6
 
 ---
 
-### 4. **注意事项**
-- **解构失败**：如果解构的变量没有匹配到值，会返回 `undefined`，除非设置了默认值。
+### 4. **Notes**
+- **Destructuring failure**: If the destructured variable doesn't match any value, it returns `undefined`, unless a default value is set.
   ```javascript
   const [x] = [];
   console.log(x); // undefined
   ```
-- **严格模式**：解构赋值必须在声明时使用（如 `let`、`const`、`var`），否则需要用括号包裹：
+- **Strict mode**: Destructuring assignment must be used during declaration (like `let`, `const`, `var`), otherwise needs to be wrapped in parentheses:
   ```javascript
   let a, b;
-  ({ a, b } = { a: 1, b: 2 }); // 必须加括号
+  ({ a, b } = { a: 1, b: 2 }); // Must add parentheses
   ```
-- **兼容性**：解构赋值是 ES6 引入的特性，现代浏览器和 Node.js 都支持。
+- **Compatibility**: Destructuring assignment is an ES6 feature, supported by modern browsers and Node.js.
 
 ---
 
-### 5. **实际应用**
-- **简化代码**：减少临时变量的使用，使代码更简洁。
-- **处理 API 数据**：从复杂 JSON 数据中快速提取所需字段。
+### 5. **Practical Applications**
+- **Simplify code**: Reduce the use of temporary variables, make code more concise.
+- **Process API data**: Quickly extract required fields from complex JSON data.
   ```javascript
   fetch('https://api.example.com/user')
     .then(response => response.json())
     .then(({ id, name }) => console.log(id, name));
   ```
-- **模块导入**：在 ES 模块中解构导入特定函数或变量。
+- **Module imports**: Destructure and import specific functions or variables in ES modules.
   ```javascript
   import { useState, useEffect } from 'react';
   ```
 
 ---
 
-### 总结
-解构赋值是 JavaScript 中一个强大且灵活的特性，适用于数组和对象的快速值提取。通过结合默认值、rest 运算符和嵌套解构，它能大幅提高代码的可读性和简洁性，尤其在处理复杂数据结构或函数参数时非常实用。
+### Summary
+Destructuring assignment is a powerful and flexible feature in JavaScript, suitable for quick value extraction from arrays and objects. By combining default values, rest operators, and nested destructuring, it can significantly improve code readability and conciseness, especially when dealing with complex data structures or function parameters.
 
-如果你有具体场景或更深入的问题，随时告诉我！
-
----
-
-在 TypeScript 中，解构赋值（Destructuring Assignment）与 JavaScript 的语法基本相同，但 TypeScript 增加了类型注解和类型检查的功能，使得解构赋值更安全、更严格。以下是 TypeScript 中解构赋值的详细介绍，涵盖数组解构、对象解构及常见用例，同时突出 TypeScript 的类型特性。
+If you have specific scenarios or deeper questions, feel free to let me know!
 
 ---
 
-### 1. **数组解构**
-在 TypeScript 中，数组解构需要为变量指定类型，以确保解构出的值符合预期类型。
+In TypeScript, destructuring assignment has basically the same syntax as JavaScript, but TypeScript adds type annotation and type checking features, making destructuring assignment safer and more strict. Here is a detailed introduction to destructuring assignment in TypeScript, covering array destructuring, object destructuring, and common use cases, while highlighting TypeScript's type characteristics.
 
-#### 基本语法
+---
+
+### 1. **Array Destructuring**
+In TypeScript, array destructuring requires specifying types for variables to ensure the destructured values match the expected types.
+
+#### Basic Syntax
 ```typescript
 const [var1, var2]: [type1, type2] = array;
 ```
 
-#### 示例
+#### Examples
 ```typescript
-// 基本数组解构
+// Basic array destructuring
 const numbers: number[] = [1, 2, 3];
 const [a, b, c]: [number, number, number] = numbers;
 console.log(a); // 1
 console.log(b); // 2
 console.log(c); // 3
 
-// 使用元组类型
+// Using tuple types
 const point: [number, string] = [10, "x"];
 const [x, label]: [number, string] = point;
 console.log(x); // 10
 console.log(label); // "x"
 
-// 跳过元素
+// Skip elements
 const [first, , third]: [number, number, number] = numbers;
 console.log(first); // 1
 console.log(third); // 3
 
-// rest 运算符
+// rest operator
 const [head, ...tail]: [number, ...number[]] = numbers;
 console.log(head); // 1
 console.log(tail); // [2, 3]
 
-// 默认值
+// Default values
 const [p, q, r = 10]: [number, number, number?] = [1, 2];
 console.log(p); // 1
 console.log(q); // 2
 console.log(r); // 10
 ```
 
-#### 类型推断
-TypeScript 通常可以推断解构变量的类型，如果数组类型已知：
+#### Type Inference
+TypeScript can usually infer the types of destructured variables if the array type is known:
 ```typescript
-const numbers = [1, 2, 3] as const; // 推断为 readonly [1, 2, 3]
-const [a, b, c] = numbers; // a, b, c 自动推断为 1, 2, 3 的字面量类型
+const numbers = [1, 2, 3] as const; // Inferred as readonly [1, 2, 3]
+const [a, b, c] = numbers; // a, b, c automatically inferred as literal types 1, 2, 3
 ```
 
-#### 注意
-如果解构的数组类型不匹配，TypeScript 会报错：
+#### Note
+If the destructured array type doesn't match, TypeScript will report an error:
 ```typescript
 const [x]: [number] = ["1"]; // Error: Type 'string' is not assignable to type 'number'
 ```
 
 ---
 
-### 2. **对象解构**
-对象解构在 TypeScript 中需要为变量指定类型，通常通过接口、类型别名或内联类型来定义对象的结构。
+### 2. **Object Destructuring**
+Object destructuring in TypeScript requires specifying types for variables, usually through interfaces, type aliases, or inline types to define the object's structure.
 
-#### 基本语法
+#### Basic Syntax
 ```typescript
 const { key1, key2 }: { key1: type1; key2: type2 } = object;
 ```
 
-#### 示例
+#### Examples
 ```typescript
-// 定义接口
+// Define interface
 interface Person {
   name: string;
   age: number;
@@ -236,28 +236,28 @@ interface Person {
 
 const person: Person = { name: "Alice", age: 25 };
 
-// 基本解构
+// Basic destructuring
 const { name, age }: Person = person;
 console.log(name); // 'Alice'
 console.log(age); // 25
 
-// 重命名变量
+// Rename variables
 const { name: userName, age: userAge }: Person = person;
 console.log(userName); // 'Alice'
 console.log(userAge); // 25
 
-// 默认值
+// Default values
 const { name, role = "Guest" }: { name: string; role?: string } = person;
 console.log(name); // 'Alice'
 console.log(role); // 'Guest'
 
-// rest 运算符
+// rest operator
 const { name: n, ...rest }: Person = person;
 console.log(n); // 'Alice'
 console.log(rest); // { age: 25 }
 ```
 
-#### 嵌套解构
+#### Nested Destructuring
 ```typescript
 interface User {
   id: number;
@@ -270,8 +270,8 @@ console.log(name); // 'Bob'
 console.log(age); // 30
 ```
 
-#### 可选属性
-TypeScript 支持解构可选属性，结合默认值可以更灵活：
+#### Optional Properties
+TypeScript supports destructuring optional properties, and combining with default values provides more flexibility:
 ```typescript
 interface Config {
   host: string;
@@ -286,12 +286,12 @@ console.log(port); // 8080
 
 ---
 
-### 3. **函数参数解构**
-TypeScript 中函数参数的解构赋值可以结合类型注解，确保参数的结构和类型安全。
+### 3. **Function Parameter Destructuring**
+Function parameter destructuring in TypeScript can be combined with type annotations to ensure parameter structure and type safety.
 
-#### 示例
+#### Examples
 ```typescript
-// 对象参数解构
+// Object parameter destructuring
 interface User {
   name: string;
   age: number;
@@ -304,7 +304,7 @@ function printUser({ name, age = 18 }: User): void {
 printUser({ name: "Charlie", age: 22 }); // Name: Charlie, Age: 22
 printUser({ name: "David" }); // Name: David, Age: 18
 
-// 数组参数解构
+// Array parameter destructuring
 function sum([a, b, c = 0]: [number, number, number?]): number {
   return a + b + c;
 }
@@ -313,8 +313,8 @@ console.log(sum([1, 2])); // 3
 console.log(sum([1, 2, 3])); // 6
 ```
 
-#### 类型推断
-如果函数参数的类型可以推断，TypeScript 会自动推导：
+#### Type Inference
+If function parameter types can be inferred, TypeScript will automatically infer them:
 ```typescript
 function logPoint([x, y]: [number, number]) {
   console.log(x, y);
@@ -324,29 +324,29 @@ logPoint([10, 20]); // 10 20
 
 ---
 
-### 4. **TypeScript 特有的注意事项**
-- **类型安全**：TypeScript 会在编译时检查解构赋值的类型是否匹配。如果解构的属性或元素类型不符，会抛出错误：
+### 4. **TypeScript Specific Considerations**
+- **Type Safety**: TypeScript checks at compile time whether destructuring assignment types match. If destructured properties or element types don't match, it throws errors:
   ```typescript
   const { name }: { name: number } = { name: "Alice" }; // Error: Type 'string' is not assignable to type 'number'
   ```
-- **非空断言**：当解构可能为 `undefined` 或 `null` 的值时，需小心处理：
+- **Non-null Assertion**: When destructuring values that might be `undefined` or `null`, handle with care:
   ```typescript
   interface Data {
     user?: { name: string };
   }
   const data: Data = {};
   const { user: { name } } = data; // Error: 'user' is possibly 'undefined'
-  // 修复：使用默认值或可选链
+  // Fix: Use default values or optional chaining
   const { user = { name: "Unknown" } }: Data = data;
   ```
-- **联合类型**：解构联合类型对象时，需要确保解构的属性在所有类型中都存在：
+- **Union Types**: When destructuring union type objects, ensure destructured properties exist in all types:
   ```typescript
   type A = { x: number };
   type B = { y: string };
   const obj: A | B = { x: 1 };
   const { x } = obj; // Error: Property 'x' does not exist on type 'A | B'
   ```
-- **严格模式**：与 JavaScript 类似，解构赋值在 TypeScript 中也需要声明变量（如 `let`、`const`），否则需用括号：
+- **Strict Mode**: Similar to JavaScript, destructuring assignment in TypeScript also requires variable declaration (like `let`, `const`), otherwise parentheses are needed:
   ```typescript
   let a: number, b: number;
   ({ a, b } = { a: 1, b: 2 });
@@ -354,8 +354,8 @@ logPoint([10, 20]); // 10 20
 
 ---
 
-### 5. **实际应用**
-- **API 数据处理**：从复杂 JSON 数据中提取字段，并确保类型正确：
+### 5. **Practical Applications**
+- **API Data Processing**: Extract fields from complex JSON data and ensure type correctness:
   ```typescript
   interface ApiResponse {
     id: number;
@@ -368,7 +368,7 @@ logPoint([10, 20]); // 10 20
     console.log(id, name);
   }
   ```
-- **React 组件**：在 React 中解构 props 并指定类型：
+- **React Components**: Destructure props and specify types in React:
   ```typescript
   interface Props {
     title: string;
@@ -379,7 +379,7 @@ logPoint([10, 20]); // 10 20
     return <div>{title}: {count}</div>;
   };
   ```
-- **模块导入**：解构导入并指定类型：
+- **Module Imports**: Destructure imports and specify types:
   ```typescript
   import { useState, useEffect } from "react";
   const [state, setState] = useState<string>("");
@@ -387,23 +387,23 @@ logPoint([10, 20]); // 10 20
 
 ---
 
-### 6. **总结**
-TypeScript 的解构赋值在 JavaScript 基础上增加了类型注解和类型检查的功能，使得代码更安全、更可维护。通过接口、类型别名或内联类型，开发者可以明确指定解构变量的类型，结合默认值、rest 运算符和嵌套解构，处理复杂数据结构更加高效。TypeScript 的类型推断也能减少冗余代码，但在处理可选属性或联合类型时需特别注意类型安全。
+### 6. **Summary**
+TypeScript's destructuring assignment adds type annotation and type checking features on top of JavaScript, making code safer and more maintainable. Through interfaces, type aliases, or inline types, developers can explicitly specify the types of destructured variables. Combined with default values, rest operators, and nested destructuring, handling complex data structures becomes more efficient. TypeScript's type inference can also reduce redundant code, but special attention to type safety is needed when dealing with optional properties or union types.
 
-如果你有具体的 TypeScript 解构场景或问题（比如结合泛型、复杂类型等），可以进一步讨论！
-
----
-
-在 JavaScript 中，解构赋值时如果数据类型与被赋值的变量预期类型不匹配，通常不会引发运行时错误，因为 JavaScript 是一种动态类型语言，变量的类型可以动态改变。解构赋值会直接将值赋给变量，而不会强制检查类型。然而，类型不匹配可能会导致逻辑错误或不符合预期的行为。以下是对数组解构和对象解构的具体分析，以及可能出现的情况：
+If you have specific TypeScript destructuring scenarios or questions (such as combining with generics, complex types, etc.), we can discuss further!
 
 ---
 
-### 1. **数组解构**
-在数组解构中，JavaScript 会按索引顺序将数组元素赋值给变量。如果数据类型与预期不符，变量会直接接收实际的值，类型由实际值决定。
+In JavaScript, when the data type doesn't match the expected type of the variable being assigned during destructuring assignment, it usually doesn't cause runtime errors because JavaScript is a dynamically typed language where variable types can change dynamically. Destructuring assignment directly assigns values to variables without forced type checking. However, type mismatches may lead to logical errors or unexpected behavior. The following is a specific analysis of array destructuring and object destructuring, along with possible scenarios:
 
-#### 示例
+---
+
+### 1. **Array Destructuring**
+In array destructuring, JavaScript assigns array elements to variables in index order. If the data type doesn't match expectations, variables directly receive the actual values, with types determined by the actual values.
+
+#### Examples
 ```javascript
-const numbers = [1, "two", true]; // 混合类型数组
+const numbers = [1, "two", true]; // Mixed type array
 const [num, str, bool] = numbers;
 
 console.log(num); // 1 (number)
@@ -411,121 +411,121 @@ console.log(str); // "two" (string)
 console.log(bool); // true (boolean)
 ```
 
-#### 情况分析
-- **类型不匹配**：JavaScript 不会检查变量的预期类型，解构会直接完成赋值。例如，`num` 预期是数字，但如果数组中对应位置是字符串，`num` 会被赋值为字符串。
+#### Scenario Analysis
+- **Type Mismatch**: JavaScript won't check the expected type of variables, destructuring completes assignment directly. For example, `num` expects a number, but if the corresponding position in the array is a string, `num` will be assigned a string.
   ```javascript
   const [a] = ["hello"];
-  console.log(a); // "hello" (string, 即使你可能预期是 number)
+  console.log(a); // "hello" (string, even though you might expect number)
   ```
-- **缺少值**：如果数组元素不足，变量会被赋值为 `undefined`。
+- **Missing Values**: If array elements are insufficient, variables will be assigned `undefined`.
   ```javascript
   const [x, y] = [1];
   console.log(x); // 1
   console.log(y); // undefined
   ```
-- **多余值**：如果数组元素多于解构的变量，额外的值会被忽略，除非使用 `...rest` 收集。
+- **Extra Values**: If array elements exceed destructured variables, extra values will be ignored unless collected with `...rest`.
   ```javascript
   const [a, b] = [1, 2, 3];
   console.log(a, b); // 1, 2
   ```
 
-#### 潜在问题
-如果代码逻辑依赖特定类型（如期望数字但得到字符串），可能导致运行时错误：
+#### Potential Issues
+If code logic depends on specific types (like expecting a number but getting a string), it may cause runtime errors:
 ```javascript
 const [x] = ["5"];
-console.log(x + 1); // "51" (字符串拼接，而非数字加法)
+console.log(x + 1); // "51" (string concatenation, not numeric addition)
 ```
 
 ---
 
-### 2. **对象解构**
-在对象解构中，JavaScript 根据属性名提取值并赋值给变量。如果属性值的数据类型与预期不符，变量会直接接收实际值。
+### 2. **Object Destructuring**
+In object destructuring, JavaScript extracts values based on property names and assigns them to variables. If the data type of property values doesn't match expectations, variables directly receive the actual values.
 
-#### 示例
+#### Examples
 ```javascript
-const obj = { name: 123, age: "30" }; // 属性值类型不符合常见预期
+const obj = { name: 123, age: "30" }; // Property value types don't match common expectations
 const { name, age } = obj;
 
-console.log(name); // 123 (number, 可能预期是 string)
-console.log(age); // "30" (string, 可能预期是 number)
+console.log(name); // 123 (number, might be expected as string)
+console.log(age); // "30" (string, might be expected as number)
 ```
 
-#### 情况分析
-- **类型不匹配**：与数组解构类似，JavaScript 不会检查类型，直接赋值。例如，`name` 可能预期是字符串，但实际得到数字。
+#### Scenario Analysis
+- **Type Mismatch**: Similar to array destructuring, JavaScript won't check types and assigns directly. For example, `name` might be expected as a string but actually gets a number.
   ```javascript
   const { value } = { value: true };
-  console.log(value); // true (boolean, 即使可能预期是 number 或 string)
+  console.log(value); // true (boolean, even though it might be expected as number or string)
   ```
-- **缺少属性**：如果对象缺少解构的属性，变量会被赋值为 `undefined`，除非提供了默认值。
+- **Missing Properties**: If the object lacks destructured properties, variables will be assigned `undefined` unless default values are provided.
   ```javascript
   const { name, role } = { name: "Alice" };
   console.log(name); // "Alice"
   console.log(role); // undefined
   ```
-- **默认值**：可以为变量设置默认值，避免 `undefined` 或类型不匹配问题。
+- **Default Values**: You can set default values for variables to avoid `undefined` or type mismatch issues.
   ```javascript
   const { count = 0 } = { count: "10" };
-  console.log(count); // "10" (默认值被实际值覆盖)
+  console.log(count); // "10" (default value is overridden by actual value)
   ```
 
-#### 潜在问题
-类型不匹配可能导致逻辑错误，例如：
+#### Potential Issues
+Type mismatches can lead to logical errors, for example:
 ```javascript
 const { num } = { num: "100" };
-console.log(num * 2); // "100100" (字符串重复，而非数字乘法)
+console.log(num * 2); // "100100" (string repetition, not numeric multiplication)
 ```
 
 ---
 
-### 3. **函数参数解构**
-函数参数解构时，类型不匹配也会直接赋值，可能导致函数逻辑出错。
+### 3. **Function Parameter Destructuring**
+When destructuring function parameters, type mismatches also assign directly, which may cause function logic errors.
 
-#### 示例
+#### Examples
 ```javascript
 function process({ value }) {
-  return value * 2; // 期望 value 是 number
+  return value * 2; // Expects value to be number
 }
 
 const data = { value: "10" };
-console.log(process(data)); // "1010" (字符串重复，而非数字乘法)
+console.log(process(data)); // "1010" (string repetition, not numeric multiplication)
 ```
 
 ---
 
-### 4. **TypeScript 中的对比**
-虽然问题问的是 JavaScript，但在 TypeScript 中，类型不匹配会在编译时被捕获，抛出类型错误。例如：
+### 4. **Comparison with TypeScript**
+Although the question is about JavaScript, in TypeScript, type mismatches are caught at compile time, throwing type errors. For example:
 ```typescript
 const numbers: number[] = [1, 2, 3];
 const [x]: [string] = numbers; // Error: Type 'number' is not assignable to type 'string'
 ```
-在 JavaScript 中，这种错误不会在运行前检测，需要开发者自行处理。
+In JavaScript, such errors are not detected before runtime and require developers to handle them themselves.
 
 ---
 
-### 5. **如何应对类型不匹配**
-在 JavaScript 中，类型不匹配不会抛出错误，但可能导致运行时问题。以下是应对策略：
-- **类型检查**：在解构后手动检查类型。
+### 5. **How to Handle Type Mismatches**
+In JavaScript, type mismatches won't throw errors but may cause runtime issues. Here are coping strategies:
+- **Type Checking**: Manually check types after destructuring.
   ```javascript
   const [x] = ["5"];
   if (typeof x !== "number") {
     console.error("Expected a number, got", typeof x);
   }
   ```
-- **类型转换**：在需要特定类型时进行转换。
+- **Type Conversion**: Convert when specific types are needed.
   ```javascript
   const { num } = { num: "100" };
   const result = Number(num) * 2; // 200
   ```
-- **默认值**：为变量提供默认值，确保类型安全。
+- **Default Values**: Provide default values for variables to ensure type safety.
   ```javascript
   const { count = 0 } = { count: undefined };
   console.log(count); // 0 (number)
   ```
-- **使用 TypeScript**：如果项目需要严格类型检查，考虑使用 TypeScript 来在编译时捕获类型错误。
+- **Use TypeScript**: If the project needs strict type checking, consider using TypeScript to catch type errors at compile time.
 
 ---
 
-### 6. **总结**
-在 JavaScript 中，解构赋值时数据类型与变量预期类型不匹配不会引发错误，变量会直接接收实际值，类型由实际值决定。这可能导致逻辑错误（如字符串被误用为数字）。开发者需要通过类型检查、类型转换或默认值来处理潜在问题。如果需要更严格的类型安全，可以使用 TypeScript，它会在编译时检测类型不匹配。
+### 6. **Summary**
+In JavaScript, when data types don't match the expected variable types during destructuring assignment, no errors are thrown, and variables directly receive the actual values with types determined by the actual values. This may lead to logical errors (like strings being misused as numbers). Developers need to handle potential issues through type checking, type conversion, or default values. If stricter type safety is needed, TypeScript can be used, which detects type mismatches at compile time.
 
-如果你有具体场景或想深入探讨某个例子，请告诉我！
+If you have specific scenarios or want to explore examples in depth, please let me know!

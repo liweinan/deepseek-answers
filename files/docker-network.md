@@ -1,54 +1,54 @@
-# Docker Network 是 Docker 提供的网络功能，用于管理容器之间的通信以及容器与外部网络的交互。Docker 网络的核心目标是实现容器隔离、通信和灵活的网络配置。以下是对 Docker 网络的详细介绍及其使用方法：
+# Docker Network is Docker's networking functionality for managing communication between containers and interaction between containers and external networks. Docker Network's core goal is to achieve container isolation, communication, and flexible network configuration. Here's a detailed introduction to Docker Network and its usage:
 
 ---
 
-### **1. Docker 网络概述**
-Docker 网络允许容器在隔离的环境中运行，同时支持容器之间或容器与主机/外部网络的通信。Docker 提供了多种网络驱动（Network Drivers），每种驱动适用于不同的使用场景。
+### **1. Docker Network Overview**
+Docker Network allows containers to run in isolated environments while supporting communication between containers or between containers and the host/external networks. Docker provides multiple network drivers, each suitable for different use cases.
 
-#### **常见的 Docker 网络驱动**
-1. **Bridge（桥接网络）**
-    - 默认网络模式，适用于同一主机上容器之间的通信。
-    - 每个容器分配一个独立的网络命名空间，容器通过虚拟网桥（docker0）通信。
-    - 容器可以互相访问（通过 IP 或容器名称），也可以通过端口映射与外部通信。
-    - 使用场景：开发、测试或单主机容器应用。
+#### **Common Docker Network Drivers**
+1. **Bridge (Bridge Network)**
+    - Default network mode, suitable for communication between containers on the same host.
+    - Each container is assigned an independent network namespace, containers communicate through virtual bridge (docker0).
+    - Containers can access each other (via IP or container name) and can also communicate with the outside through port mapping.
+    - Use cases: Development, testing, or single-host container applications.
 
-2. **Host（主机网络）**
-    - 容器直接使用宿主机的网络栈，没有网络隔离。
-    - 优点：性能高，无需端口映射。
-    - 缺点：容器与主机共享网络，端口冲突需手动管理。
-    - 使用场景：需要高性能网络或直接使用主机网络的应用。
+2. **Host (Host Network)**
+    - Containers directly use the host's network stack, no network isolation.
+    - Advantages: High performance, no port mapping needed.
+    - Disadvantages: Container shares network with host, port conflicts need manual management.
+    - Use cases: Applications requiring high-performance networking or direct host network usage.
 
-3. **None（无网络）**
-    - 容器没有任何网络接口，完全隔离。
-    - 适用于不需要网络的场景，如某些批处理任务。
-    - 使用场景：安全敏感或离线任务。
+3. **None (No Network)**
+    - Container has no network interfaces, completely isolated.
+    - Suitable for scenarios not requiring network, such as certain batch processing tasks.
+    - Use cases: Security-sensitive or offline tasks.
 
-4. **Overlay（覆盖网络）**
-    - 用于跨主机容器通信，常见于 Docker Swarm 或 Kubernetes 等集群环境。
-    - 通过 VXLAN 技术在多个主机之间创建虚拟网络。
-    - 使用场景：分布式系统、多主机容器集群。
+4. **Overlay (Overlay Network)**
+    - Used for cross-host container communication, common in Docker Swarm or Kubernetes cluster environments.
+    - Creates virtual networks between multiple hosts through VXLAN technology.
+    - Use cases: Distributed systems, multi-host container clusters.
 
 5. **Macvlan**
-    - 允许容器直接分配物理网络的 MAC 地址，使容器像物理设备一样出现在网络中。
-    - 适合需要容器直接暴露在外部网络的场景。
-    - 使用场景：需要容器与外部设备直接通信的场景。
+    - Allows containers to directly assign MAC addresses of physical networks, making containers appear as physical devices in the network.
+    - Suitable for scenarios requiring containers to be directly exposed to external networks.
+    - Use cases: Scenarios requiring direct communication between containers and external devices.
 
 6. **IPvlan**
-    - 类似于 Macvlan，但共享相同的 MAC 地址，支持 L2 或 L3 模式。
-    - 使用场景：需要高效网络隔离的场景。
+    - Similar to Macvlan but shares the same MAC address, supports L2 or L3 mode.
+    - Use cases: Scenarios requiring efficient network isolation.
 
 ---
 
-### **2. Docker 网络基本操作**
+### **2. Docker Network Basic Operations**
 
-以下是 Docker 网络的常见操作及其命令：
+Here are common Docker network operations and their commands:
 
-#### **查看网络**
-列出所有 Docker 网络：
+#### **View Networks**
+List all Docker networks:
 ```bash
 docker network ls
 ```
-输出示例：
+Output example:
 ```
 NETWORK ID     NAME            DRIVER    SCOPE
 a1b2c3d4e5f6   bridge         bridge    local
@@ -56,122 +56,122 @@ b2c3d4e5f6a7   host           host      local
 c3d4e5f6a7b8   none           none      local
 ```
 
-#### **创建网络**
-创建自定义桥接网络：
+#### **Create Network**
+Create custom bridge network:
 ```bash
 docker network create my-network
 ```
-指定驱动（例如 overlay）：
+Specify driver (e.g., overlay):
 ```bash
 docker network create -d overlay my-overlay-network
 ```
 
-#### **查看网络详情**
-检查某个网络的详细信息：
+#### **View Network Details**
+Check detailed information of a network:
 ```bash
 docker network inspect my-network
 ```
-输出包括网络配置、子网、网关以及连接的容器。
+Output includes network configuration, subnet, gateway, and connected containers.
 
-#### **连接容器到网络**
-启动容器并连接到指定网络：
+#### **Connect Container to Network**
+Start container and connect to specified network:
 ```bash
 docker run -d --name my-container --network my-network nginx
 ```
-将已有容器连接到网络：
+Connect existing container to network:
 ```bash
 docker network connect my-network my-container
 ```
 
-#### **断开容器网络**
-断开容器与某个网络的连接：
+#### **Disconnect Container Network**
+Disconnect container from a network:
 ```bash
 docker network disconnect my-network my-container
 ```
 
-#### **删除网络**
-删除未被使用的网络：
+#### **Delete Network**
+Delete unused network:
 ```bash
 docker network rm my-network
 ```
 
-#### **端口映射**
-将容器端口映射到主机（桥接网络常用）：
+#### **Port Mapping**
+Map container port to host (common in bridge networks):
 ```bash
 docker run -d -p 8080:80 nginx
 ```
-上述命令将主机的 8080 端口映射到容器的 80 端口。
+The above command maps host's 8080 port to container's 80 port.
 
 ---
 
-### **3. 使用示例**
+### **3. Usage Examples**
 
-#### **示例 1：桥接网络通信**
-1. 创建一个自定义桥接网络：
+#### **Example 1: Bridge Network Communication**
+1. Create a custom bridge network:
    ```bash
    docker network create my-bridge
    ```
-2. 启动两个容器并连接到该网络：
+2. Start two containers and connect to this network:
    ```bash
    docker run -d --name web1 --network my-bridge nginx
    docker run -d --name web2 --network my-bridge nginx
    ```
-3. 在 `web1` 容器中测试与 `web2` 的通信：
+3. Test communication between `web1` and `web2` in the `web1` container:
    ```bash
    docker exec -it web1 ping web2
    ```
-   输出显示 `web2` 可通过容器名称解析并通信。
+   Output shows `web2` can be resolved and communicated with via container name.
 
-4. 映射端口以访问容器：
+4. Map ports to access containers:
    ```bash
    docker run -d -p 8080:80 --name web3 --network my-bridge nginx
    ```
-   访问 `http://localhost:8080` 可看到 Nginx 欢迎页面。
+   Access `http://localhost:8080` to see the Nginx welcome page.
 
-#### **示例 2：主机网络**
-启动一个容器使用主机网络：
+#### **Example 2: Host Network**
+Start a container using host network:
 ```bash
 docker run -d --name my-host-container --network host nginx
 ```
-直接访问主机 IP 的 80 端口即可访问容器中的 Nginx 服务，无需端口映射。
+Directly access the host IP's port 80 to access the Nginx service in the container, no port mapping needed.
 
-#### **示例 3：跨主机通信（Overlay 网络）**
-1. 初始化 Docker Swarm：
+#### **Example 3: Cross-host Communication (Overlay Network)**
+1. Initialize Docker Swarm:
    ```bash
    docker swarm init
    ```
-2. 创建 Overlay 网络：
+2. Create Overlay network:
    ```bash
    docker network create -d overlay my-overlay
    ```
-3. 部署服务到该网络：
+3. Deploy service to this network:
    ```bash
    docker service create --name web --network my-overlay --replicas 2 nginx
    ```
-4. 容器将分布在 Swarm 节点上，并通过 Overlay 网络通信。
+4. Containers will be distributed across Swarm nodes and communicate through Overlay network.
 
 ---
 
-### **4. 高级用法**
+### **4. Advanced Usage**
 
-#### **自定义网络配置**
-创建网络时指定子网和网关：
+#### **Custom Network Configuration**
+Specify subnet and gateway when creating network:
 ```bash
 docker network create --driver bridge --subnet 172.20.0.0/16 --gateway 172.20.0.1 my-custom-network
 ```
 
-#### **DNS 配置**
-Docker 桥接网络支持通过容器名称解析 IP。如果需要自定义 DNS，可以在 `docker run` 时指定：
+#### **DNS Configuration**
+Docker bridge networks support IP resolution through container names. If custom DNS is needed, specify it in `docker run`:
 ```bash
 docker run -d --dns 8.8.8.8 --name my-container nginx
 ```
 
-#### **网络安全**
-- 使用自定义桥接网络隔离容器，防止不必要的通信。
-- 在生产环境中，结合防火墙规则（如 iptables）限制容器网络访问。
+#### **Network Security**
+- Use custom bridge networks to isolate containers and prevent unnecessary communication.
+- In production environments, combine with firewall rules (like iptables) to restrict container network access.
 
-#### **与 Docker Compose 结合**
-Docker Compose 简化多容器网络配置。示例 `docker-compose.yml`：
+#### **Integration with Docker Compose**
+Docker Compose simplifies multi-container network configuration. Example `docker-compose.yml`:
 ```yaml
 version: '3'
 services:
@@ -189,29 +189,29 @@ networks:
   my-network:
     driver: bridge
 ```
-运行：
+Run:
 ```bash
 docker-compose up -d
 ```
-`web` 和 `db` 容器将自动连接到 `my-network` 网络并可互相通信。
+`web` and `db` containers will automatically connect to `my-network` and can communicate with each other.
 
 ---
 
-### **5. 注意事项**
-- **性能**：桥接网络有一定的性能开销，主机网络性能最高，但隔离性差。
-- **安全性**：避免将敏感服务直接暴露在主机网络或外部网络。
-- **Swarm/Kubernetes**：生产环境中通常结合 Overlay 网络或第三方 CNI 插件（如 Calico、Flannel）实现复杂网络需求。
-- **清理**：定期删除未使用的网络以释放资源：
+### **5. Notes**
+- **Performance**: Bridge networks have some performance overhead, host networks have the highest performance but poor isolation.
+- **Security**: Avoid directly exposing sensitive services on host networks or external networks.
+- **Swarm/Kubernetes**: In production environments, usually combine with Overlay networks or third-party CNI plugins (like Calico, Flannel) to implement complex network requirements.
+- **Cleanup**: Regularly delete unused networks to free resources:
   ```bash
   docker network prune
   ```
 
 ---
 
-### **6. 总结**
-Docker 网络提供了灵活的网络模型，适用于从简单开发到复杂分布式系统的各种场景。桥接网络适合单主机开发，主机网络适合高性能场景，Overlay 网络适合跨主机集群。通过合理选择网络驱动和配置，可以高效管理容器通信和外部访问。
+### **6. Summary**
+Docker Network provides flexible network models suitable for various scenarios from simple development to complex distributed systems. Bridge networks are suitable for single-host development, host networks for high-performance scenarios, and Overlay networks for cross-host clusters. By reasonably selecting network drivers and configurations, you can efficiently manage container communication and external access.
 
-如果需要更具体的示例或某部分深入讲解，请告诉我！
+Let me know if you need more specific examples or in-depth explanation of any part!
 
 ---
 

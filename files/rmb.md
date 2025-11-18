@@ -1,16 +1,16 @@
-# 数字人民币与DeFi的关系解析
+# Analysis of the Relationship Between Digital Yuan and DeFi
 
-数字人民币（e-CNY）和去中心化金融（DeFi）是两种截然不同的金融创新，虽然都属于数字货币和金融科技领域，但在本质、架构和应用上存在根本区别。
+Digital Yuan (e-CNY) and Decentralized Finance (DeFi) are two completely different financial innovations. Although both belong to the field of digital currency and financial technology, there are fundamental differences in essence, architecture, and application.
 
-## 1. 基本定义对比
+## 1. Basic Definition Comparison
 
-| 特性                | 数字人民币 (e-CNY)                          | DeFi (去中心化金融)                          |
+| Feature                | Digital Yuan (e-CNY)                          | DeFi (Decentralized Finance)                          |
 |---------------------|--------------------------------------------|---------------------------------------------|
-| **性质**            | 中央银行数字货币 (CBDC)                     | 基于区块链的开放式金融协议集合                |
-| **发行主体**        | 中国人民银行                                | 无中心发行方，由智能合约和算法控制            |
-| **法律地位**        | 中国法定货币的数字形式                       | 无官方货币地位，属于加密资产                  |
-| **技术基础**        | 许可链/联盟链                               | 公有链 (如以太坊)                            |
-| **中心化程度**      | 完全中心化                                  | 完全去中心化                                 |
+| **Nature**            | Central Bank Digital Currency (CBDC)                     | Collection of open financial protocols based on blockchain                |
+| **Issuing Entity**        | People's Bank of China                                | No central issuer, controlled by smart contracts and algorithms            |
+| **Legal Status**        | Digital form of China's legal currency                       | No official currency status, belongs to crypto assets                  |
+| **Technical Foundation**        | Permissioned chain/Consortium chain                               | Public chain (like Ethereum)                            |
+| **Centralization Level**      | Fully centralized                                  | Fully decentralized                                 |
 
 ## 2. 关键区别分析
 

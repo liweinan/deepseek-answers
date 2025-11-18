@@ -1,6 +1,6 @@
-# Rust中的闭包（Closures）
+# Rust Closures
 
-参考图：https://tinyurl.com/rustclosure
+Reference diagram: https://tinyurl.com/rustclosure
 
 ```mermaid
 classDiagram
@@ -115,7 +115,7 @@ classDiagram
     note for Move_Capture "Copy types: Modifies copy\nNon-Copy types: Consumes variable\nFnOnce for consuming operations (e.g., drop)"
 ```
 
-Rust中的闭包是一种匿名函数，能够捕获其定义环境中的变量。闭包的强大之处在于它可以灵活地捕获变量，并根据使用方式实现`Fn`、`FnMut`或`FnOnce` trait。本文档将详细介绍闭包的捕获机制，特别针对`Copy`类型和非`Copy`类型，结合引用和非引用、`move`和非`move`的不同场景，通过示例展示其行为。
+Rust closures are anonymous functions that can capture variables from their defining environment. The power of closures lies in their ability to flexibly capture variables and implement `Fn`, `FnMut`, or `FnOnce` traits based on usage patterns. This document will detail closure capture mechanisms, specifically for `Copy` types and non-`Copy` types, combining different scenarios of references and non-references, `move` and non-`move`, with examples demonstrating their behavior.
 
 ---
 

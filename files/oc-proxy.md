@@ -1,69 +1,69 @@
-# 在 OpenShift Local（CRC）环境中解决镜像拉取网络问题 
+# Solving Image Pull Network Issues in OpenShift Local (CRC) Environments
 
-在 OpenShift Local（CRC）环境中，创建 Pod 时出现 `ImagePullBackOff` 错误，通常是由于网络问题导致无法从容器注册表拉取镜像，特别是在使用代理环境时。以下是解决镜像拉取网络问题的详细步骤，重点在于正确配置代理：
+In OpenShift Local (CRC) environments, when creating Pods, `ImagePullBackOff` errors typically occur due to network issues preventing container image pulls from registries, especially when using proxy environments. Below are detailed steps to resolve image pull network issues, focusing on proper proxy configuration:
 
 ---
 
-### 1. **确认问题原因**
-`ImagePullBackOff` 通常由以下原因引起：
-- **网络连接问题**：集群无法访问容器注册表（如 `registry.redhat.io` 或 `quay.io`）。
-- **代理配置错误**：代理设置未正确应用到 CRC 或 OpenShift 集群。
-- **镜像地址或认证问题**：镜像名称、标签错误，或缺少拉取凭据（Pull Secret）。
-- **DNS 解析问题**：DNS 配置错误导致无法解析注册表域名。
+### 1. **Confirm the Problem Cause**
+`ImagePullBackOff` is usually caused by the following reasons:
+- **Network connectivity issues**: The cluster cannot access container registries (like `registry.redhat.io` or `quay.io`).
+- **Proxy configuration errors**: Proxy settings are not properly applied to CRC or the OpenShift cluster.
+- **Image address or authentication issues**: Incorrect image names, tags, or missing pull credentials (Pull Secret).
+- **DNS resolution issues**: DNS configuration errors preventing registry domain name resolution.
 
-你可以通过以下命令查看具体错误：
+You can view specific errors with the following command:
 ```bash
 oc describe pod <pod-name>
 ```
-在 `Events` 部分查找详细错误信息，例如：
-- `Failed to pull image ... dial tcp: lookup registry ...`（DNS 或网络问题）
-- `Get https://registry ...: proxyconnect tcp: ...`（代理配置问题）
+Look for detailed error information in the `Events` section, such as:
+- `Failed to pull image ... dial tcp: lookup registry ...` (DNS or network issues)
+- `Get https://registry ...: proxyconnect tcp: ...` (proxy configuration issues)
 
 ---
 
-### 2. **检查代理环境**
-如果你的网络环境需要通过代理访问外部注册表（如 `quay.io` 或 `registry.redhat.io`），需要确保代理正确配置。以下是配置步骤：
+### 2. **Check Proxy Environment**
+If your network environment requires proxy access to external registries (like `quay.io` or `registry.redhat.io`), ensure proper proxy configuration. Here are the configuration steps:
 
-#### 2.1 **设置 CRC 代理**
-在运行 `crc setup` 或 `crc start` 之前，设置环境变量以确保 CRC 虚拟机使用代理：
+#### 2.1 **Set CRC Proxy**
+Before running `crc setup` or `crc start`, set environment variables to ensure the CRC VM uses the proxy:
 ```bash
 export HTTP_PROXY=http://<proxy-host>:<proxy-port>
 export HTTPS_PROXY=https://<proxy-host>:<proxy-port>
 export NO_PROXY=localhost,127.0.0.1,.crc.testing,.apps-crc.testing,api.crc.testing
 ```
-- `<proxy-host>:<proxy-port>` 替换为你的代理服务器地址和端口。
-- `NO_PROXY` 包括 CRC 内部域名（如 `.crc.testing` 和 `api.crc.testing`），以避免内部通信经过代理。
+- Replace `<proxy-host>:<proxy-port>` with your proxy server address and port.
+- `NO_PROXY` includes CRC internal domains (like `.crc.testing` and `api.crc.testing`) to avoid internal traffic going through the proxy.
 
-如果代理需要认证，格式如下：
+If the proxy requires authentication, format as follows:
 ```bash
 export HTTP_PROXY=http://<username>:<password>@<proxy-host>:<proxy-port>
 export HTTPS_PROXY=https://<username>:<password>@<proxy-host>:<proxy-port>
 ```
 
-#### 2.2 **配置 CRC 代理（持久化）**
-环境变量仅对当前会话有效。为避免每次手动设置，可以使用 CRC 配置文件：
+#### 2.2 **Configure CRC Proxy (Persistent)**
+Environment variables are only valid for the current session. To avoid manual setup each time, use the CRC configuration file:
 ```bash
 crc config set http-proxy http://<proxy-host>:<proxy-port>
 crc config set https-proxy https://<proxy-host>:<proxy-port>
 crc config set no-proxy localhost,127.0.0.1,.crc.testing,.apps-crc.testing,api.crc.testing
 ```
-如果需要代理认证：
+If proxy authentication is needed:
 ```bash
 crc config set proxy-user <username>
 crc config set proxy-password <password>
 ```
-查看配置：
+View configuration:
 ```bash
 crc config view
 ```
 
-如果使用自定义 CA 证书：
+If using custom CA certificates:
 ```bash
 crc config set proxy-ca-file <path-to-custom-ca-file>
 ```
 
-#### 2.3 **重启 CRC**
-代理配置更改后，重启 CRC 以应用设置：
+#### 2.3 **Restart CRC**
+After proxy configuration changes, restart CRC to apply settings:
 ```bash
 crc stop
 crc start
@@ -71,19 +71,19 @@ crc start
 
 ---
 
-### 3. **配置集群代理**
-CRC 虚拟机使用代理后，还需要确保 OpenShift 集群内的 Pod 能够通过代理拉取镜像。需要配置集群范围的代理。
+### 3. **Configure Cluster Proxy**
+After the CRC VM uses the proxy, you also need to ensure Pods in the OpenShift cluster can pull images through the proxy. Configure cluster-wide proxy settings.
 
-#### 3.1 **编辑集群代理配置**
-检查当前的集群代理配置：
+#### 3.1 **Edit Cluster Proxy Configuration**
+Check current cluster proxy configuration:
 ```bash
 oc get proxy cluster -o yaml
 ```
-如果代理未配置，编辑 `cluster` 代理资源：
+If proxy is not configured, edit the `cluster` proxy resource:
 ```bash
 oc edit proxy cluster
 ```
-添加或修改以下内容：
+Add or modify the following content:
 ```yaml
 apiVersion: config.openshift.io/v1
 kind: Proxy
@@ -100,26 +100,26 @@ status:
   httpsProxy: https://<proxy-host>:<proxy-port>
   noProxy: localhost,.cluster.local,.svc,.testing,10.128.0.0/14,127.0.0.1,172.30.0.0/16,192.168.126.0/24,api-int.crc.testing,api.crc.testing,etcd-0.crc.testing
 ```
-- `noProxy` 必须包含 CRC 内部网络范围和域名（如 `.testing`、`api.crc.testing`）。
-- 如果代理需要认证，确保 `httpProxy` 和 `httpsProxy` 包含用户名和密码（如 `http://<username>:<password>@<proxy-host>:<proxy-port>`）。
+- `noProxy` must include CRC internal network ranges and domains (like `.testing`, `api.crc.testing`).
+- If proxy requires authentication, ensure `httpProxy` and `httpsProxy` include username and password (like `http://<username>:<password>@<proxy-host>:<proxy-port>`).
 
-#### 3.2 **添加自定义 CA 证书（如果需要）**
-如果你的代理使用自定义 CA 证书，需将其添加到集群信任的 CA 列表：
-1. 创建一个 ConfigMap 包含 CA 证书：
+#### 3.2 **Add Custom CA Certificate (if needed)**
+If your proxy uses custom CA certificates, add them to the cluster's trusted CA list:
+1. Create a ConfigMap containing the CA certificate:
    ```bash
    oc create configmap user-ca-bundle -n openshift-config --from-file=ca-bundle.crt=<path-to-ca-cert>
    ```
-2. 更新代理配置以引用该 ConfigMap：
+2. Update proxy configuration to reference this ConfigMap:
    ```bash
    oc patch proxy cluster --type=merge -p '{"spec":{"trustedCA":{"name":"user-ca-bundle"}}}'
    ```
 
-#### 3.3 **重启相关组件**
-集群代理配置更改后，需等待相关 Operator 和 Pod 自动重启。如果 Operator（如 `marketplace-operator`）仍无法拉取镜像，可以手动更新其代理环境变量：
+#### 3.3 **Restart Related Components**
+After cluster proxy configuration changes, wait for related Operators and Pods to automatically restart. If Operators (like `marketplace-operator`) still cannot pull images, manually update their proxy environment variables:
 ```bash
 oc edit deployment.apps/marketplace-operator -n openshift-marketplace
 ```
-添加以下环境变量：
+Add the following environment variables:
 ```yaml
 spec:
   template:
@@ -137,18 +137,18 @@ spec:
 
 ---
 
-### 4. **验证镜像拉取**
-配置完成后，验证镜像是否可以拉取：
-1. 创建一个测试 Pod：
+### 4. **Verify Image Pull**
+After configuration, verify if images can be pulled:
+1. Create a test Pod:
    ```bash
    oc new-app --docker-image=registry.redhat.io/rhel8/httpd-24:latest
    ```
-2. 检查 Pod 状态：
+2. Check Pod status:
    ```bash
    oc get pods
    oc describe pod <pod-name>
    ```
-3. 如果仍然失败，检查 kubelet 日志：
+3. If still failing, check kubelet logs:
    ```bash
    crc ssh
    journalctl -u kubelet
@@ -156,60 +156,60 @@ spec:
 
 ---
 
-### 5. **处理 DNS 问题**
-如果错误信息包含 DNS 相关内容（如 `dial tcp: lookup quay.io ... no such host`），可能是 DNS 配置问题：
-1. **检查主机 DNS**：
-   确保主机能够解析 `quay.io` 和 `registry.redhat.io`：
+### 5. **Handle DNS Issues**
+If error messages contain DNS-related content (like `dial tcp: lookup quay.io ... no such host`), it might be a DNS configuration issue:
+1. **Check host DNS**:
+   Ensure the host can resolve `quay.io` and `registry.redhat.io`:
    ```bash
    nslookup quay.io
    nslookup registry.redhat.io
    ```
-   如果失败，检查 `/etc/resolv.conf` 或配置主机使用公共 DNS（如 `8.8.8.8`）。
+   If failed, check `/etc/resolv.conf` or configure the host to use public DNS (like `8.8.8.8`).
 
-2. **检查 CRC DNS**：
-   CRC 使用 `dnsmasq` 提供内部 DNS。确保主机 DNS 配置不干扰 CRC 域名（`.crc.testing`）：
+2. **Check CRC DNS**:
+   CRC uses `dnsmasq` to provide internal DNS. Ensure host DNS configuration doesn't interfere with CRC domains (`.crc.testing`):
    ```bash
    cat /etc/NetworkManager/dnsmasq.d/crc.conf
    ```
-   确保包含以下内容：
+   Ensure it contains the following:
    ```bash
    address=/apps-crc.testing/127.0.0.1
    address=/api.crc.testing/127.0.0.1
    ```
 
-3. **集群内 DNS 测试**：
-   在 CRC 虚拟机中测试 DNS：
+3. **Cluster DNS test**:
+   Test DNS in the CRC VM:
    ```bash
    crc ssh
    curl --head quay.io
    ```
-   如果失败，检查集群 DNS Operator：
+   If failed, check cluster DNS Operator:
    ```bash
    oc get co dns
    ```
 
 ---
 
-### 6. **其他可能问题**
-- **Pull Secret 缺失或错误**：
-  确保 CRC 已配置正确的 Pull Secret（通常在 `crc start` 时提供）。检查：
+### 6. **Other Possible Issues**
+- **Missing or incorrect Pull Secret**:
+  Ensure CRC is configured with the correct Pull Secret (usually provided during `crc start`). Check:
   ```bash
   oc get secret pull-secret -n openshift-config -o yaml
   ```
-  如果需要更新，参考 Red Hat 提供的 Pull Secret（从 `cloud.redhat.com` 下载）。
+  If update is needed, refer to Red Hat's provided Pull Secret (download from `cloud.redhat.com`).
 
-- **镜像名称或标签错误**：
-  确认 Pod 使用的镜像名称和标签正确。例如：
+- **Incorrect image name or tag**:
+  Confirm the image name and tag used by the Pod are correct. For example:
   ```yaml
   image: registry.redhat.io/rhel8/httpd-24:latest
   ```
-  尝试手动拉取镜像验证：
+  Try manually pulling the image to verify:
   ```bash
   podman pull registry.redhat.io/rhel8/httpd-24:latest
   ```
 
-- **网络防火墙**：
-  确保主机和代理服务器的防火墙允许访问注册表的端口（通常为 443）：
+- **Network firewall**:
+  Ensure host and proxy server firewalls allow access to registry ports (usually 443):
   ```bash
   sudo firewall-cmd --add-port=443/tcp --permanent
   sudo firewall-cmd --reload
@@ -217,17 +217,17 @@ spec:
 
 ---
 
-### 7. **调试和日志**
-如果问题仍未解决，收集以下日志以进一步调试：
-- CRC 状态：
+### 7. **Debugging and Logs**
+If the issue remains unresolved, collect the following logs for further debugging:
+- CRC status:
   ```bash
   crc status --log-level debug
   ```
-- 集群 Operator 状态：
+- Cluster Operator status:
   ```bash
   oc get clusteroperators
   ```
-- kubelet 日志：
+- kubelet logs:
   ```bash
   crc ssh
   journalctl -u kubelet
@@ -235,63 +235,63 @@ spec:
 
 ---
 
-### 8. **参考资料**
-- OpenShift 官方文档：配置集群代理 [](https://docs.openshift.com/container-platform/4.8/networking/enable-cluster-wide-proxy.html)[](https://docs.openshift.com/container-platform/3.5/install_config/http_proxies.html)
-- CRC 代理配置指南：[](https://github.com/crc-org/crc/issues/337)[](https://github.com/crc-org/crc/issues/337)
-- 镜像拉取错误通用排查：[](https://lumigo.io/learn/kubernetes-imagepullbackoff-error/)[](https://lumigo.io/kubernetes-troubleshooting/kubernetes-imagepullbackoff/)
+### 8. **Reference Materials**
+- OpenShift official documentation: Configure cluster proxy [](https://docs.openshift.com/container-platform/4.8/networking/enable-cluster-wide-proxy.html)[](https://docs.openshift.com/container-platform/3.5/install_config/http_proxies.html)
+- CRC proxy configuration guide: [](https://github.com/crc-org/crc/issues/337)[](https://github.com/crc-org/crc/issues/337)
+- General image pull error troubleshooting: [](https://lumigo.io/learn/kubernetes-imagepullbackoff-error/)[](https://lumigo.io/kubernetes-troubleshooting/kubernetes-imagepullbackoff/)
 
-如果以上步骤仍无法解决问题，请提供 `oc describe pod <pod-name>` 的详细错误信息以及你的代理配置（隐藏敏感信息），我可以帮助进一步分析！
+If the above steps still cannot resolve the issue, please provide detailed error information from `oc describe pod <pod-name>` and your proxy configuration (hide sensitive information), and I can help analyze further!
 
-
----
-
-根据你提供的错误信息，`oc new-app --docker-image=registry.redhat.io/rhel8/httpd-24:latest` 失败，主要原因是：
-
-1. **`--docker-image` 已被废弃**：错误提示表明 `--docker-image` 标志已弃用，应使用 `--image` 替代。
-2. **无法找到镜像**：OpenShift 无法在本地容器存储、远程注册表或集群的镜像流（ImageStream）中找到 `registry.redhat.io/rhel8/httpd-24:latest`。
-3. **可能的原因**：
-    - 缺少有效的 Pull Secret 来认证 `registry.redhat.io`。
-    - 代理配置不正确，导致无法访问 `registry.redhat.io`。
-    - 镜像名称或标签不正确，或镜像尚未被缓存到本地。
-
-以下是解决问题的详细步骤：
 
 ---
 
-### 1. **修正命令**
-根据错误提示，替换 `--docker-image` 为 `--image` 并重新运行命令：
+Based on the error information you provided, `oc new-app --docker-image=registry.redhat.io/rhel8/httpd-24:latest` failed, mainly because:
+
+1. **`--docker-image` is deprecated**: The error indicates the `--docker-image` flag is deprecated and should be replaced with `--image`.
+2. **Cannot find image**: OpenShift cannot find `registry.redhat.io/rhel8/httpd-24:latest` in local container storage, remote registries, or the cluster's ImageStream.
+3. **Possible reasons**:
+    - Missing valid Pull Secret to authenticate `registry.redhat.io`.
+    - Incorrect proxy configuration preventing access to `registry.redhat.io`.
+    - Incorrect image name or tag, or image not yet cached locally.
+
+Below are detailed steps to resolve the issue:
+
+---
+
+### 1. **Fix the Command**
+According to the error prompt, replace `--docker-image` with `--image` and rerun the command:
 ```bash
 oc new-app --image=registry.redhat.io/rhel8/httpd-24:latest
 ```
 
-如果仍然报错，继续以下步骤。
+If still reporting errors, continue with the following steps.
 
 ---
 
-### 2. **检查 Pull Secret**
-`registry.redhat.io` 是一个需要认证的注册表，必须配置正确的 Pull Secret 以拉取镜像。
+### 2. **Check Pull Secret**
+`registry.redhat.io` is an authenticated registry and must be configured with the correct Pull Secret to pull images.
 
-#### 2.1 **验证 Pull Secret**
-检查集群是否配置了正确的 Pull Secret：
+#### 2.1 **Verify Pull Secret**
+Check if the cluster has the correct Pull Secret configured:
 ```bash
 oc get secret pull-secret -n openshift-config -o yaml
 ```
-确保 `pull-secret` 包含 `registry.redhat.io` 的认证信息。输出中应包含类似以下内容（Base64 编码）：
+Ensure the `pull-secret` contains authentication information for `registry.redhat.io`. The output should contain something like (Base64 encoded):
 ```yaml
 data:
   .dockerconfigjson: <base64-encoded-credentials>
 ```
 
-#### 2.2 **更新 Pull Secret**
-如果 Pull Secret 缺失或无效，请从 Red Hat 官网获取：
-1. 登录 [cloud.redhat.com](https://cloud.redhat.com/openshift/install/pull-secret) 下载 Pull Secret。
-2. 更新集群的 Pull Secret：
+#### 2.2 **Update Pull Secret**
+If the Pull Secret is missing or invalid, get it from Red Hat's official website:
+1. Login to [cloud.redhat.com](https://cloud.redhat.com/openshift/install/pull-secret) to download the Pull Secret.
+2. Update the cluster's Pull Secret:
    ```bash
    oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=<path-to-pull-secret-file>
    ```
 
-#### 2.3 **验证 Pull Secret 生效**
-创建一个测试 Pod 直接使用该镜像：
+#### 2.3 **Verify Pull Secret Takes Effect**
+Create a test Pod that directly uses this image:
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -302,125 +302,125 @@ spec:
   - name: httpd
     image: registry.redhat.io/rhel8/httpd-24:latest
 ```
-保存为 `test-pod.yaml`，然后运行：
+Save as `test-pod.yaml`, then run:
 ```bash
 oc apply -f test-pod.yaml
 oc describe pod test-httpd
 ```
-检查是否仍然出现 `ImagePullBackOff` 或认证错误。
+Check if `ImagePullBackOff` or authentication errors still appear.
 
 ---
 
-### 3. **检查代理配置**
-根据你的原始问题，`ImagePullBackOff` 可能是由于代理配置不正确导致无法访问 `registry.redhat.io`。请按照以下步骤验证和修正代理设置：
+### 3. **Check Proxy Configuration**
+Based on your original issue, `ImagePullBackOff` might be due to incorrect proxy configuration preventing access to `registry.redhat.io`. Follow these steps to verify and fix proxy settings:
 
-#### 3.1 **验证 CRC 代理配置**
-确保 CRC 虚拟机已配置代理：
+#### 3.1 **Verify CRC Proxy Configuration**
+Ensure the CRC VM is configured with proxy:
 ```bash
 crc config view
 ```
-检查是否包含：
+Check if it contains:
 ```
 - http-proxy: http://<proxy-host>:<proxy-port>
 - https-proxy: https://<proxy-host>:<proxy-port>
 - no-proxy: localhost,127.0.0.1,.crc.testing,.apps-crc.testing,api.crc.testing
 ```
-如果未配置，参考原始回答的 **2.2 节** 设置代理并重启 CRC：
+If not configured, refer to section **2.2** in the original answer to set up proxy and restart CRC:
 ```bash
 crc stop
 crc start
 ```
 
-#### 3.2 **验证集群代理配置**
-检查 OpenShift 集群的代理配置：
+#### 3.2 **Verify Cluster Proxy Configuration**
+Check OpenShift cluster's proxy configuration:
 ```bash
 oc get proxy cluster -o yaml
 ```
-确保 `spec` 中包含正确的代理设置，例如：
+Ensure `spec` contains correct proxy settings, for example:
 ```yaml
 spec:
   httpProxy: http://<proxy-host>:<proxy-port>
   httpsProxy: https://<proxy-host>:<proxy-port>
   noProxy: localhost,.cluster.local,.svc,.testing,10.128.0.0/14,127.0.0.1,172.30.0.0/16,192.168.126.0/24,api-int.crc.testing,api.crc.testing,etcd-0.crc.testing
 ```
-如果需要修改：
+If modification is needed:
 ```bash
 oc edit proxy cluster
 ```
 
-#### 3.3 **验证代理连通性**
-在 CRC 虚拟机中测试是否可以访问 `registry.redhat.io`：
+#### 3.3 **Verify Proxy Connectivity**
+Test in the CRC VM whether `registry.redhat.io` can be accessed:
 ```bash
 crc ssh
 curl --head https://registry.redhat.io
 ```
-如果返回 HTTP 200 或 401（需要认证），说明代理配置正确。如果失败，检查代理服务器是否允许访问 `registry.redhat.io`。
+If HTTP 200 or 401 (authentication required) is returned, proxy configuration is correct. If failed, check if the proxy server allows access to `registry.redhat.io`.
 
 ---
 
-### 4. **检查镜像名称和可用性**
-确保镜像 `registry.redhat.io/rhel8/httpd-24:latest` 存在且可用：
+### 4. **Check Image Name and Availability**
+Ensure the image `registry.redhat.io/rhel8/httpd-24:latest` exists and is available:
 ```bash
 podman pull registry.redhat.io/rhel8/httpd-24:latest
 ```
-- 如果拉取失败，检查是否需要登录：
+- If pull fails, check if login is needed:
   ```bash
   podman login registry.redhat.io
   ```
-  使用 Red Hat 账户凭据登录。
-- 如果镜像名称或标签有误，访问 [catalog.redhat.com](https://catalog.redhat.com/software/containers) 确认正确镜像路径。
+  Use Red Hat account credentials to login.
+- If image name or tag is incorrect, visit [catalog.redhat.com](https://catalog.redhat.com/software/containers) to confirm the correct image path.
 
 ---
 
-### 5. **使用 `--allow-missing-images`**
-错误提示提到 `--allow-missing-images` 可以用于不存在的镜像。如果镜像暂时不可用或需要延迟拉取，可以尝试：
+### 5. **Use `--allow-missing-images`**
+The error message mentions `--allow-missing-images` can be used for non-existent images. If the image is temporarily unavailable or needs delayed pulling, you can try:
 ```bash
 oc new-app --image=registry.redhat.io/rhel8/httpd-24:latest --allow-missing-images
 ```
-但这仅适用于镜像确实存在但未缓存的情况，通常还需要解决代理或认证问题。
+But this only applies when the image does exist but isn't cached, usually you still need to resolve proxy or authentication issues.
 
 ---
 
-### 6. **检查 DNS**
-如果错误涉及 DNS 解析失败（例如 `lookup registry.redhat.io: no such host`），参考原始回答的 **5 节**：
-- 验证主机 DNS：
+### 6. **Check DNS**
+If the error involves DNS resolution failure (e.g., `lookup registry.redhat.io: no such host`), refer to section **5** in the original answer:
+- Verify host DNS:
   ```bash
   nslookup registry.redhat.io
   ```
-- 验证 CRC 虚拟机 DNS：
+- Verify CRC VM DNS:
   ```bash
   crc ssh
   nslookup registry.redhat.io
   ```
-- 确保主机和 CRC 的 DNS 配置正确（如使用 `8.8.8.8`）。
+- Ensure host and CRC DNS configuration is correct (e.g., using `8.8.8.8`).
 
 ---
 
-### 7. **调试和日志**
-如果问题仍未解决，收集以下信息以进一步排查：
-1. **Pod 事件**：
+### 7. **Debugging and Logs**
+If the issue is still not resolved, collect the following information for further troubleshooting:
+1. **Pod events**:
    ```bash
    oc describe pod <pod-name>
    ```
-2. **集群 Operator 状态**：
+2. **Cluster Operator status**:
    ```bash
    oc get clusteroperators
    ```
-3. **kubelet 日志**：
+3. **kubelet logs**:
    ```bash
    crc ssh
    journalctl -u kubelet
    ```
-4. **CRC 日志**：
+4. **CRC logs**:
    ```bash
    crc status --log-level debug
    ```
 
 ---
 
-### 8. **快速解决示例**
-以下是一个完整的测试流程：
-1. 配置代理（如果需要）：
+### 8. **Quick Solution Example**
+Below is a complete testing workflow:
+1. Configure proxy (if needed):
    ```bash
    crc config set http-proxy http://<proxy-host>:<proxy-port>
    crc config set https-proxy https://<proxy-host>:<proxy-port>
@@ -428,15 +428,15 @@ oc new-app --image=registry.redhat.io/rhel8/httpd-24:latest --allow-missing-imag
    crc stop
    crc start
    ```
-2. 更新 Pull Secret：
+2. Update Pull Secret:
    ```bash
    oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=<path-to-pull-secret-file>
    ```
-3. 创建应用：
+3. Create application:
    ```bash
    oc new-app --image=registry.redhat.io/rhel8/httpd-24:latest
    ```
-4. 检查 Pod 状态：
+4. Check Pod status:
    ```bash
    oc get pods
    oc describe pod <pod-name>
@@ -444,32 +444,32 @@ oc new-app --image=registry.redhat.io/rhel8/httpd-24:latest --allow-missing-imag
 
 ---
 
-### 9. **如果仍失败**
-请提供以下信息以便进一步分析：
-- `oc describe pod <pod-name>` 的完整输出。
-- `oc get proxy cluster -o yaml` 的输出（隐藏敏感信息）。
-- 你的代理服务器是否需要认证或自定义 CA 证书。
-- 是否有特定的防火墙或网络限制。
+### 9. **If Still Failing**
+Please provide the following information for further analysis:
+- Complete output of `oc describe pod <pod-name>`.
+- Output of `oc get proxy cluster -o yaml` (hide sensitive information).
+- Whether your proxy server requires authentication or custom CA certificates.
+- Any specific firewall or network restrictions.
 
-希望这些步骤能帮你解决问题！
-
----
-
-根据你提供的错误信息，`oc new-app --image=registry.redhat.io/rhel8/httpd-24:latest` 失败，提示 `unable to locate any local docker images with name "registry.redhat.io/rhel8/httpd-24:latest"`。这表明 OpenShift 无法找到指定镜像，可能是因为以下原因：
-
-1. **镜像未在本地容器存储或远程注册表中找到**：OpenShift 尝试从本地容器引擎或远程注册表（`registry.redhat.io`）拉取镜像，但失败。
-2. **代理配置问题**：网络代理未正确配置，导致无法访问 `registry.redhat.io`。
-3. **Pull Secret 缺失或无效**：`registry.redhat.io` 需要认证，缺少有效的 Pull Secret 会导致拉取失败。
-4. **集群或 CRC 环境配置问题**：OpenShift Local（CRC）可能未正确配置镜像拉取的网络或认证。
-
-以下是解决问题的详细步骤，结合你之前提到 `ImagePullBackOff` 和代理配置需求：
+Hope these steps help you solve the problem!
 
 ---
 
-### 1. **验证命令并尝试直接创建 Pod**
-`oc new-app` 会在当前项目中创建 ImageStream 和相关资源，但错误表明它无法解析镜像。让我们先尝试直接创建 Pod 来验证镜像拉取是否可行，绕过 `oc new-app` 的复杂逻辑：
+Based on the error information you provided, `oc new-app --image=registry.redhat.io/rhel8/httpd-24:latest` failed, prompting `unable to locate any local docker images with name "registry.redhat.io/rhel8/httpd-24:latest"`. This indicates OpenShift cannot find the specified image, possibly because:
 
-创建以下 YAML 文件（`test-pod.yaml`）：
+1. **Image not found in local container storage or remote registry**: OpenShift tried to pull the image from local container engine or remote registry (`registry.redhat.io`) but failed.
+2. **Proxy configuration issue**: Network proxy not correctly configured, preventing access to `registry.redhat.io`.
+3. **Missing or invalid Pull Secret**: `registry.redhat.io` requires authentication, missing valid Pull Secret causes pull failure.
+4. **Cluster or CRC environment configuration issue**: OpenShift Local (CRC) might not be properly configured for image pull networking or authentication.
+
+Below are detailed steps to resolve the issue, combined with your previous mention of `ImagePullBackOff` and proxy configuration requirements:
+
+---
+
+### 1. **Verify Command and Try Direct Pod Creation**
+`oc new-app` creates ImageStream and related resources in the current project, but the error indicates it cannot resolve the image. Let's first try direct Pod creation to verify if image pull works, bypassing `oc new-app`'s complex logic:
+
+Create the following YAML file (`test-pod.yaml`):
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -480,40 +480,40 @@ spec:
   - name: httpd
     image: registry.redhat.io/rhel8/httpd-24:latest
 ```
-运行：
+Run:
 ```bash
 oc apply -f test-pod.yaml
 oc describe pod test-httpd
 ```
 
-检查 `Events` 部分是否有 `ImagePullBackOff` 或其他错误。如果直接创建 Pod 也失败，说明问题出在镜像拉取的网络或认证上，继续以下步骤。
+Check the `Events` section for `ImagePullBackOff` or other errors. If direct Pod creation also fails, the issue lies in image pull networking or authentication, continue with the following steps.
 
 ---
 
-### 2. **检查 Pull Secret**
-`registry.redhat.io` 是一个需要认证的注册表，必须配置有效的 Pull Secret。
+### 2. **Check Pull Secret**
+`registry.redhat.io` is an authenticated registry and must be configured with valid Pull Secret.
 
-#### 2.1 **验证 Pull Secret**
-检查集群是否配置了 Pull Secret：
+#### 2.1 **Verify Pull Secret**
+Check if the cluster has Pull Secret configured:
 ```bash
 oc get secret pull-secret -n openshift-config -o yaml
 ```
-确保 `.dockerconfigjson` 字段包含 `registry.redhat.io` 的认证信息（Base64 编码）。解码查看：
+Ensure the `.dockerconfigjson` field contains authentication information for `registry.redhat.io` (Base64 encoded). Decode to view:
 ```bash
 oc get secret pull-secret -n openshift-config -o jsonpath='{.data.\.dockerconfigjson}' | base64 -d
 ```
-检查输出是否包含 `registry.redhat.io` 的用户名和密码。
+Check if the output contains username and password for `registry.redhat.io`.
 
-#### 2.2 **更新 Pull Secret**
-如果 Pull Secret 缺失或无效：
-1. 从 [cloud.redhat.com](https://cloud.redhat.com/openshift/install/pull-secret) 下载最新的 Pull Secret 文件。
-2. 更新集群 Pull Secret：
+#### 2.2 **Update Pull Secret**
+If Pull Secret is missing or invalid:
+1. Download the latest Pull Secret file from [cloud.redhat.com](https://cloud.redhat.com/openshift/install/pull-secret).
+2. Update cluster Pull Secret:
    ```bash
    oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=<path-to-pull-secret-file>
    ```
 
-#### 2.3 **确保 Pull Secret 应用到命名空间**
-默认情况下，Pull Secret 应用于集群级别，但某些命名空间可能需要手动链接：
+#### 2.3 **Ensure Pull Secret Applied to Namespace**
+By default, Pull Secret applies at cluster level, but some namespaces might need manual linking:
 ```bash
 oc create secret generic registry-pull-secret --from-file=.dockerconfigjson=<path-to-pull-secret-file> -n <your-namespace>
 oc secrets link default registry-pull-secret --for=pull -n <your-namespace>
@@ -521,70 +521,70 @@ oc secrets link default registry-pull-secret --for=pull -n <your-namespace>
 
 ---
 
-### 3. **验证代理配置**
-你之前提到 `ImagePullBackOff` 与代理相关，可能是代理配置未正确应用，导致无法访问 `registry.redhat.io`。
+### 3. **Verify Proxy Configuration**
+You previously mentioned `ImagePullBackOff` is related to proxy, possibly due to incorrect proxy configuration preventing access to `registry.redhat.io`.
 
-#### 3.1 **检查 CRC 代理配置**
-确保 CRC 虚拟机已配置代理：
+#### 3.1 **Check CRC Proxy Configuration**
+Ensure CRC VM is configured with proxy:
 ```bash
 crc config view
 ```
-输出应包含：
+Output should contain:
 ```
 - http-proxy: http://<proxy-host>:<proxy-port>
 - https-proxy: https://<proxy-host>:<proxy-port>
 - no-proxy: localhost,127.0.0.1,.crc.testing,.apps-crc.testing,api.crc.testing
 ```
-如果未配置，设置代理：
+If not configured, set proxy:
 ```bash
 crc config set http-proxy http://<proxy-host>:<proxy-port>
 crc config set https-proxy https://<proxy-host>:<proxy-port>
 crc config set no-proxy localhost,127.0.0.1,.crc.testing,.apps-crc.testing,api.crc.testing
 ```
-如果代理需要认证：
+If proxy requires authentication:
 ```bash
 crc config set proxy-user <username>
 crc config set proxy-password <password>
 ```
-重启 CRC 以应用更改：
+Restart CRC to apply changes:
 ```bash
 crc stop
 crc start
 ```
 
-#### 3.2 **检查集群代理配置**
-确保 OpenShift 集群配置了代理：
+#### 3.2 **Check Cluster Proxy Configuration**
+Ensure OpenShift cluster is configured with proxy:
 ```bash
 oc get proxy cluster -o yaml
 ```
-确保 `spec` 包含：
+Ensure `spec` contains:
 ```yaml
 spec:
   httpProxy: http://<proxy-host>:<proxy-port>
   httpsProxy: https://<proxy-host>:<proxy-port>
   noProxy: localhost,.cluster.local,.svc,.testing,10.128.0.0/14,127.0.0.1,172.30.0.0/16,192.168.126.0/24,api-int.crc.testing,api.crc.testing,etcd-0.crc.testing
 ```
-如果需要修改：
+If modification is needed:
 ```bash
 oc edit proxy cluster
 ```
 
-#### 3.3 **验证代理连通性**
-在 CRC 虚拟机中测试是否可以访问 `registry.redhat.io`：
+#### 3.3 **Verify Proxy Connectivity**
+Test in CRC VM whether `registry.redhat.io` can be accessed:
 ```bash
 crc ssh
 curl --head https://registry.redhat.io
 ```
-- 如果返回 HTTP 200 或 401，说明代理工作正常。
-- 如果失败，检查代理服务器是否允许访问 `registry.redhat.io` 或是否存在防火墙限制。
+- If HTTP 200 or 401 is returned, proxy is working correctly.
+- If failed, check if proxy server allows access to `registry.redhat.io` or if there are firewall restrictions.
 
-#### 3.4 **自定义 CA 证书（如果需要）**
-如果你的代理使用自定义 CA 证书：
-1. 创建 ConfigMap：
+#### 3.4 **Custom CA Certificate (if needed)**
+If your proxy uses custom CA certificate:
+1. Create ConfigMap:
    ```bash
    oc create configmap user-ca-bundle -n openshift-config --from-file=ca-bundle.crt=<path-to-ca-cert>
    ```
-2. 更新代理配置：
+2. Update proxy configuration:
    ```bash
    oc patch proxy cluster --type=merge -p '{
      "spec": {
@@ -597,17 +597,17 @@ curl --head https://registry.redhat.io
 
 ---
 
-### 4. **手动拉取镜像验证**
-在主机上使用 `podman` 测试是否可以拉取镜像：
+### 4. **Manual Image Pull Verification**
+Test on the host whether the image can be pulled using `podman`:
 ```bash
 podman pull registry.redhat.io/rhel8/httpd-24:latest
 ```
-- 如果失败，可能需要登录：
+- If failed, login might be needed:
   ```bash
   podman login registry.redhat.io
   ```
-  使用 Red Hat 账户凭据。
-- 如果代理导致失败，确保主机环境变量包含代理设置：
+  Use Red Hat account credentials.
+- If proxy causes failure, ensure host environment variables include proxy settings:
   ```bash
   export HTTP_PROXY=http://<proxy-host>:<proxy-port>
   export HTTPS_PROXY=https://<proxy-host>:<proxy-port>
@@ -616,79 +616,79 @@ podman pull registry.redhat.io/rhel8/httpd-24:latest
 
 ---
 
-### 5. **使用 ImageStream 导入镜像**
-`oc new-app` 更倾向于使用 ImageStream。如果直接拉取镜像失败，可以手动创建 ImageStream：
+### 5. **Use ImageStream to Import Image**
+`oc new-app` prefers using ImageStream. If direct image pull fails, you can manually create ImageStream:
 ```bash
 oc import-image httpd-24 --from=registry.redhat.io/rhel8/httpd-24:latest --confirm
 ```
-然后使用 ImageStream 创建应用：
+Then use ImageStream to create application:
 ```bash
 oc new-app httpd-24
 ```
-检查 ImageStream 是否成功导入：
+Check if ImageStream import was successful:
 ```bash
 oc get is httpd-24
 ```
 
 ---
 
-### 6. **检查 DNS**
-如果错误涉及 DNS 解析（如 `lookup registry.redhat.io: no such host`）：
-1. **主机 DNS 测试**：
+### 6. **Check DNS**
+If the error involves DNS resolution failure (e.g., `lookup registry.redhat.io: no such host`):
+1. **Host DNS test**:
    ```bash
    nslookup registry.redhat.io
    ```
-   如果失败，配置主机 DNS（如 `8.8.8.8`）：
+   If failed, configure host DNS (e.g., `8.8.8.8`):
    ```bash
    sudo nmcli con mod <connection-name> ipv4.dns "8.8.8.8 8.8.4.4"
    sudo nmcli con up <connection-name>
    ```
-2. **CRC DNS 测试**：
+2. **CRC DNS test**:
    ```bash
    crc ssh
    nslookup registry.redhat.io
    ```
-   如果失败，检查 `/etc/resolv.conf` 或配置 CRC 使用公共 DNS。
+   If failed, edit `/etc/resolv.conf` (in CRC VM) or configure CRC to use public DNS.
 
 ---
 
-### 7. **使用 `--allow-missing-images`**
-错误提示提到 `--allow-missing-images` 可用于不存在的镜像。尝试：
+### 7. **Use `--allow-missing-images`**
+The error message mentions `--allow-missing-images` can be used for non-existent images. Try:
 ```bash
 oc new-app --image=registry.redhat.io/rhel8/httpd-24:latest --allow-missing-images
 ```
-但这通常只是绕过初始检查，仍需解决镜像拉取问题。
+But this usually just bypasses initial checks, still need to resolve image pull issues.
 
 ---
 
-### 8. **调试和日志**
-收集以下信息以进一步排查：
-1. **Pod 事件**（如果使用 `test-pod.yaml`）：
+### 8. **Debugging and Logs**
+Collect the following information for further troubleshooting:
+1. **Pod events** (if using `test-pod.yaml`):
    ```bash
    oc describe pod test-httpd
    ```
-2. **集群 Operator 状态**：
+2. **Cluster Operator status**:
    ```bash
    oc get clusteroperators
    ```
-3. **kubelet 日志**：
+3. **kubelet logs**:
    ```bash
    crc ssh
    journalctl -u kubelet
    ```
-4. **CRC 日志**：
+4. **CRC logs**:
    ```bash
    crc status --log-level debug
    ```
 
 ---
 
-### 9. **快速解决流程**
-1. **更新 Pull Secret**：
+### 9. **Quick Resolution Workflow**
+1. **Update Pull Secret**:
    ```bash
    oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=<path-to-pull-secret-file>
    ```
-2. **配置代理**：
+2. **Configure proxy**:
    ```bash
    crc config set http-proxy http://<proxy-host>:<proxy-port>
    crc config set https-proxy https://<proxy-host>:<proxy-port>
@@ -697,42 +697,42 @@ oc new-app --image=registry.redhat.io/rhel8/httpd-24:latest --allow-missing-imag
    crc start
    oc edit proxy cluster
    ```
-3. **测试镜像拉取**：
+3. **Test image pull**:
    ```bash
    oc apply -f test-pod.yaml
    oc describe pod test-httpd
    ```
-4. **重试 `oc new-app`**：
+4. **Retry `oc new-app`**:
    ```bash
    oc new-app --image=registry.redhat.io/rhel8/httpd-24:latest
    ```
 
 ---
 
-### 10. **进一步帮助**
-如果问题仍未解决，请提供：
-- `oc describe pod test-httpd` 的完整输出（如果尝试了 Pod 创建）。
-- `oc get proxy cluster -o yaml` 的输出（隐藏敏感信息）。
-- 代理是否需要认证或自定义 CA。
-- 主机和 CRC 的 DNS 配置（`cat /etc/resolv.conf`）。
+### 10. **Further Help**
+If the issue remains unresolved, please provide:
+- Complete output of `oc describe pod test-httpd` (if Pod creation was attempted).
+- Output of `oc get proxy cluster -o yaml` (hide sensitive information).
+- Whether proxy requires authentication or custom CA.
+- Host and CRC DNS configuration (`cat /etc/resolv.conf`).
 
-这些信息将帮助我进一步定位问题！
-
----
-
-由于你没有 `registry.redhat.io` 的权限，我们可以选择一个无需认证的公共镜像源（如 Docker Hub）来测试镜像拉取，并确保代理配置正确。以下是使用 Docker Hub 的公共镜像（例如 `httpd:latest`）进行测试的步骤，同时保持对代理配置的检查和优化，以解决 `ImagePullBackOff` 问题。
+This information will help me further locate the problem!
 
 ---
 
-### 1. **选择公共镜像**
-我们将使用 Docker Hub 的 `httpd:latest` 镜像（Apache HTTP Server），这是一个无需认证的公共镜像，地址为 `docker.io/library/httpd:latest`（在 OpenShift 中可以简写为 `httpd:latest`）。
+Since you don't have permission for `registry.redhat.io`, we can choose a public image source that doesn't require authentication (like Docker Hub) to test image pulls and ensure proxy configuration is correct. Below are the steps using Docker Hub's public images (e.g., `httpd:latest`) for testing, while maintaining proxy configuration checks and optimization to resolve `ImagePullBackOff` issues.
 
 ---
 
-### 2. **测试镜像拉取（直接创建 Pod）**
-为避免 `oc new-app` 的复杂逻辑，先直接创建 Pod 测试镜像拉取：
+### 1. **Choose Public Image**
+We'll use Docker Hub's `httpd:latest` image (Apache HTTP Server), which is a public image that doesn't require authentication, with the address `docker.io/library/httpd:latest` (can be abbreviated as `httpd:latest` in OpenShift).
 
-创建以下 YAML 文件（`test-httpd.yaml`）：
+---
+
+### 2. **Test Image Pull (Direct Pod Creation)**
+To avoid `oc new-app`'s complex logic, first directly create Pod to test image pull:
+
+Create the following YAML file (`test-httpd.yaml`):
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -743,100 +743,100 @@ spec:
   - name: httpd
     image: docker.io/library/httpd:latest
 ```
-运行：
+Run:
 ```bash
 oc apply -f test-httpd.yaml
 oc describe pod test-httpd
 ```
 
-检查 `Events` 部分：
-- 如果 Pod 状态为 `Running`，说明镜像拉取成功，代理配置可能已正确。
-- 如果出现 `ImagePullBackOff`，查看具体错误（如 `ErrImagePull` 或 `dial tcp`），并继续以下步骤。
+Check the `Events` section:
+- If Pod status is `Running`, image pull succeeded, proxy configuration might be correct.
+- If `ImagePullBackOff` appears, view specific errors (like `ErrImagePull` or `dial tcp`) and continue with the following steps.
 
 ---
 
-### 3. **检查和配置代理**
-你提到 `ImagePullBackOff` 与网络代理相关，可能是代理配置未正确应用，导致无法访问 `docker.io`。以下是验证和修复代理配置的步骤：
+### 3. **Check and Configure Proxy**
+You mentioned `ImagePullBackOff` is related to network proxy, possibly due to incorrect proxy configuration preventing access to `docker.io`. Below are steps to verify and fix proxy configuration:
 
-#### 3.1 **验证 CRC 代理配置**
-确保 CRC 虚拟机已配置代理：
+#### 3.1 **Verify CRC Proxy Configuration**
+Ensure CRC VM is configured with proxy:
 ```bash
 crc config view
 ```
-输出应包含：
+Output should contain:
 ```
 - http-proxy: http://<proxy-host>:<proxy-port>
 - https-proxy: https://<proxy-host>:<proxy-port>
 - no-proxy: localhost,127.0.0.1,.crc.testing,.apps-crc.testing,api.crc.testing
 ```
-如果未配置，设置代理：
+If not configured, set proxy:
 ```bash
 crc config set http-proxy http://<proxy-host>:<proxy-port>
 crc config set https-proxy https://<proxy-host>:<proxy-port>
 crc config set no-proxy localhost,127.0.0.1,.crc.testing,.apps-crc.testing,api.crc.testing
 ```
-如果代理需要认证：
+If proxy requires authentication:
 ```bash
 crc config set proxy-user <username>
 crc config set proxy-password <password>
 ```
-重启 CRC 以应用更改：
+Restart CRC to apply changes:
 ```bash
 crc stop
 crc start
 ```
 
-#### 3.2 **验证集群代理配置**
-确保 OpenShift 集群配置了代理：
+#### 3.2 **Verify Cluster Proxy Configuration**
+Ensure OpenShift cluster is configured with proxy:
 ```bash
 oc get proxy cluster -o yaml
 ```
-确保 `spec` 包含：
+Ensure `spec` contains:
 ```yaml
 spec:
   httpProxy: http://<proxy-host>:<proxy-port>
   httpsProxy: https://<proxy-host>:<proxy-port>
   noProxy: localhost,.cluster.local,.svc,.testing,10.128.0.0/14,127.0.0.1,172.30.0.0/16,192.168.126.0/24,api-int.crc.testing,api.crc.testing,etcd-0.crc.testing
 ```
-如果需要修改：
+If modification is needed:
 ```bash
 oc edit proxy cluster
 ```
 
-#### 3.3 **验证代理连通性**
-在 CRC 虚拟机中测试是否可以访问 `docker.io`：
+#### 3.3 **Verify Proxy Connectivity**
+Test in CRC VM whether `docker.io` can be accessed:
 ```bash
 crc ssh
 curl --head https://registry-1.docker.io
 ```
-- 如果返回 HTTP 200 或 401，说明代理配置正常。
-- 如果失败（例如 `connection refused` 或 `timeout`），检查：
-    - 代理服务器是否允许访问 `docker.io`。
-    - 防火墙是否阻止了 443 端口：
+- If HTTP 200 or 401 is returned, proxy configuration is normal.
+- If failed (e.g., `connection refused` or `timeout`), check:
+    - Whether proxy server allows access to `docker.io`.
+    - Whether firewall blocks port 443:
       ```bash
       sudo firewall-cmd --add-port=443/tcp --permanent
       sudo firewall-cmd --reload
       ```
 
-#### 3.4 **自定义 CA 证书（如果需要）**
-如果你的代理使用自定义 CA 证书：
-1. 创建 ConfigMap：
+#### 3.4 **Custom CA Certificate (if needed)**
+If your proxy uses custom CA certificate:
+1. Create ConfigMap:
    ```bash
    oc create configmap user-ca-bundle -n openshift-config --from-file=ca-bundle.crt=<path-to-ca-cert>
    ```
-2. 更新代理配置：
+2. Update proxy configuration:
    ```bash
    oc patch proxy cluster --type=merge -p '{"spec":{"trustedCA":{"name":"user-ca-bundle"}}}'
    ```
 
 ---
 
-### 4. **使用 `oc new-app` 测试**
-如果直接创建 Pod 成功，可以尝试使用 `oc new-app` 创建应用：
+### 4. **Test with `oc new-app`**
+If direct Pod creation succeeds, try using `oc new-app` to create application:
 ```bash
 oc new-app --image=docker.io/library/httpd:latest
 ```
-如果仍报错 `unable to locate any local docker images`，尝试导入 ImageStream：
+If still reporting `unable to locate any local docker images`, try importing ImageStream:
 ```bash
 oc import-image httpd --from=docker.io/library/httpd:latest --confirm
 oc new-app httpd
@@ -844,65 +844,65 @@ oc new-app httpd
 
 ---
 
-### 5. **检查 DNS**
-如果错误涉及 DNS 解析（如 `lookup registry-1.docker.io: no such host`）：
-1. **主机 DNS 测试**：
+### 5. **Check DNS**
+If the error involves DNS resolution (e.g., `lookup registry-1.docker.io: no such host`):
+1. **Host DNS test**:
    ```bash
    nslookup registry-1.docker.io
    ```
-   如果失败，配置主机 DNS：
+   If failed, configure host DNS:
    ```bash
    sudo nmcli con mod <connection-name> ipv4.dns "8.8.8.8 8.8.4.4"
    sudo nmcli con up <connection-name>
    ```
-2. **CRC DNS 测试**：
+2. **CRC DNS test**:
    ```bash
    crc ssh
    nslookup registry-1.docker.io
    ```
-   如果失败，编辑 `/etc/resolv.conf`（在 CRC 虚拟机中）或配置 CRC 使用公共 DNS。
+   If failed, edit `/etc/resolv.conf` (in CRC VM) or configure CRC to use public DNS.
 
 ---
 
-### 6. **手动拉取镜像验证**
-在主机上使用 `podman` 测试拉取镜像：
+### 6. **Manual Image Pull Verification**
+Test image pull on host using `podman`:
 ```bash
 podman pull docker.io/library/httpd:latest
 ```
-- 如果失败，确保主机环境变量包含代理：
+- If failed, ensure host environment variables include proxy:
   ```bash
   export HTTP_PROXY=http://<proxy-host>:<proxy-port>
   export HTTPS_PROXY=https://<proxy-host>:<proxy-port>
   export NO_PROXY=localhost,127.0.0.1
   ```
-- 如果成功，说明主机网络正常，问题可能出在 CRC 或集群配置。
+- If successful, host network is normal, issue might be in CRC or cluster configuration.
 
 ---
 
-### 7. **调试和日志**
-如果仍出现 `ImagePullBackOff` 或其他错误，收集以下信息：
-1. **Pod 事件**：
+### 7. **Debugging and Logs**
+If `ImagePullBackOff` or other errors still appear, collect the following information:
+1. **Pod events**:
    ```bash
    oc describe pod test-httpd
    ```
-2. **集群 Operator 状态**：
+2. **Cluster Operator status**:
    ```bash
    oc get clusteroperators
    ```
-3. **kubelet 日志**：
+3. **kubelet logs**:
    ```bash
    crc ssh
    journalctl -u kubelet
    ```
-4. **CRC 日志**：
+4. **CRC logs**:
    ```bash
    crc status --log-level debug
    ```
 
 ---
 
-### 8. **快速解决流程**
-1. **配置代理**：
+### 8. **Quick Resolution Workflow**
+1. **Configure proxy**:
    ```bash
    crc config set http-proxy http://<proxy-host>:<proxy-port>
    crc config set https-proxy https://<proxy-host>:<proxy-port>
@@ -911,24 +911,24 @@ podman pull docker.io/library/httpd:latest
    crc start
    oc edit proxy cluster
    ```
-2. **测试 Pod**：
+2. **Test Pod**:
    ```bash
    oc apply -f test-httpd.yaml
    oc describe pod test-httpd
    ```
-3. **测试 `oc new-app`**：
+3. **Test `oc new-app`**:
    ```bash
    oc new-app --image=docker.io/library/httpd:latest
    ```
 
 ---
 
-### 9. **替代镜像（如果需要）**
-如果 `httpd:latest` 仍无法拉取，可以尝试其他公共镜像，例如：
-- `nginx:latest`（`docker.io/library/nginx:latest`）
-- `busybox:latest`（`docker.io/library/busybox:latest`）
+### 9. **Alternative Images (if needed)**
+If `httpd:latest` still cannot be pulled, try other public images, such as:
+- `nginx:latest` (`docker.io/library/nginx:latest`)
+- `busybox:latest` (`docker.io/library/busybox:latest`)
 
-示例（使用 `nginx`）：
+Example (using `nginx`):
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -946,235 +946,55 @@ oc describe pod test-nginx
 
 ---
 
-### 10. **进一步帮助**
-如果问题仍未解决，请提供：
-- `oc describe pod test-httpd` 的完整输出。
-- `oc get proxy cluster -o yaml` 的输出（隐藏敏感信息）。
-- 代理是否需要认证或自定义 CA。
-- DNS 测试结果（`nslookup registry-1.docker.io` 的输出）。
+### 10. **Further Help**
+If the issue remains unresolved, please provide:
+- Complete output of `oc describe pod test-httpd`.
+- Output of `oc get proxy cluster -o yaml` (hide sensitive information).
+- Whether proxy requires authentication or custom CA.
+- DNS test results (output of `nslookup registry-1.docker.io`).
 
-这些信息将帮助我进一步定位问题！
-
----
-
-根据你提供的错误信息和代理配置，问题出在代理配置导致的镜像拉取失败。以下是详细分析和解决方案：
+This information will help me further locate the problem!
 
 ---
 
-### 错误分析
-1. **错误信息**：
+Based on the error information and proxy configuration you provided, the issue is proxy configuration causing image pull failure. Below is detailed analysis and solutions:
+
+---
+
+### Error Analysis
+1. **Error Message**:
    ```plaintext
    Failed to pull image "docker.io/library/httpd:latest": RegistryUnavailable: initializing source docker://httpd:latest: pinging container registry registry-1.docker.io: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp [::1]:7890: connect: connection refused
    ```
-    - **关键点**：`proxyconnect tcp: dial tcp [::1]:7890: connect: connection refused`
-    - **含义**：集群尝试通过代理（`localhost:7890`）访问 `registry-1.docker.io`，但连接被拒绝。这通常是因为代理服务器未运行、配置错误或无法从集群内部访问。
+    - **Key point**: `proxyconnect tcp: dial tcp [::1]:7890: connect: connection refused`
+    - **Meaning**: The cluster tried to access `registry-1.docker.io` through proxy (`localhost:7890`) but the connection was refused. This usually means the proxy server is not running, incorrectly configured, or cannot be accessed from within the cluster.
 
-2. **代理配置问题**：
-    - 集群代理配置（`oc get proxy cluster -o yaml`）显示：
+2. **Proxy Configuration Issue**:
+    - Cluster proxy configuration (`oc get proxy cluster -o yaml`) shows:
       ```yaml
       spec:
         httpProxy: http://localhost:7890
         httpsProxy: http://localhost:7890
         noProxy: 127.0.0.1,localhost,localhost,127.0.0.1,.crc.testing,.apps-crc.testing,192.168.130.11,.testing,127.0.0.1
       ```
-    - **问题**：
-        - 使用 `localhost:7890` 作为代理地址在集群内部不可用。`localhost` 在 Pod 或节点（CRC 虚拟机）内部解析为主机自身的环回地址（`127.0.0.1` 或 `[::1]`），而不是你的主机运行的代理服务器。
-        - CRC 虚拟机和 OpenShift 集群运行在独立的网络环境中，Pod 无法通过 `localhost` 访问主机上的代理。
+    - **Problem**:
+        - Using `localhost:7890` as proxy address is unavailable inside the cluster. `localhost` resolves to the host's loopback address (`127.0.0.1` or `[::1]`) inside Pods or nodes (CRC VM), not your host's running proxy server.
+        - CRC VM and OpenShift cluster run in independent network environments, Pods cannot access the proxy on the host through `localhost`.
 
-3. **其他可能问题**：
-    - 主机的代理服务器（端口 `7890`）可能未正确运行或未监听正确的网络接口。
-    - DNS 配置可能导致 `registry-1.docker.io` 无法解析（尽管当前错误更偏向代理连接问题）。
+3. **Other Possible Issues**:
+    - The host's proxy server (port `7890`) might not be running correctly or listening on the correct network interface.
+    - DNS configuration might cause `registry-1.docker.io` resolution failure (though current error is more proxy connection related).
 
 ---
 
-### 解决方案
+### Solution
 
-#### 1. **修正集群代理配置**
-将 `httpProxy` 和 `httpsProxy` 从 `localhost:7890` 改为代理服务器的实际 IP 地址（主机或代理服务器的 IP）。以下是步骤：
+#### 1. **Fix Cluster Proxy Configuration**
+Change `httpProxy` and `httpsProxy` from `localhost:7890` to the actual IP address of the proxy server (host or proxy server IP). Steps:
 
-1. **获取主机 IP**：
-    - 在主机上运行以下命令获取主机 IP（假设主机和 CRC 虚拟机在同一网络）：
+1. **Get Host IP**:
+    - Run the following command on the host to get host IP (assuming host and CRC VM are on the same network):
       ```bash
       ip addr show | grep inet
       ```
-      查找与你的网络接口相关的 IP，例如 `192.168.x.x`（局域网 IP）。避免使用 `127.0.0.1` 或 `[::1]`。
-    - 或者，如果代理服务器运行在主机上，确认 CRC 虚拟机可以访问主机的 IP（通常为主机的局域网 IP，如 `192.168.1.x`）。
-
-2. **确认代理服务器运行**：
-    - 确保主机的代理服务器（监听 `7890` 端口）正在运行。例如，如果使用的是 Clash 或 V2Ray，检查服务状态：
-      ```bash
-      netstat -tuln | grep 7890
-      ```
-    - 确保代理服务器监听的是 `0.0.0.0:7890`（所有接口），而不是仅 `127.0.0.1:7890`。如果仅监听 `127.0.0.1`，修改代理配置文件（例如 Clash 的 `config.yaml`）：
-      ```yaml
-      bind-address: 0.0.0.0
-      ```
-      然后重启代理服务。
-
-3. **更新集群代理配置**：
-   编辑集群代理配置：
-   ```bash
-   oc edit proxy cluster
-   ```
-   将 `httpProxy` 和 `httpsProxy` 改为代理服务器的实际 IP，例如：
-   ```yaml
-   spec:
-     httpProxy: http://192.168.1.100:7890
-     httpsProxy: http://192.168.1.100:7890
-     noProxy: .cluster.local,.svc,.testing,10.217.0.0/22,10.217.4.0/23,127.0.0.1,192.168.126.0/24,192.168.130.11,.crc.testing,.apps-crc.testing,api-int.crc.testing,api.crc.testing,localhost
-   ```
-    - 替换 `192.168.1.100` 为你的主机或代理服务器的实际 IP。
-    - 确保 `noProxy` 包含 CRC 内部网络和域名，以避免内部通信经过代理。
-
-4. **验证配置**：
-   检查更新后的代理配置：
-   ```bash
-   oc get proxy cluster -o yaml
-   ```
-
----
-
-#### 2. **更新 CRC 代理配置**
-确保 CRC 虚拟机本身的代理配置也使用正确的代理地址，而不是 `localhost`。
-
-1. **检查 CRC 配置**：
-   ```bash
-   crc config view
-   ```
-   如果 `http-proxy` 或 `https-proxy` 设置为 `localhost:7890`，需要更新。
-
-2. **设置 CRC 代理**：
-   ```bash
-   crc config set http-proxy http://192.168.1.100:7890
-   crc config set https-proxy http://192.168.1.100:7890
-   crc config set no-proxy localhost,127.0.0.1,.crc.testing,.apps-crc.testing,api.crc.testing,192.168.126.0/24,192.168.130.11
-   ```
-    - 替换 `192.168.1.100` 为你的主机或代理服务器的实际 IP。
-    - 如果代理需要认证：
-      ```bash
-      crc config set proxy-user <username>
-      crc config set proxy-password <password>
-      ```
-
-3. **重启 CRC**：
-   ```bash
-   crc stop
-   crc start
-   ```
-
----
-
-#### 3. **测试代理连通性**
-在 CRC 虚拟机中验证是否可以访问 `docker.io`：
-```bash
-crc ssh
-curl --head https://registry-1.docker.io
-```
-- 如果返回 HTTP 200 或 401，说明代理配置正确。
-- 如果失败，检查：
-    - 代理服务器是否允许外部访问（`0.0.0.0:7890`）。
-    - 主机防火墙是否阻止了 `7890` 端口：
-      ```bash
-      sudo firewall-cmd --add-port=7890/tcp --permanent
-      sudo firewall-cmd --reload
-      ```
-
----
-
-#### 4. **重新测试镜像拉取**
-1. 删除之前的 Pod：
-   ```bash
-   oc delete pod test-httpd
-   ```
-2. 重新应用 Pod：
-   ```bash
-   oc apply -f test-httpd.yaml
-   oc describe pod test-httpd
-   ```
-3. 检查 `Events` 是否显示镜像拉取成功。如果仍失败，记录新的错误信息。
-
----
-
-#### 5. **检查 DNS（备用步骤）**
-虽然当前错误是代理连接问题，但为确保没有 DNS 问题：
-1. **主机 DNS 测试**：
-   ```bash
-   nslookup registry-1.docker.io
-   ```
-2. **CRC DNS 测试**：
-   ```bash
-   crc ssh
-   nslookup registry-1.docker.io
-   ```
-   如果失败，配置主机或 CRC 使用公共 DNS（如 `8.8.8.8`）：
-   ```bash
-   sudo nmcli con mod <connection-name> ipv4.dns "8.8.8.8 8.8.4.4"
-   sudo nmcli con up <connection-name>
-   ```
-
----
-
-#### 6. **测试 `oc new-app`**
-如果 Pod 拉取成功，尝试使用 `oc new-app`：
-```bash
-oc new-app --image=docker.io/library/httpd:latest
-```
-如果仍报 `unable to locate any local docker images`，导入 ImageStream：
-```bash
-oc import-image httpd --from=docker.io/library/httpd:latest --confirm
-oc new-app httpd
-```
-
----
-
-#### 7. **调试和日志**
-如果仍失败，收集以下信息：
-1. **Pod 事件**：
-   ```bash
-   oc describe pod test-httpd
-   ```
-2. **kubelet 日志**：
-   ```bash
-   crc ssh
-   journalctl -u kubelet
-   ```
-3. **CRC 日志**：
-   ```bash
-   crc status --log-level debug
-   ```
-
----
-
-### 8. **快速解决流程**
-1. **更新代理配置**：
-   ```bash
-   oc edit proxy cluster
-   # 设置 httpProxy 和 httpsProxy 为 http://<主机IP>:7890
-   crc config set http-proxy http://<主机IP>:7890
-   crc config set https-proxy http://<主机IP>:7890
-   crc config set no-proxy localhost,127.0.0.1,.crc.testing,.apps-crc.testing,api.crc.testing,192.168.126.0/24,192.168.130.11
-   crc stop
-   crc start
-   ```
-2. **测试连通性**：
-   ```bash
-   crc ssh
-   curl --head https://registry-1.docker.io
-   ```
-3. **重新测试 Pod**：
-   ```bash
-   oc delete pod test-httpd
-   oc apply -f test-httpd.yaml
-   oc describe pod test-httpd
-   ```
-
----
-
-### 9. **进一步帮助**
-如果问题仍未解决，请提供：
-- 更新后的 `oc describe pod test-httpd` 输出。
-- 主机 IP 和代理服务器的监听状态（`netstat -tuln | grep 7890`）。
-- `curl --head https://registry-1.docker.io` 的输出（从 CRC 虚拟机）。
-- 代理是否需要认证或自定义 CA。
-
-这些信息将帮助我进一步定位问题！
+      Find the IP related to your network interface, e.g., `192.168.x.x` (LAN IP). Avoid using `127.0.0.1` or `[::1]`.

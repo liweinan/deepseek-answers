@@ -1,170 +1,173 @@
-# 好的，SemVer (Semantic Versioning, 语义化版本) 是一套简单而明确的版本号管理规则，旨在帮助开发者和用户理解版本更新的性质，避免“依赖地狱”（dependency hell）。
+# SemVer (Semantic Versioning)
 
-它的核心思想是，通过版本号的格式来传达底层代码的变更内容。
+SemVer (Semantic Versioning) is a simple and clear version number management rule designed to help developers and users understand the nature of version updates and avoid "dependency hell".
+
+Its core idea is to convey the changes in the underlying code through the format of the version number.
 
 - https://devhints.io/semver
 
 ---
 
-### 1. 核心格式：`MAJOR.MINOR.PATCH`
+### 1. Core Format: `MAJOR.MINOR.PATCH`
 
-一个标准的 SemVer 版本号必须采用 `X.Y.Z` 的格式，其中 X, Y, Z 都是非负整数，并且禁止在数字前面加 0（例如 `1.02.3` 是无效的）。
+A standard SemVer version number must use the `X.Y.Z` format, where X, Y, and Z are non-negative integers, and leading zeros are not allowed (e.g., `1.02.3` is invalid).
 
-* **`MAJOR` (主版本号)**: 当你做了**不兼容的 API 修改**时，你必须增加主版本号。
-    * 例如，你删除了一个公共函数、修改了函数签名、或者改变了函数的行为，导致依赖你的旧版本的代码无法正常工作。
+* **`MAJOR` (Major Version)**: You must increment the major version number when you make **incompatible API changes**.
+    * For example, you delete a public function, modify a function signature, or change the behavior of a function, causing code that depends on your old version to fail to work properly.
     * `1.7.2` -> `2.0.0`
 
-* **`MINOR` (次版本号)**: 当你以**向后兼容**的方式**添加了新功能**时，你必须增加次版本号。
-    * 例如，你增加了一个新的公共函数、给现有 API 增加了可选参数等。依赖你的旧版本的代码仍然可以正常工作。
+* **`MINOR` (Minor Version)**: You must increment the minor version number when you **add new features** in a **backward-compatible** manner.
+    * For example, you add a new public function, add optional parameters to an existing API, etc. Code that depends on your old version can still work properly.
     * `1.7.2` -> `1.8.0`
 
-* **`PATCH` (修订号)**: 当你做了**向后兼容的 bug 修复**时，你必须增加修订号。
-    * 例如，你修复了一个内部实现的错误，但没有改变任何 API 的行为或签名。
+* **`PATCH` (Patch Version)**: You must increment the patch version number when you make **backward-compatible bug fixes**.
+    * For example, you fix an internal implementation error without changing any API behavior or signature.
     * `1.7.2` -> `1.7.3`
 
-### 2. 特殊情况：0.y.z (初始开发阶段)
+### 2. Special Case: 0.y.z (Initial Development Phase)
 
-当主版本号是 `0` 时（例如 `0.1.0`），表示这个项目处于**初始开发阶段**，其 API 被认为是不稳定的。
+When the major version number is `0` (e.g., `0.1.0`), it indicates that the project is in the **initial development phase**, and its API is considered unstable.
 
-在这个阶段，**任何改动都可能包含不兼容的变更**。因此，`^` 和 `~` 符号对 `0.y.z` 版本的处理会更加保守。
+During this phase, **any changes may contain incompatible changes**. Therefore, the `^` and `~` symbols will be more conservative when handling `0.y.z` versions.
 
-### 3. 先行版本 (Pre-release)
+### 3. Pre-release Version (Pre-release)
 
-如果你想发布一个不稳定的、用于测试的版本，可以在 `MAJOR.MINOR.PATCH` 后面附加一个连字符和一系列由点分隔的标识符。
+If you want to release an unstable version for testing, you can append a hyphen and a series of dot-separated identifiers after `MAJOR.MINOR.PATCH`.
 
-* **格式**: `X.Y.Z-[标识符]`
-* **示例**: `1.0.0-alpha`, `1.0.0-alpha.1`, `1.0.0-beta.2`, `1.0.0-rc.1` (rc = Release Candidate)
-* **优先级**: 先行版本的优先级低于其对应的正式版本。例如，`1.0.0-rc.1` 的优先级低于 `1.0.0`。
+* **Format**: `X.Y.Z-[identifier]`
+* **Examples**: `1.0.0-alpha`, `1.0.0-alpha.1`, `1.0.0-beta.2`, `1.0.0-rc.1` (rc = Release Candidate)
+* **Priority**: Pre-release versions have lower priority than their corresponding official versions. For example, `1.0.0-rc.1` has lower priority than `1.0.0`.
 
-### 4. npm 中的版本范围符号
+### 4. npm Version Range Symbols
 
-在 `package.json` 中，我们通常不写死一个版本，而是指定一个可接受的版本范围。最常见的符号是 `^` 和 `~`。
+In `package.json`, we usually don't write a fixed version but specify an acceptable version range. The most common symbols are `^` and `~`.
 
-* **`^` (Caret / 脱字符)**: **“不要改动最左边的非零数字”**
-    * 这是 `npm install --save` 的默认行为。
-    * 它允许次版本和修订号的更新，但**不允许主版本的更新**（因为主版本更新意味着不兼容）。
-    * `^1.2.3` 匹配 `>= 1.2.3` 且 `< 2.0.0` 的所有版本。
-    * `^0.2.3` 匹配 `>= 0.2.3` 且 `< 0.3.0` 的所有版本 (因为最左非零数字是 `2`)。
-    * `^0.0.3` 只匹配 `>= 0.0.3` 且 `< 0.0.4` 的版本 (因为最左非零数字是 `3`)。
+* **`^` (Caret)**: **"Do not change the leftmost non-zero digit"**
+    * This is the default behavior of `npm install --save`.
+    * It allows updates to minor and patch versions but **does not allow updates to major versions** (because major version updates mean incompatibility).
+    * `^1.2.3` matches all versions `>= 1.2.3` and `< 2.0.0`.
+    * `^0.2.3` matches all versions `>= 0.2.3` and `< 0.3.0` (because the leftmost non-zero digit is `2`).
+    * `^0.0.3` only matches versions `>= 0.0.3` and `< 0.0.4` (because the leftmost non-zero digit is `3`).
 
-* **`~` (Tilde / 波浪号)**: **“只允许修订号更新”** (如果指定了次版本号)
-    * 它比 `^` 更保守。
-    * `~1.2.3` 匹配 `>= 1.2.3` 且 `< 1.3.0` 的所有版本 (只允许 patch 更新)。
-    * `~1.2` 匹配 `>= 1.2.0` 且 `< 1.3.0` 的所有版本 (相当于 `1.2.x`)。
-    * `~1` 匹配 `>= 1.0.0` 且 `< 2.0.0` 的所有版本 (相当于 `1.x`)。
+* **`~` (Tilde)**: **"Only allow patch version updates"** (if minor version is specified)
+    * It is more conservative than `^`.
+    * `~1.2.3` matches all versions `>= 1.2.3` and `< 1.3.0` (only allows patch updates).
+    * `~1.2` matches all versions `>= 1.2.0` and `< 1.3.0` (equivalent to `1.2.x`).
+    * `~1` matches all versions `>= 1.0.0` and `< 2.0.0` (equivalent to `1.x`).
 
-* **其他符号**:
-    * `*` 或 `x`: 匹配任意版本。
-    * `>`,`<`,`>=`,`<=`: 指定范围。
-    * `1.2.3 - 2.3.4`: 指定一个闭区间范围。
-    * `||`: “或”逻辑，用于组合多个范围，例如 `^1.0.0 || ^2.0.0`。
+* **Other Symbols**:
+    * `*` or `x`: Matches any version.
+    * `>`,`<`,`>=`,`<=`: Specify ranges.
+    * `1.2.3 - 2.3.4`: Specify a closed range.
+    * `||`: "Or" logic, used to combine multiple ranges, e.g., `^1.0.0 || ^2.0.0`.
 
-通过遵循 SemVer，库的作者可以清晰地向用户传达更新的风险等级，而用户则可以通过 `package.json` 中的版本范围来控制自己愿意承担的更新风险，从而实现更稳定、可预测的依赖管理。
-
-好的，我们来把 `~` (Tilde / 波浪号) 这个符号彻底讲清楚。
-
-你说得对，“只允许修订号更新”这个说法虽然没错，但确实有点抽象。
-
-一个更具体、更准确的“黄金法则”是：
-
-**`~` 会保持你指定的 `主版本号` 和 `次版本号` 不变，只允许 `修订号` 增长。**
-
-让我们通过几个例子来分解这个法则：
+By following SemVer, library authors can clearly communicate the risk level of updates to users, and users can control the update risk they are willing to accept through version ranges in `package.json`, thereby achieving more stable and predictable dependency management.
 
 ---
 
-### 场景 1：最常见的用法 `~1.2.3`
+Now, let's thoroughly explain the `~` (Tilde) symbol.
 
-假设你在 `package.json` 中写了：`"some-package": "~1.2.3"`
+You are right. The statement "only allows patch version updates" is correct but indeed a bit abstract.
 
-* **分析**:
-    * 你指定的主版本号是 `1`。
-    * 你指定的次版本号是 `2`。
-    * 你指定的修订号是 `3`。
+A more specific and accurate "golden rule" is:
 
-* **规则**:
-    * 主版本号**必须**是 `1`。
-    * 次版本号**必须**是 `2`。
-    * 修订号**必须**大于或等于 `3`。
+**`~` will keep the `major version` and `minor version` you specify unchanged, only allowing the `patch version` to increase.**
 
-* **换句话说，这等价于版本范围**: `>= 1.2.3` 并且 `< 1.3.0`。
-
-* **具体匹配情况**:
-    * `1.2.3` -> **匹配** (这是最低版本)
-    * `1.2.4` -> **匹配** (修订号增加了)
-    * `1.2.99` -> **匹配** (修订号增加了)
-    * `1.2.2` -> **不匹配** (修订号太旧了)
-    * `1.3.0` -> **不匹配** (次版本号变了，这是 `~` 不允许的)
-    * `2.0.0` -> **不匹配** (主版本号变了)
-
-**核心目的**: 你告诉 npm：“我依赖 `some-package` 的 `1.2` 版本，我相信这个版本后续的 bug 修复（比如 `1.2.4`），但我不想冒任何风险去使用可能包含新功能的 `1.3.0` 版本，即使它号称是向后兼容的。”
+Let's break down this rule through several examples:
 
 ---
 
-### 场景 2：只指定主次版本 `~1.2`
+### Scenario 1: Most Common Usage `~1.2.3`
 
-这其实是场景 1 的一种简写，它被 npm 解释为 `~1.2.0`。
+Suppose you write in `package.json`: `"some-package": "~1.2.3"`
 
-* **`"some-package": "~1.2"`** 等价于 **`"some-package": "~1.2.0"`**
-* **匹配范围**: `>= 1.2.0` 并且 `< 1.3.0`。
-* **也等价于**: `1.2.x`
+* **Analysis**:
+    * The major version you specified is `1`.
+    * The minor version you specified is `2`.
+    * The patch version you specified is `3`.
+
+* **Rule**:
+    * The major version **must** be `1`.
+    * The minor version **must** be `2`.
+    * The patch version **must** be greater than or equal to `3`.
+
+* **In other words, this is equivalent to the version range**: `>= 1.2.3` and `< 1.3.0`.
+
+* **Specific Matching**:
+    * `1.2.3` -> **Matches** (this is the minimum version)
+    * `1.2.4` -> **Matches** (patch version increased)
+    * `1.2.99` -> **Matches** (patch version increased)
+    * `1.2.2` -> **Does Not Match** (patch version is too old)
+    * `1.3.0` -> **Does Not Match** (minor version changed, which `~` does not allow)
+    * `2.0.0` -> **Does Not Match** (major version changed)
+
+**Core Purpose**: You tell npm: "I depend on `some-package` version `1.2`, and I trust the subsequent bug fixes in this version (such as `1.2.4`), but I don't want to take any risks using version `1.3.0` that may contain new features, even if it claims to be backward compatible."
 
 ---
 
-### `~` (Tilde) vs. `^` (Caret) 的关键区别
+### Scenario 2: Only Specify Major and Minor Versions `~1.2`
 
-现在对比一下默认的 `^`，你就能彻底明白 `~` 的用途了。
+This is actually a shorthand for Scenario 1, which npm interprets as `~1.2.0`.
 
-| 版本范围 | 匹配 `1.2.4`? | 匹配 `1.3.0`? | 匹配 `1.3.5`? | 匹配 `2.0.0`? | 风险等级 |
+* **`"some-package": "~1.2"`** is equivalent to **`"some-package": "~1.2.0"`**
+* **Matching Range**: `>= 1.2.0` and `< 1.3.0`.
+* **Also Equivalent To**: `1.2.x`
+
+---
+
+### Key Differences Between `~` (Tilde) and `^` (Caret)
+
+Now compare it with the default `^`, and you will fully understand the use of `~`.
+
+| Version Range | Matches `1.2.4`? | Matches `1.3.0`? | Matches `1.3.5`? | Matches `2.0.0`? | Risk Level |
 | :--- | :---: | :---: | :---: | :---: | :--- |
-| `~1.2.3` | ✅ | ❌ | ❌ | ❌ | **最低** (只接受 bug 修复) |
-| `^1.2.3` | ✅ | ✅ | ✅ | ❌ | **中等** (接受 bug 修复和新功能) |
+| `~1.2.3` | ✅ | ❌ | ❌ | ❌ | **Lowest** (only accepts bug fixes) |
+| `^1.2.3` | ✅ | ✅ | ✅ | ❌ | **Medium** (accepts bug fixes and new features) |
 
-**总结一下：**
+**Summary**:
 
-* `^` (默认) 说：“我相信这个库的作者，只要不升级主版本，新功能和 bug 修复我都要。”
-* `~` (更保守) 说：“我只想要 bug 修复。任何新功能，哪怕是兼容的，我都暂时不想要，因为新功能可能引入新 bug。我要等我准备好了再手动升级次版本。”
+* `^` (default) says: "I trust the author of this library. As long as the major version is not upgraded, I want both new features and bug fixes."
+* `~` (more conservative) says: "I only want bug fixes. I don't want any new features for now, even if they are compatible, because new features may introduce new bugs. I will manually upgrade the minor version when I am ready."
 
-在一些对稳定性要求极高、不希望任何非预期行为变化的项目中，开发者会选择使用 `~` 来锁定次要版本，以获得最大的可预测性。
-
----
-
-
-当然，这是一个非常好的深化问题。`~` 和 `^` 的行为在主版本号为 `0` 和不为 `0` 时有关键区别。下面是详细的对比表格。
-
-### 表格 1: 主版本号 >= 1 (例如 `1.x.y`)
-
-这是最常见的情况，用于稳定版本的依赖。
-
-| 输入版本 | 符号 | 等价范围 | 解释 |
-| :--- | :--- | :--- | :--- |
-| **`1.2.3`** | `~` | `>= 1.2.3 < 1.3.0` | **只允许修订号更新**。锁定主版本 `1` 和次版本 `2`。 |
-| | `^` | `>= 1.2.3 < 2.0.0` | **允许次版本和修订号更新**。只锁定主版本 `1`。 |
-| **`1.2`** | `~` | `>= 1.2.0 < 1.3.0` | **只允许修订号更新**。锁定 `1.2`。 |
-| | `^` | `>= 1.2.0 < 2.0.0` | **允许次版本和修订号更新**。锁定 `1`。 |
-| **`1`** | `~` | `>= 1.0.0 < 2.0.0` | **允许次版本和修订号更新**。因为未指定次版本，行为与 `^` 相同。 |
-| | `^` | `>= 1.0.0 < 2.0.0` | **允许次版本和修订号更新**。 |
-
-**核心区别**: 当指定了次版本号（如 `1.2` 或 `1.2.3`）时，`~` 比 `^` 更严格，它会把次版本号也锁定。
+In some projects with extremely high stability requirements and where any unexpected behavior changes are not desired, developers will choose to use `~` to lock the minor version for maximum predictability.
 
 ---
 
-### 表格 2: 主版本号为 0 (例如 `0.x.y`)
+Of course, this is a very good deepening question. The behavior of `~` and `^` is significantly different when the major version number is `0` and when it is not `0`. Here is a detailed comparison table.
 
-这种情况用于初始开发阶段 (API 不稳定)，`^` 的行为会变得更加保守，以避免引入破坏性更新。
+### Table 1: Major Version Number >= 1 (e.g., `1.x.y`)
 
-| 输入版本 | 符号 | 等价范围 | 解释 |
+This is the most common case for stable version dependencies.
+
+| Input Version | Symbol | Equivalent Range | Explanation |
 | :--- | :--- | :--- | :--- |
-| **`0.2.3`** | `~` | `>= 0.2.3 < 0.3.0` | **只允许修订号更新**。锁定 `0.2`。 |
-| | `^` | `>= 0.2.3 < 0.3.0` | **只允许修订号更新**。对于 `0.x.y` (x>0)，`^` 的行为退化为与 `~` 相同。 |
-| **`0.2`** | `~` | `>= 0.2.0 < 0.3.0` | **只允许修订号更新**。锁定 `0.2`。 |
-| | `^` | `>= 0.2.0 < 0.3.0` | **只允许修订号更新**。对于 `0.x` (x>0)，`^` 的行为退化为与 `~` 相同。 |
-| **`0.0.3`** | `~` | `>= 0.0.3 < 0.1.0` | **只允许修订号更新**。锁定 `0.0`。 |
-| | `^` | `>= 0.0.3 < 0.0.4` | **不允许任何更新**。`^` 的规则是锁定最左非零数字，这里是 `3`，所以版本被完全锁定。 |
-| **`0`** | `~` | `>= 0.0.0 < 1.0.0` | **允许次版本和修订号更新**。因为未指定次版本，行为与 `^` 相同。 |
-| | `^` | `>= 0.0.0 < 1.0.0` | **允许次版本和修订号更新**。 |
+| **`1.2.3`** | `~` | `>= 1.2.3 < 1.3.0` | **Only allows patch version updates**. Locks major version `1` and minor version `2`. |
+| | `^` | `>= 1.2.3 < 2.0.0` | **Allows minor and patch version updates**. Only locks major version `1`. |
+| **`1.2`** | `~` | `>= 1.2.0 < 1.3.0` | **Only allows patch version updates**. Locks `1.2`. |
+| | `^` | `>= 1.2.0 < 2.0.0` | **Allows minor and patch version updates**. Locks `1`. |
+| **`1`** | `~` | `>= 1.0.0 < 2.0.0` | **Allows minor and patch version updates**. Because no minor version is specified, behavior is the same as `^`. |
+| | `^` | `>= 1.0.0 < 2.0.0` | **Allows minor and patch version updates**. |
 
-**核心区别**:
-1. 对于 `0.x.y` (且 x > 0)，`^` 和 `~` 的行为**完全相同**。
-2. 对于 `0.0.y`，`^` 会**完全锁定**版本，比 `~` 更严格。
-3. 如果只指定主版本（`1` 或 `0`），`^` 和 `~` 的行为**没有区别**。
+**Core Difference**: When the minor version number is specified (such as `1.2` or `1.2.3`), `~` is stricter than `^`, as it also locks the minor version number.
+
+---
+
+### Table 2: Major Version Number is 0 (e.g., `0.x.y`)
+
+This case is used for the initial development phase (API is unstable), and the behavior of `^` becomes more conservative to avoid introducing destructive updates.
+
+| Input Version | Symbol | Equivalent Range | Explanation |
+| :--- | :--- | :--- | :--- |
+| **`0.2.3`** | `~` | `>= 0.2.3 < 0.3.0` | **Only allows patch version updates**. Locks `0.2`. |
+| | `^` | `>= 0.2.3 < 0.3.0` | **Only allows patch version updates**. For `0.x.y` (x>0), `^` behavior degrades to be the same as `~`. |
+| **`0.2`** | `~` | `>= 0.2.0 < 0.3.0` | **Only allows patch version updates**. Locks `0.2`. |
+| | `^` | `>= 0.2.0 < 0.3.0` | **Only allows patch version updates**. For `0.x` (x>0), `^` behavior degrades to be the same as `~`. |
+| **`0.0.3`** | `~` | `>= 0.0.3 < 0.1.0` | **Only allows patch version updates**. Locks `0.0`. |
+| | `^` | `>= 0.0.3 < 0.0.4` | **Does not allow any updates**. `^` rule is to lock the leftmost non-zero digit, here it is `3`, so the version is completely locked. |
+| **`0`** | `~` | `>= 0.0.0 < 1.0.0` | **Allows minor and patch version updates**. Because no minor version is specified, behavior is the same as `^`. |
+| | `^` | `>= 0.0.0 < 1.0.0` | **Allows minor and patch version updates**. |
+
+**Core Differences**:
+1. For `0.x.y` (and x > 0), the behavior of `^` and `~` is **exactly the same**.
+2. For `0.0.y`, `^` will **completely lock** the version, which is stricter than `~`.
+3. If only the major version is specified (`1` or `0`), the behavior of `^` and `~` is **no different**.

@@ -1,19 +1,19 @@
-# 在 Rust 中，`Copy` trait 是一个标记 trait，用于指示类型是否可以安全地通过**按位复制**（bitwise copy）来复制其值。实现了 `Copy` trait 的类型在赋值或传递时会直接复制数据，而不是转移所有权。而未实现 `Copy` trait 的类型（称为 **non-Copy 类型**）在赋值或传递时会触发所有权转移（move）。
+# In Rust, the `Copy` trait is a marker trait used to indicate whether a type can safely copy its values through **bitwise copy**. Types that implement the `Copy` trait directly copy data during assignment or passing, rather than transferring ownership. Types that do not implement the `Copy` trait (called **non-Copy types**) trigger ownership transfer (move) during assignment or passing.
 
 以下是 Rust 中默认实现 `Copy` trait 和默认不实现 `Copy` trait（即 non-Copy）的类型说明：
 
 ---
 
-### 默认实现 `Copy` trait 的类型
+### Types That Default Implement `Copy` Trait
 
-Rust 中，**简单、固定大小的标量类型**和**由它们组成的复合类型**（如结构体或枚举），如果满足条件，通常会自动实现 `Copy` trait。以下是常见的默认 `Copy` 类型：
+In Rust, **simple, fixed-size scalar types** and **composite types composed of them** (like structs or enums) usually automatically implement the `Copy` trait if conditions are met. Here are common default `Copy` types:
 
-1. **基本标量类型**：
-    - 整数类型：`i8`, `i16`, `i32`, `i64`, `i128`, `u8`, `u16`, `u32`, `u64`, `u128`
-    - 浮点数类型：`f32`, `f64`
-    - 布尔类型：`bool`
-    - 字符类型：`char`
-    - 单元类型：`()`（空元组）
+1. **Basic scalar types**:
+    - Integer types: `i8`, `i16`, `i32`, `i64`, `i128`, `u8`, `u16`, `u32`, `u64`, `u128`
+    - Floating-point types: `f32`, `f64`
+    - Boolean type: `bool`
+    - Character type: `char`
+    - Unit type: `()` (empty tuple)
 
 2. **引用类型**（不可变引用和可变引用）：
     - `&T`（不可变引用）

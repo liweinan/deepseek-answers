@@ -1,117 +1,117 @@
-# GitHub Webhook 是一种机制，允许 GitHub 在特定事件发生时向外部服务发送 HTTP 请求（通常是 POST 请求），以实现自动化工作流或与第三方工具集成。Prow 就利用 GitHub Webhook 来监听 GitHub 事件（例如 Pull Request 创建、Issue Comment 等），从而触发 CI/CD 任务。以下是对 GitHub Webhook 的详细介绍，结合 Prow 的使用场景。
+# GitHub Webhook is a mechanism that allows GitHub to send HTTP requests (usually POST requests) to external services when specific events occur, to achieve automated workflows or integration with third-party tools. Prow uses GitHub Webhook to listen for GitHub events (such as Pull Request creation, Issue Comment, etc.), thereby triggering CI/CD tasks. Here's a detailed introduction to GitHub Webhook, combined with Prow's usage scenarios.
 
 ---
 
-### 1. **什么是 GitHub Webhook？**
-- **定义**：GitHub Webhook 是一种事件驱动的机制，当 GitHub 仓库中发生特定事件时，GitHub 会向预配置的 URL（称为 Webhook URL）发送一个 HTTP POST 请求，包含事件的相关数据。
-- **用途**：Webhook 允许外部系统（如 Prow、Jenkins、Slack 等）实时响应 GitHub 事件，实现自动化，例如：
-    - 触发 CI/CD 管道（Prow 监听 Pull Request 事件并运行测试）。
-    - 通知团队（例如将 Issue 创建事件发送到 Slack）。
-    - 同步数据（例如将代码推送事件同步到外部备份系统）。
+### 1. **What is GitHub Webhook?**
+- **Definition**: GitHub Webhook is an event-driven mechanism where, when specific events occur in a GitHub repository, GitHub sends an HTTP POST request to a pre-configured URL (called Webhook URL) containing relevant data about the event.
+- **Uses**: Webhook allows external systems (like Prow, Jenkins, Slack, etc.) to respond to GitHub events in real-time, achieving automation, such as:
+    - Triggering CI/CD pipelines (Prow listens for Pull Request events and runs tests).
+    - Notifying teams (e.g., sending Issue creation events to Slack).
+    - Synchronizing data (e.g., synchronizing code push events to external backup systems).
 
 ---
 
-### 2. **GitHub Webhook 的核心概念**
-#### 2.1 **事件（Events）**
-- Webhook 可以监听多种 GitHub 事件，常见的事件包括：
-    - `push`：代码被推送到仓库（例如推送新提交）。
-    - `pull_request`：Pull Request 被创建、更新、合并或关闭。
-    - `issue_comment`：Issue 或 Pull Request 上有新的评论。
-    - `issues`：Issue 被创建、更新或关闭。
-    - `status`：仓库的状态检查（如 CI 状态）发生变化。
-- 在 Prow 的场景中，教程中选择了以下事件：
-    - `Push`：监听代码推送。
-    - `Pull Request`：监听 Pull Request 创建、更新等。
-    - `Issue Comment`：监听 Issue 或 Pull Request 的评论（例如用户可能通过评论触发 Prow 命令，如 `/retest`）。
+### 2. **GitHub Webhook Core Concepts**
+#### 2.1 **Events**
+- Webhook can listen for various GitHub events, common events include:
+    - `push`: Code is pushed to repository (e.g., pushing new commits).
+    - `pull_request`: Pull Request is created, updated, merged, or closed.
+    - `issue_comment`: New comments on Issue or Pull Request.
+    - `issues`: Issue is created, updated, or closed.
+    - `status`: Repository status checks (like CI status) change.
+- In Prow's scenario, the tutorial selected these events:
+    - `Push`: Listen for code pushes.
+    - `Pull Request`: Listen for Pull Request creation, updates, etc.
+    - `Issue Comment`: Listen for comments on Issues or Pull Requests (e.g., users might trigger Prow commands through comments like `/retest`).
 
 #### 2.2 **Webhook URL**
-- Webhook URL 是 GitHub 发送事件数据的目标地址，必须是一个公开可访问的 HTTP/HTTPS 端点。
-- 在 Prow 的教程中：
-    - Webhook URL 配置为 `https://hook.prow.yourdomain.com/hook`（使用 Nginx Ingress 和 HTTPS）。
-    - Prow 的 Hook 服务监听在这个 URL 上，接收 GitHub 事件并分发给其他组件（如 Plank）。
+- Webhook URL is the target address where GitHub sends event data, must be a publicly accessible HTTP/HTTPS endpoint.
+- In Prow's tutorial:
+    - Webhook URL is configured as `https://hook.prow.yourdomain.com/hook` (using Nginx Ingress and HTTPS).
+    - Prow's Hook service listens on this URL, receives GitHub events and distributes them to other components (like Plank).
 
-#### 2.3 **Payload（事件数据）**
-- GitHub 在发送 Webhook 请求时，会附带一个 JSON 格式的 Payload，包含事件的具体信息。
-- 例如，`pull_request` 事件的 Payload 可能包含：
-    - 仓库名称（`repository.full_name`：如 `my-org/my-repo`）。
-    - Pull Request 编号（`pull_request.number`）。
-    - 事件类型（`action`：如 `opened`、`closed`）。
-    - 提交 SHA（`pull_request.head.sha`）。
-- Prow 的 Hook 服务会解析这个 Payload，提取必要信息（例如仓库名称和 PR 编号），以决定是否触发作业。
+#### 2.3 **Payload (Event Data)**
+- When GitHub sends Webhook requests, it includes a JSON-formatted Payload containing specific information about the event.
+- For example, `pull_request` event Payload might contain:
+    - Repository name (`repository.full_name`: like `my-org/my-repo`).
+    - Pull Request number (`pull_request.number`).
+    - Event type (`action`: like `opened`, `closed`).
+    - Commit SHA (`pull_request.head.sha`).
+- Prow's Hook service parses this Payload, extracts necessary information (e.g., repository name and PR number) to decide whether to trigger jobs.
 
-#### 2.4 **Webhook Secret（可选）**
-- Webhook Secret 是一个可选的密钥，用于验证 Webhook 请求的合法性。
-- 配置方式：
-    - 在 GitHub Webhook 设置中指定一个 Secret（例如教程中的 `/path/to/hook/secret`）。
-    - GitHub 在发送 Webhook 请求时，使用这个 Secret 生成一个 HMAC-SHA256 签名，放在请求头的 `X-Hub-Signature-256` 字段中。
-- 接收端（例如 Prow）使用相同的 Secret 验证签名，确保请求来自 GitHub 而不是伪造的。
-- 在 Prow 中：
-    - `hmac-token` Secret 存储了 Webhook Secret，用于验证 GitHub Webhook 请求：
+#### 2.4 **Webhook Secret (Optional)**
+- Webhook Secret is an optional key used to verify the legitimacy of Webhook requests.
+- Configuration method:
+    - Specify a Secret in GitHub Webhook settings (e.g., `/path/to/hook/secret` in the tutorial).
+    - When GitHub sends Webhook requests, it uses this Secret to generate an HMAC-SHA256 signature, placed in the request header's `X-Hub-Signature-256` field.
+- The receiving end (e.g., Prow) uses the same Secret to verify the signature, ensuring the request comes from GitHub rather than being forged.
+- In Prow:
+    - `hmac-token` Secret stores the Webhook Secret for verifying GitHub Webhook requests:
       ```bash
       kubectl create secret -n prow generic hmac-token --from-file=hmac=/path/to/hook/secret
       ```
 
-#### 2.5 **请求头**
-- GitHub Webhook 请求会包含一些重要的 HTTP 头：
-    - **`X-GitHub-Event`**：事件类型（例如 `pull_request`、`push`）。
-    - **`X-Hub-Signature-256`**：HMAC-SHA256 签名，用于验证请求（如果配置了 Webhook Secret）。
-    - **`X-GitHub-Delivery`**：唯一的事件 ID，用于调试或去重。
+#### 2.5 **Request Headers**
+- GitHub Webhook requests include some important HTTP headers:
+    - **`X-GitHub-Event`**: Event type (e.g., `pull_request`, `push`).
+    - **`X-Hub-Signature-256`**: HMAC-SHA256 signature for request verification (if Webhook Secret is configured).
+    - **`X-GitHub-Delivery`**: Unique event ID for debugging or deduplication.
 
 ---
 
-### 3. **GitHub Webhook 的配置**
-GitHub Webhook 可以在两个层面配置：**仓库级别** 和 **GitHub App 级别**。Prow 使用的是 GitHub App 级别的 Webhook。
+### 3. **GitHub Webhook Configuration**
+GitHub Webhook can be configured at two levels: **Repository level** and **GitHub App level**. Prow uses GitHub App level Webhook.
 
-#### 3.1 **仓库级别的 Webhook**
-- 配置位置：单个 GitHub 仓库的设置页面（`https://github.com/<org>/<repo>/settings/hooks`）。
-- 配置内容：
-    - **Payload URL**：目标 URL（例如 `https://hook.prow.yourdomain.com/hook`）。
-    - **Content type**：通常选择 `application/json`。
-    - **Secret**：可选，用于验证请求。
-    - **Events**：选择要监听的事件（例如 `Push`、`Pull Request`）。
-- 用途：适合单个仓库的简单集成，但不适合管理多个仓库。
+#### 3.1 **Repository Level Webhook**
+- Configuration location: Individual GitHub repository settings page (`https://github.com/<org>/<repo>/settings/hooks`).
+- Configuration content:
+    - **Payload URL**: Target URL (e.g., `https://hook.prow.yourdomain.com/hook`).
+    - **Content type**: Usually select `application/json`.
+    - **Secret**: Optional, for request verification.
+    - **Events**: Select events to listen for (e.g., `Push`, `Pull Request`).
+- Use case: Suitable for simple integration of single repositories, but not suitable for managing multiple repositories.
 
-#### 3.2 **GitHub App 级别的 Webhook（Prow 使用的方式）**
-- 配置位置：GitHub App 的设置页面（`https://github.com/settings/apps/<your-app-name>`）。
-- 配置内容：
-    - **Webhook URL**：全局 Webhook URL（例如 `https://hook.prow.yourdomain.com/hook`）。
-    - **Webhook Secret**：用于验证请求（例如 `/path/to/hook/secret`）。
-    - **Events**：选择 GitHub App 监听的事件（教程中选择了 `Push`、`Pull Request`、`Issue Comment`）。
-- 优势：
-    - 一个 GitHub App 可以管理多个仓库，适合 Prow 这种多仓库 CI/CD 系统。
-    - 通过 GitHub App 的权限控制，Prow 可以以 App 身份操作仓库（例如设置状态、评论 PR）。
-- 在 Prow 的教程中：
-    - 步骤 1 创建了 GitHub App。
-    - 步骤 9 配置了 Webhook URL 和 Secret：
+#### 3.2 **GitHub App Level Webhook (Method Used by Prow)**
+- Configuration location: GitHub App settings page (`https://github.com/settings/apps/<your-app-name>`).
+- Configuration content:
+    - **Webhook URL**: Global Webhook URL (e.g., `https://hook.prow.yourdomain.com/hook`).
+    - **Webhook Secret**: For request verification (e.g., `/path/to/hook/secret`).
+    - **Events**: Select events for GitHub App to listen to (tutorial selected `Push`, `Pull Request`, `Issue Comment`).
+- Advantages:
+    - One GitHub App can manage multiple repositories, suitable for Prow's multi-repository CI/CD system.
+    - Through GitHub App's permission control, Prow can operate repositories as the App (e.g., setting status, commenting on PRs).
+- In Prow's tutorial:
+    - Step 1 created the GitHub App.
+    - Step 9 configured Webhook URL and Secret:
       ```
-      1. 返回 GitHub App 设置页面（`https://github.com/settings/apps/<your-app-name>`），在 **Webhook** 部分，更新 Webhook URL 为 `https://hook.prow.yourdomain.com/hook`.
-      2. 将 Webhook Secret 设置为 `/path/to/hook/secret` 中的值。
-      3. 选择事件：Push、Pull Request、Issue Comment.
+      1. Return to GitHub App settings page (`https://github.com/settings/apps/<your-app-name>`), in **Webhook** section, update Webhook URL to `https://hook.prow.yourdomain.com/hook`.
+      2. Set Webhook Secret to the value in `/path/to/hook/secret`.
+      3. Select events: Push, Pull Request, Issue Comment.
       ```
 
 ---
 
-### 4. **GitHub Webhook 在 Prow 中的工作流程**
-结合 Prow 的使用场景，GitHub Webhook 的工作流程如下：
+### 4. **GitHub Webhook Workflow in Prow**
+Combined with Prow's usage scenario, GitHub Webhook's workflow is as follows:
 
-1. **事件触发**：
-    - 用户在 `my-org/my-repo` 仓库中创建了一个 Pull Request。
-    - GitHub App 监听到 `pull_request` 事件（因为它被授权访问该仓库）。
+1. **Event Trigger**:
+    - User creates a Pull Request in `my-org/my-repo` repository.
+    - GitHub App listens for `pull_request` event (because it's authorized to access the repository).
 
-2. **发送 Webhook 请求**：
-    - GitHub 向 GitHub App 配置的 Webhook URL（`https://hook.prow.yourdomain.com/hook`）发送 POST 请求。
-    - 请求包含：
-        - Payload：Pull Request 的详细信息（JSON 格式）。
-        - 头信息：`X-GitHub-Event: pull_request`、`X-Hub-Signature-256`（签名）。
+2. **Send Webhook Request**:
+    - GitHub sends POST request to GitHub App's configured Webhook URL (`https://hook.prow.yourdomain.com/hook`).
+    - Request contains:
+        - Payload: Pull Request detailed information (JSON format).
+        - Header info: `X-GitHub-Event: pull_request`, `X-Hub-Signature-256` (signature).
 
-3. **Prow 处理请求**：
-    - Prow 的 Hook 服务接收到 Webhook 请求。
-    - 使用 `hmac-token` Secret 验证签名（确保请求来自 GitHub）。
-    - 解析 Payload，提取事件信息（例如仓库名 `my-org/my-repo`、PR 编号、事件类型 `opened`）。
+3. **Prow Processes Request**:
+    - Prow's Hook service receives the Webhook request.
+    - Uses `hmac-token` Secret to verify signature (ensures request comes from GitHub).
+    - Parses Payload, extracts event information (e.g., repository name `my-org/my-repo`, PR number, event type `opened`).
 
-4. **触发作业**：
-    - Hook 将事件分发给 Plank 组件。
-    - Plank 检查 `prow-jobs.yaml`（存储在 `my-org/my-repo` 仓库中），发现 `unit-test` 作业：
+4. **Trigger Jobs**:
+    - Hook distributes event to Plank component.
+    - Plank checks `prow-jobs.yaml` (stored in `my-org/my-repo` repository), finds `unit-test` job:
       ```yaml
       presubmits:
         my-org/my-repo:
@@ -126,42 +126,42 @@ GitHub Webhook 可以在两个层面配置：**仓库级别** 和 **GitHub App �
               args:
               - test
       ```
-    - 由于 `always_run: true`，Plank 触发 `unit-test` 作业，运行 `go test`。
+    - Since `always_run: true`, Plank triggers `unit-test` job, runs `go test`.
 
-5. **报告结果**：
-    - 作业完成后，Prow 使用 `github-token` Secret 生成 GitHub API 访问令牌。
-    - 通过 GitHub API 将测试结果（例如 `PASS` 或 `FAIL`）更新到 Pull Request 的状态检查中。
-
----
-
-### 5. **GitHub Webhook 的优势与注意事项**
-#### 优势：
-- **实时性**：事件发生时立即通知外部服务，支持实时自动化。
-- **灵活性**：支持多种事件，适用于各种集成场景。
-- **安全性**：通过 Webhook Secret 验证请求来源，防止伪造。
-
-#### 注意事项：
-- **网络可达性**：
-    - Webhook URL 必须是公网可访问的（教程中通过公网 IP 和 Nginx Ingress 实现）。
-    - 如果在本地主机部署（如 Minikube），需要端口转发或工具（如 UltraHook）暴露服务。
-- **安全性**：
-    - 始终配置 Webhook Secret，防止恶意请求。
-    - 使用 HTTPS 端点（教程中通过 cert-manager 实现），确保数据加密。
-- **错误处理**：
-    - GitHub Webhook 失败时会重试几次，但如果一直失败（例如 URL 不可达），事件可能会丢失。
-    - 在 Prow 中，可以通过 Hook 的日志（`kubectl logs -n prow -l app=hook`）调试 Webhook 失败。
+5. **Report Results**:
+    - After job completion, Prow uses `github-token` Secret to generate GitHub API access token.
+    - Updates test results (e.g., `PASS` or `FAIL`) to Pull Request status checks via GitHub API.
 
 ---
 
-### 6. **总结**
-- **GitHub Webhook** 是一种事件通知机制，GitHub 在事件发生时向指定 URL 发送 HTTP 请求。
-- **Prow 的使用**：
-    - Prow 通过 GitHub App 级别的 Webhook 监听事件（`Push`、`Pull Request`、`Issue Comment`）。
-    - Webhook URL（`https://hook.prow.yourdomain.com/hook`）指向 Prow 的 Hook 服务。
-    - Hook 服务接收事件，触发作业，并通过 GitHub API 报告结果。
-- **关键点**：
-    - 配置 Webhook Secret 确保安全。
-    - Webhook URL 必须公网可达。
-    - Prow 使用 Secrets（`hmac-token` 和 `github-token`）验证和操作 GitHub。
+### 5. **GitHub Webhook Advantages and Notes**
+#### Advantages:
+- **Real-time**: Immediately notifies external services when events occur, supporting real-time automation.
+- **Flexibility**: Supports multiple events, suitable for various integration scenarios.
+- **Security**: Verifies request source through Webhook Secret, prevents forgery.
 
-如果你想深入了解 Webhook 的 Payload 格式或调试方法，请告诉我！
+#### Notes:
+- **Network Reachability**:
+    - Webhook URL must be publicly accessible (tutorial implements through public IP and Nginx Ingress).
+    - If deployed on local host (like Minikube), needs port forwarding or tools (like UltraHook) to expose service.
+- **Security**:
+    - Always configure Webhook Secret to prevent malicious requests.
+    - Use HTTPS endpoints (tutorial implements through cert-manager), ensure data encryption.
+- **Error Handling**:
+    - GitHub Webhook will retry several times on failure, but if consistently fails (e.g., URL unreachable), events may be lost.
+    - In Prow, can debug Webhook failures through Hook logs (`kubectl logs -n prow -l app=hook`).
+
+---
+
+### 6. **Summary**
+- **GitHub Webhook** is an event notification mechanism where GitHub sends HTTP requests to specified URLs when events occur.
+- **Prow's Usage**:
+    - Prow listens for events through GitHub App level Webhook (`Push`, `Pull Request`, `Issue Comment`).
+    - Webhook URL (`https://hook.prow.yourdomain.com/hook`) points to Prow's Hook service.
+    - Hook service receives events, triggers jobs, and reports results via GitHub API.
+- **Key Points**:
+    - Configure Webhook Secret for security.
+    - Webhook URL must be publicly reachable.
+    - Prow uses Secrets (`hmac-token` and `github-token`) to verify and operate GitHub.
+
+Let me know if you want to learn more about Webhook Payload format or debugging methods!

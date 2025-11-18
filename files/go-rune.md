@@ -1,62 +1,62 @@
-# 在 Go 编程语言中，`rune` 是一种内置类型，用于表示单个 Unicode 码点（code point）。以下是关于 `rune` 的详细介绍：
+# In Go programming language, `rune` is a built-in type used to represent a single Unicode code point. Here's a detailed introduction to `rune`:
 
-### 1. **定义**
-- `rune` 是 Go 中的一个类型别名，实际上是 `int32` 的别名。
-- 它用来表示一个 Unicode 码点，范围从 `U+0000` 到 `U+10FFFF`，可以表示任何 Unicode 字符（包括 ASCII 字符和多字节字符，如中文、表情符号等）。
-- 例如，字母 `'a'`、中文 `'中'` 或表情符号 `'😊'` 都可以用一个 `rune` 表示。
+### 1. **Definition**
+- `rune` is a type alias in Go, essentially an alias for `int32`.
+- It represents a Unicode code point, ranging from `U+0000` to `U+10FFFF`, and can represent any Unicode character (including ASCII characters and multi-byte characters like Chinese, emojis, etc.).
+- For example, the letter `'a'`, Chinese character `'中'`, or emoji `'😊'` can all be represented by a `rune`.
 
-### 2. **与 byte 的区别**
-- Go 的字符串底层是由 `byte`（`uint8`）数组存储的，每个 `byte` 表示 UTF-8 编码的一个字节。
-- 一个 Unicode 字符可能由 1 到 4 个 `byte` 组成（取决于字符的 UTF-8 编码）。
-- `rune` 则表示解码后的单个 Unicode 字符，而不是字节。例如，字符串 `"中"` 的 UTF-8 编码占 3 个 `byte`，但它对应一个 `rune`。
+### 2. **Difference from byte**
+- Go strings are stored as `byte` (`uint8`) arrays at the底层, with each `byte` representing a UTF-8 encoded byte.
+- A Unicode character may consist of 1 to 4 `byte`s (depending on the character's UTF-8 encoding).
+- `rune` represents a decoded single Unicode character, not bytes. For example, the string `"中"` occupies 3 `byte`s in UTF-8 encoding, but it corresponds to one `rune`.
 
-### 3. **使用场景**
-- **遍历字符串**：当你需要按字符（而非字节）遍历字符串时，可以将字符串转换为 `[]rune` 或使用 `range` 循环。
+### 3. **Use Cases**
+- **String traversal**: When you need to traverse a string by characters (not bytes), you can convert the string to `[]rune` or use a `range` loop.
   ```go
   s := "Hello, 世界"
   for i, r := range s {
-      fmt.Printf("索引: %d, 字符: %c, Unicode: %U\n", i, r, r)
+      fmt.Printf("Index: %d, Character: %c, Unicode: %U\n", i, r, r)
   }
   ```
-  输出：
+  Output:
   ```
-  索引: 0, 字符: H, Unicode: U+0048
-  索引: 1, 字符: e, Unicode: U+0065
+  Index: 0, Character: H, Unicode: U+0048
+  Index: 1, Character: e, Unicode: U+0065
   ...
-  索引: 7, 字符: 世, Unicode: U+4E16
-  索引: 10, 字符: 界, Unicode: U+754C
+  Index: 7, Character: 世, Unicode: U+4E16
+  Index: 10, Character: 界, Unicode: U+754C
   ```
-  这里 `range` 迭代的是 `rune`，而不是 `byte`。
+  Here `range` iterates over `rune`, not `byte`.
 
-- **处理非 ASCII 字符**：当需要操作多字节字符（如中文、表情符号）时，`rune` 非常有用。例如：
+- **Handling non-ASCII characters**: When you need to manipulate multi-byte characters (like Chinese, emojis), `rune` is very useful. For example:
   ```go
   s := "世界"
   runes := []rune(s)
-  fmt.Println(len(runes)) // 输出: 2（两个字符）
-  fmt.Println(len(s))     // 输出: 6（6 个字节，因为每个中文字符占 3 字节）
+  fmt.Println(len(runes)) // Output: 2 (two characters)
+  fmt.Println(len(s))     // Output: 6 (6 bytes, because each Chinese character occupies 3 bytes)
   ```
 
-- **字符操作**：`rune` 可以用来比较、转换或操作单个字符。例如：
+- **Character operations**: `rune` can be used to compare, convert, or manipulate individual characters. For example:
   ```go
   r := '中'
-  fmt.Printf("字符: %c, Unicode: %U\n", r, r) // 输出: 字符: 中, Unicode: U+4E2D
+  fmt.Printf("Character: %c, Unicode: %U\n", r, r) // Output: Character: 中, Unicode: U+4E2D
   ```
 
-### 4. **语法和表示**
-- `rune` 字面量用单引号 `''` 括起来，例如 `'a'`、`'中'`、`'😊'`。
-- 你可以直接将 `rune` 用 Unicode 码点表示，例如：
+### 4. **Syntax and Representation**
+- `rune` literals are enclosed in single quotes `''`, for example `'a'`, `'中'`, `'😊'`.
+- You can directly represent `rune` using Unicode code points, for example:
   ```go
   r := rune(0x4E2D) // 表示 '中'
-  fmt.Printf("%c\n", r) // 输出: 中
+  fmt.Printf("%c\n", r) // Output: 中
   ```
 
-### 5. **注意事项**
-- **字符串长度**：`len(string)` 返回的是字节数，而不是字符数。如果需要字符数，需转换为 `[]rune` 后用 `len([]rune(string))`。
-- **性能**：将字符串转换为 `[]rune` 会分配新的内存，因此在性能敏感的场景中应谨慎使用。
-- **空 rune**：`rune` 的零值是 `0`，对应 Unicode 码点 `U+0000`（空字符）。
+### 5. **Important Notes**
+- **String length**: `len(string)` returns the number of bytes, not characters. If you need the character count, convert to `[]rune` and use `len([]rune(string))`.
+- **Performance**: Converting a string to `[]rune` allocates new memory, so use cautiously in performance-sensitive scenarios.
+- **Empty rune**: The zero value of `rune` is `0`, corresponding to Unicode code point `U+0000` (null character).
 
-### 6. **示例代码**
-以下是一个综合示例，展示 `rune` 的使用：
+### 6. **Example Code
+Here's a comprehensive example demonstrating the use of `rune`:
 ```go
 package main
 
@@ -65,46 +65,46 @@ import "fmt"
 func main() {
     s := "Hello, 世界! 😊"
     
-    // 按字节遍历
-    fmt.Println("按字节遍历:")
+    // Traverse by bytes
+    fmt.Println("Traverse by bytes:")
     for i := 0; i < len(s); i++ {
         fmt.Printf("%d: %x\n", i, s[i])
     }
     
-    // 按字符（rune）遍历
-    fmt.Println("\n按字符遍历:")
+    // Traverse by characters (rune)
+    fmt.Println("\nTraverse by characters:")
     for i, r := range s {
-        fmt.Printf("索引: %d, 字符: %c, Unicode: %U\n", i, r, r)
+        fmt.Printf("Index: %d, Character: %c, Unicode: %U\n", i, r, r)
     }
     
-    // 转换为 []rune
+    // Convert to []rune
     runes := []rune(s)
-    fmt.Printf("\n字符数: %d\n", len(runes)) // 输出: 12
-    fmt.Printf("字节数: %d\n", len(s))      // 输出: 19
+    fmt.Printf("\nCharacter count: %d\n", len(runes)) // Output: 12
+    fmt.Printf("Byte count: %d\n", len(s))      // Output: 19
 }
 ```
 
-### 7. **总结**
-- `rune` 是 Go 中用于表示 Unicode 字符的类型，适合处理多字节字符和国际化文本。
-- 它与字符串的字节表示（`byte`）不同，提供了按字符操作的能力。
-- 在处理非 ASCII 字符或需要精确字符计数时，`rune` 是不可或缺的工具。
+### 7. **Summary**
+- `rune` is the type in Go used to represent Unicode characters, suitable for handling multi-byte characters and internationalized text.
+- It differs from the byte representation of strings (`byte`), providing character-level manipulation capabilities.
+- When dealing with non-ASCII characters or when precise character counting is needed, `rune` is an indispensable tool.
 
-如果你有更具体的问题或需要进一步的代码示例，请告诉我！
+If you have more specific questions or need further code examples, please let me know!
 
 ---
 
-在 Go 编程语言中，`rune` 的实现非常直接，它本质上是 `int32` 的类型别名，结合 Go 的标准库和编译器对 Unicode 和 UTF-8 编码的支持来实现其功能。以下是对 `rune` 实现方式的详细讲解，涵盖其底层机制和相关设计：
+In Go programming language, the implementation of `rune` is very straightforward - it is essentially a type alias for `int32`, combined with Go's standard library and compiler support for Unicode and UTF-8 encoding to implement its functionality. Here's a detailed explanation of how `rune` is implemented, covering its underlying mechanisms and related design:
 
-### 1. **`rune` 的定义**
-- 在 Go 的源代码中，`rune` 被定义为：
+### 1. **`rune` Definition**
+- In Go's source code, `rune` is defined as:
   ```go
   type rune = int32
   ```
-  这意味着 `rune` 是一个 32 位有符号整数，足以表示 Unicode 标准中的所有码点（从 `U+0000` 到 `U+10FFFF`，最大值需要 21 位）。
-- 选择 `int32` 作为底层类型的原因：
-    - **范围足够**：Unicode 码点最大为 `U+10FFFF`（约 17 万个字符），32 位整数可以轻松覆盖。
-    - **性能**：32 位整数是现代 CPU 的原生类型，操作效率高。
-    - **一致性**：与 Go 的其他整数类型（如 `int32`）保持一致，便于类型转换和操作。
+  This means `rune` is a 32-bit signed integer, sufficient to represent all code points in the Unicode standard (from `U+0000` to `U+10FFFF`, with the maximum value requiring 21 bits).
+- Reasons for choosing `int32` as the underlying type:
+    - **Sufficient range**: Unicode code points maximum is `U+10FFFF` (approximately 170,000 characters), which 32-bit integers can easily cover.
+    - **Performance**: 32-bit integers are native types on modern CPUs, with high operation efficiency.
+    - **Consistency**: Consistent with Go's other integer types (like `int32`), facilitating type conversion and operations.
 
 ### 2. **字符串与 UTF-8 编码**
 - Go 的字符串底层是一个只读的字节切片（`[]byte`），存储的是 UTF-8 编码的字节序列。

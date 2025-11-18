@@ -1,10 +1,10 @@
-# 在 Rust 中，一个 `struct` 是否可以实现 `Copy` trait 取决于其所有字段的类型是否都实现了 `Copy` trait。`Copy` trait 要求类型的数据可以被简单地按位复制（bitwise copy），而不需要任何额外的逻辑（比如深拷贝或释放资源）。像 `String` 和 `Vec<T>` 这样的类型属于非 `Copy` 类型，因为它们涉及堆分配的内存，复制它们需要分配新的内存并复制数据，而不是简单的按位复制。因此，如果一个 `struct` 包含 `String` 或 `Vec<T>` 这样的字段，它**不能**实现 `Copy` trait。
+# In Rust, whether a `struct` can implement the `Copy` trait depends on whether all its field types implement the `Copy` trait. The `Copy` trait requires that the type's data can be simply bitwise copied without any additional logic (such as deep copying or resource deallocation). Types like `String` and `Vec<T>` are non-`Copy` types because they involve heap-allocated memory. Copying them requires allocating new memory and copying data, rather than simple bitwise copying. Therefore, if a `struct` contains fields like `String` or `Vec<T>`, it **cannot** implement the `Copy` trait.
 
-### 详细解释
-1. **`Copy` trait 的要求**：
-   - `Copy` trait 是一个标记 trait，表示类型可以安全地通过按位复制（`memcpy`）来复制。
-   - 实现 `Copy` 的类型必须保证按位复制不会导致未定义行为或资源管理问题（如双重释放）。
-   - 常见的 `Copy` 类型包括基本类型（如 `i32`、`f64`、`bool`）和由 `Copy` 类型组成的复合类型（如包含 `i32` 的元组或结构体）。
+### Detailed Explanation
+1. **Requirements of `Copy` trait**:
+   - The `Copy` trait is a marker trait indicating that the type can be safely copied through bitwise copy (`memcpy`).
+   - Types implementing `Copy` must ensure that bitwise copying won't lead to undefined behavior or resource management issues (like double free).
+   - Common `Copy` types include basic types (like `i32`, `f64`, `bool`) and composite types composed of `Copy` types (like tuples or structs containing `i32`).
 
 2. **`String` 和 `Vec<T>` 为什么不是 `Copy`**：
    - `String` 和 `Vec<T>` 管理堆上的动态分配内存。它们内部包含一个指向堆内存的指针、长度和容量。

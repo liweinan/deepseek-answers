@@ -1,18 +1,18 @@
-# OpenShift的构建策略
+# OpenShift Build Strategies
 
-在OpenShift中，`Source Strategy` 和 `Docker Strategy` 是两种不同的构建策略，用于从源代码或 Docker 镜像构建应用。以下是它们的区别：
+In OpenShift, `Source Strategy` and `Docker Strategy` are two different build strategies used to build applications from source code or Docker images. Here are their differences:
 
 ### 1. Source Strategy
-- **定义**：从源代码构建应用。
-- **适用场景**：适用于有源代码且需在构建过程中编译或打包的项目。
-- **构建过程**：
-    - 拉取源代码（如 Git 仓库）。
-    - 使用指定的构建器镜像（如 S2I，Source-to-Image）编译代码。
-    - 生成最终的应用镜像并推送到镜像仓库。
-- **优点**：
-    - 自动化编译和打包。
-    - 支持多种语言和框架。
-- **示例**：
+- **Definition**: Build applications from source code.
+- **Applicable Scenarios**: Suitable for projects with source code that need to be compiled or packaged during the build process.
+- **Build Process**:
+    - Pull source code (like Git repository).
+    - Compile code using specified builder image (like S2I, Source-to-Image).
+    - Generate final application image and push to image registry.
+- **Advantages**:
+    - Automated compilation and packaging.
+    - Support for multiple languages and frameworks.
+- **Example**:
   ```yaml
   strategy:
     sourceStrategy:
@@ -22,28 +22,28 @@
   ```
 
 ### 2. Docker Strategy
-- **定义**：基于现有 Dockerfile 构建应用镜像。
-- **适用场景**：已有 Dockerfile 或需完全控制构建过程的项目。
-- **构建过程**：
-    - 使用提供的 Dockerfile 构建镜像。
-    - 生成的镜像推送到镜像仓库。
-- **优点**：
-    - 完全控制构建过程。
-    - 适合复杂构建需求。
-- **示例**：
+- **Definition**: Build application image based on existing Dockerfile.
+- **Applicable Scenarios**: Projects that already have Dockerfile or need complete control over the build process.
+- **Build Process**:
+    - Build image using provided Dockerfile.
+    - Push generated image to image registry.
+- **Advantages**:
+    - Complete control over build process.
+    - Suitable for complex build requirements.
+- **Example**:
   ```yaml
   strategy:
     dockerStrategy:
       dockerfilePath: "Dockerfile"
   ```
 
-### 主要区别
-- **输入**：Source Strategy 使用源代码，Docker Strategy 使用 Dockerfile。
-- **构建过程**：Source Strategy 依赖构建器镜像，Docker Strategy 直接使用 Dockerfile。
-- **灵活性**：Docker Strategy 提供更高灵活性，Source Strategy 更自动化。
+### Main Differences
+- **Input**: Source Strategy uses source code, Docker Strategy uses Dockerfile.
+- **Build Process**: Source Strategy depends on builder image, Docker Strategy directly uses Dockerfile.
+- **Flexibility**: Docker Strategy provides higher flexibility, Source Strategy is more automated.
 
-### 选择依据
-- 选择 **Source Strategy**：有源代码且希望自动化构建。
-- 选择 **Docker Strategy**：已有 Dockerfile 或需要完全控制构建过程。
+### Selection Criteria
+- Choose **Source Strategy**: Have source code and want automated builds.
+- Choose **Docker Strategy**: Already have Dockerfile or need complete control over build process.
 
-根据项目需求选择合适的策略。
+Choose the appropriate strategy based on project requirements.

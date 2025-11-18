@@ -1,33 +1,56 @@
-# SmallRye 是一个开源项目，专注于为云原生开发提供轻量级 Java 库和工具，主要实现 Eclipse MicroProfile 规范的各种 API，同时也提供一些独立的功能扩展。它旨在提升开发者的云环境开发体验，适用于容器化部署，并与 Quarkus、WildFly、Open Liberty 和 TomEE 等运行时或应用服务器集成，也可作为独立库在任何 Java 应用中使用。以下是 SmallRye 的核心特点和组件概述：
+# SmallRye: Open Source Project for Cloud-Native Java Development
 
-### 核心特点
-1. **MicroProfile 规范实现**：SmallRye 提供 Eclipse MicroProfile 规范的实现，例如 Config、Metrics、Health、OpenAPI、Fault Tolerance 和 JWT 等，遵循微服务架构的标准。
-2. **云原生优化**：专为容器环境设计，支持轻量级运行时，适合 Kubernetes 和其他云平台。
-3. **灵活性**：既可与 Quarkus 等框架深度集成，也可独立使用，适配多种 Java 应用场景。
-4. **开源社区驱动**：采用 Apache 2.0 许可证，托管在 GitHub，鼓励社区贡献，包括 bug 报告、功能请求和文档改进。[](https://smallrye.io/)[](https://github.com/smallrye)
-5. **现代化技术**：支持 reactive 编程（通过 SmallRye Mutiny）、服务发现（SmallRye Stork）等现代开发需求。
+SmallRye is an open source project focused on providing lightweight Java libraries and tools for cloud-native development. It primarily implements various APIs of the Eclipse MicroProfile specification and also provides some independent functional extensions. It aims to enhance developers' cloud environment development experience, suitable for containerized deployment, and integrates with runtimes or application servers such as Quarkus, WildFly, Open Liberty, and TomEE, and can also be used as a standalone library in any Java application.
 
-### 主要组件
-SmallRye 包含多个子项目，覆盖配置、监控、通信等开发需求，以下是部分关键组件：
-- **SmallRye Config**：一个灵活的配置库，遵循 MicroProfile Config 规范，支持环境变量、属性文件等配置源，并扩展了更高级的配置功能。[](https://github.com/smallrye/smallrye-config)[](https://smallrye.io/smallrye-config/Main/)
-- **SmallRye Metrics**：实现 MicroProfile Metrics 规范，用于监控应用性能指标。[](https://github.com/smallrye/smallrye-metrics)
-- **SmallRye Health**：提供健康检查功能，支持 MicroProfile Health 规范，用于报告应用状态。[](https://mvnrepository.com/artifact/io.smallrye)
-- **SmallRye Fault Tolerance**：实现 MicroProfile Fault Tolerance 规范，支持重试、超时、断路器等容错模式，早期基于 Hystrix，现已优化。[](https://quarkus.io/blog/tag/smallrye/)
-- **SmallRye OpenAPI**：实现 MicroProfile OpenAPI 规范，自动生成 OpenAPI 文档。[](https://github.com/smallrye/smallrye-open-api)
-- **SmallRye Mutiny**：一个直观的事件驱动 reactive 编程库，支持 Java Flow API，已从 Reactive Streams 升级到现代 API。[](https://github.com/smallrye/smallrye-mutiny)[](https://groups.google.com/g/smallrye)
-- **SmallRye Stork**：服务发现和客户端负载均衡框架，简化微服务通信。[](https://github.com/smallrye)
-- **SmallRye Reactive Messaging**：支持异步消息处理，集成 Kafka、AMQP、MQTT 等协议。[](https://groups.google.com/g/smallrye)
-- **SmallRye JWT**：实现 JWT 认证和授权，支持 MicroProfile JWT 规范。[](https://groups.google.com/g/smallrye)
-- **SmallRye Common**：提供通用工具和 BOM（Bill of Materials），简化依赖管理。[](https://github.com/smallrye/smallrye-common)
-- **SmallRye LLM**：一个新兴项目，探索与大语言模型相关的功能（具体细节尚在发展）。[](https://groups.google.com/g/smallrye)
+## Core Features
 
-### 使用场景
-- **微服务开发**：通过 MicroProfile 实现，SmallRye 提供标准化的微服务功能，如配置管理、监控和容错。
-- **云原生应用**：与 Quarkus 等框架结合，SmallRye 优化了应用的启动时间和内存占用，适合容器化部署。
-- **独立库**：开发者可选择单个 SmallRye 组件（如 SmallRye Config 或 Mutiny）用于非 MicroProfile 项目。
+1. **MicroProfile Specification Implementation**: SmallRye provides implementations of Eclipse MicroProfile specifications, such as Config, Metrics, Health, OpenAPI, Fault Tolerance, and JWT, following microservice architecture standards.
 
-### 如何开始
-1. **添加依赖**：通过 Maven 或 Gradle 添加所需 SmallRye 模块，例如：
+2. **Cloud-Native Optimization**: Designed specifically for container environments, supporting lightweight runtimes, suitable for Kubernetes and other cloud platforms.
+
+3. **Flexibility**: Can be deeply integrated with frameworks like Quarkus, or used independently, adapting to various Java application scenarios.
+
+4. **Open Source Community Driven**: Uses Apache 2.0 license, hosted on GitHub, encouraging community contributions including bug reports, feature requests, and documentation improvements.
+
+5. **Modern Technologies**: Supports reactive programming (through SmallRye Mutiny), service discovery (SmallRye Stork), and other modern development needs.
+
+## Main Components
+
+SmallRye includes multiple sub-projects covering configuration, monitoring, communication, and other development needs:
+
+- **SmallRye Config**: A flexible configuration library following the MicroProfile Config specification, supporting configuration sources such as environment variables and properties files, and extending more advanced configuration features.
+
+- **SmallRye Metrics**: Implements the MicroProfile Metrics specification for monitoring application performance metrics.
+
+- **SmallRye Health**: Provides health check functionality, supporting the MicroProfile Health specification for reporting application status.
+
+- **SmallRye Fault Tolerance**: Implements the MicroProfile Fault Tolerance specification, supporting retry, timeout, circuit breaker, and other fault tolerance modes, previously based on Hystrix, now optimized.
+
+- **SmallRye OpenAPI**: Implements the MicroProfile OpenAPI specification, automatically generating OpenAPI documentation.
+
+- **SmallRye Mutiny**: An intuitive event-driven reactive programming library, supporting the Java Flow API, upgraded from Reactive Streams to modern API.
+
+- **SmallRye Stork**: A service discovery and client load balancing framework, simplifying microservice communication.
+
+- **SmallRye Reactive Messaging**: Supports asynchronous message processing, integrating protocols such as Kafka, AMQP, MQTT.
+
+- **SmallRye JWT**: Implements JWT authentication and authorization, supporting the MicroProfile JWT specification.
+
+- **SmallRye Common**: Provides common tools and BOM (Bill of Materials), simplifying dependency management.
+
+- **SmallRye LLM**: An emerging project exploring features related to large language models (specific details are still evolving).
+
+## Usage Scenarios
+
+- **Microservice Development**: Through MicroProfile implementation, SmallRye provides standardized microservice capabilities such as configuration management, monitoring, and fault tolerance.
+
+- **Cloud-Native Applications**: Combined with frameworks like Quarkus, SmallRye optimizes application startup time and memory usage, suitable for containerized deployment.
+
+- **Standalone Library**: Developers can choose individual SmallRye components (such as SmallRye Config or Mutiny) for non-MicroProfile projects.
+
+## Getting Started
+
+1. **Add Dependencies**: Add the required SmallRye modules through Maven or Gradle:
    ```xml
    <dependency>
        <groupId>io.smallrye.config</groupId>
@@ -35,21 +58,25 @@ SmallRye 包含多个子项目，覆盖配置、监控、通信等开发需求�
        <version>3.12.5-SNAPSHOT</version>
    </dependency>
    ```
-   可使用 `smallrye-common-bom` 管理版本。[](https://github.com/smallrye/smallrye-common)[](https://smallrye.io/smallrye-config/Main/)
-2. **访问文档**：SmallRye 官网 (smallrye.io) 提供详细的子项目文档和使用指南。[](https://smallrye.io/)
-3. **加入社区**：通过 GitHub (github.com/smallrye) 或 Google Groups 参与贡献，提交 issue 或 PR。[](https://github.com/smallrye)[](https://groups.google.com/g/smallrye)
+   You can use `smallrye-common-bom` to manage versions.
 
-### 最新动态
-- 部分组件已计划支持 Java 17 作为最低版本，反映了现代化趋势。[](https://groups.google.com/g/smallrye)
-- SmallRye JWT 持续更新，最新版本（如 3.6.1）已支持 Jakarta IdentityStore 集成。[](https://groups.google.com/g/smallrye)
-- SmallRye Health 和 Fault Tolerance 的最新发布分别在 2025 年 1 月和 4 月，保持活跃开发。[](https://mvnrepository.com/artifact/io.smallrye)
+2. **Access Documentation**: The SmallRye official website (smallrye.io) provides detailed sub-project documentation and usage guides.
 
-### 总结
-SmallRye 是一个功能丰富、轻量灵活的 Java 生态项目，特别适合云原生和微服务开发。它通过实现 MicroProfile 规范并提供扩展功能，简化了开发者的工作，同时保持开源社区的活力。无论是构建 Quarkus 应用还是独立 Java 项目，SmallRye 都是值得考虑的工具集。
+3. **Join the Community**: Participate in contributions through GitHub (github.com/smallrye) or Google Groups, submit issues or PRs.
 
-更多信息可访问 [SmallRye 官网](https://smallrye.io) 或 [GitHub 组织](https://github.com/smallrye)。[](https://smallrye.io/)[](https://github.com/smallrye
+## Latest Updates
 
----
+- Some components are planned to support Java 17 as the minimum version, reflecting modernization trends.
+
+- SmallRye JWT continues to be updated, with the latest version (such as 3.6.1) already supporting Jakarta IdentityStore integration.
+
+- The latest releases of SmallRye Health and Fault Tolerance were in January and April 2025 respectively, maintaining active development.
+
+## Summary
+
+SmallRye is a feature-rich, lightweight, and flexible Java ecosystem project, particularly suitable for cloud-native and microservice development. It simplifies developers' work by implementing MicroProfile specifications and providing extended features, while maintaining the vitality of the open source community. Whether building Quarkus applications or standalone Java projects, SmallRye is a toolset worth considering.
+
+More information can be found at the [SmallRye official website](https://smallrye.io) or [GitHub organization](https://github.com/smallrye).
 
 ```mermaid
 classDiagram
@@ -58,7 +85,7 @@ classDiagram
         +Extensions
     }
 
-%% Core Modules
+    %% Core Modules
     class SmallRye_Config {
         +Configuration Management
         +MicroProfile Config
@@ -84,7 +111,7 @@ classDiagram
         +MicroProfile JWT
     }
 
-%% Extension Modules
+    %% Extension Modules
     class SmallRye_Mutiny {
         +Reactive Programming
         +Java Flow API
@@ -106,7 +133,7 @@ classDiagram
         +Experimental
     }
 
-%% Relationships
+    %% Relationships
     SmallRye --> SmallRye_Config : Contains
     SmallRye --> SmallRye_Metrics : Contains
     SmallRye --> SmallRye_Health : Contains
@@ -119,7 +146,7 @@ classDiagram
     SmallRye --> SmallRye_Common : Contains
     SmallRye --> SmallRye_LLM : Contains
 
-%% Dependencies
+    %% Dependencies
     SmallRye_Config --> SmallRye_Common : Uses
     SmallRye_JWT --> SmallRye_Config : Uses
     SmallRye_FaultTolerance --> SmallRye_Config : Uses

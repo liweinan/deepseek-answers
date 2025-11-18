@@ -1,39 +1,41 @@
-# 是的，Go 语言支持函数返回多个值，这是 Go 语言的一个显著特性。以下是对这一特性的详细说明：
+# Yes, Go Language Supports Functions Returning Multiple Values
 
-### 1. **多返回值的基本语法**
-在 Go 中，函数的返回值可以在函数签名中定义多个类型，使用括号 `( )` 括起来。调用函数时，可以使用多个变量接收这些返回值。
+Go language supports functions returning multiple values, which is a distinctive feature of Go. Here's a detailed explanation of this feature:
 
-**语法**：
+### 1. **Basic Syntax for Multiple Return Values**
+In Go, function return values can define multiple types in the function signature, enclosed in parentheses `( )`. When calling the function, multiple variables can receive these return values.
+
+**Syntax**:
 ```go
-func 函数名(参数列表) (返回值类型1, 返回值类型2, ...) {
-    // 函数体
-    return 值1, 值2, ...
+func functionName(parameterList) (returnType1, returnType2, ...) {
+    // function body
+    return value1, value2, ...
 }
 ```
 
-**示例**：
+**Example**:
 ```go
 package main
 
 import "fmt"
 
-// 定义一个返回两个值的函数
+// Define a function that returns two values
 func swap(a, b string) (string, string) {
     return b, a
 }
 
 func main() {
     x, y := swap("hello", "world")
-    fmt.Println(x, y) // 输出: world hello
+    fmt.Println(x, y) // Output: world hello
 }
 ```
-- `swap` 函数返回两个 `string` 类型的值。
-- 调用时使用 `x, y` 接收返回值。
+- The `swap` function returns two values of type `string`.
+- When calling, use `x, y` to receive the return values.
 
-### 2. **命名返回值**
-Go 允许在函数签名中为返回值命名，这些命名返回值会自动在函数体内声明为变量。使用 `return` 语句时，可以省略返回值，直接返回命名变量的值。
+### 2. **Named Return Values**
+Go allows naming return values in the function signature. These named return values are automatically declared as variables in the function body. When using the `return` statement, you can omit the return values and directly return the values of the named variables.
 
-**示例**：
+**Example**:
 ```go
 package main
 
@@ -42,21 +44,21 @@ import "fmt"
 func split(sum int) (x, y int) {
     x = sum * 4 / 9
     y = sum - x
-    return // 直接 return，使用命名返回值 x 和 y
+    return // Direct return, using named return values x and y
 }
 
 func main() {
     a, b := split(17)
-    fmt.Println(a, b) // 输出: 7 10
+    fmt.Println(a, b) // Output: 7 10
 }
 ```
-- `(x, y int)` 定义了两个命名返回值 `x` 和 `y`，类型为 `int`。
-- `return` 语句会自动返回 `x` 和 `y` 的值。
+- `(x, y int)` defines two named return values `x` and `y`, both of type `int`.
+- The `return` statement automatically returns the values of `x` and `y`.
 
-### 3. **忽略部分返回值**
-在 Go 中，可以使用下划线 `_` 忽略某些返回值，这在只需要部分返回值时非常有用。
+### 3. **Ignoring Partial Return Values**
+In Go, you can use underscore `_` to ignore certain return values. This is useful when you only need some of the return values.
 
-**示例**：
+**Example**:
 ```go
 package main
 
@@ -67,15 +69,15 @@ func getPoint() (x, y int) {
 }
 
 func main() {
-    _, y := getPoint() // 忽略 x，只接收 y
-    fmt.Println(y)     // 输出: 4
+    _, y := getPoint() // Ignore x, only receive y
+    fmt.Println(y)     // Output: 4
 }
 ```
 
-### 4. **多返回值与错误处理**
-多返回值在 Go 中常用于错误处理。函数通常返回一个结果值和一个错误值（`error` 类型），调用者检查错误值来判断操作是否成功。
+### 4. **Multiple Return Values and Error Handling**
+Multiple return values are commonly used for error handling in Go. Functions typically return a result value and an error value (`error` type), and the caller checks the error value to determine if the operation was successful.
 
-**示例**：
+**Example**:
 ```go
 package main
 
@@ -94,23 +96,23 @@ func divide(a, b float64) (float64, error) {
 func main() {
     result, err := divide(10, 2)
     if err != nil {
-        fmt.Println("错误:", err)
+        fmt.Println("Error:", err)
         return
     }
-    fmt.Println("结果:", result) // 输出: 结果: 5
+    fmt.Println("Result:", result) // Output: Result: 5
 
     result, err = divide(10, 0)
     if err != nil {
-        fmt.Println("错误:", err) // 输出: 错误: division by zero
+        fmt.Println("Error:", err) // Output: Error: division by zero
         return
     }
 }
 ```
-- `divide` 函数返回计算结果和可能的错误。
-- 调用者通过检查 `err != nil` 来处理错误。
+- The `divide` function returns the calculation result and a possible error.
+- The caller handles errors by checking `err != nil`.
 
-### 5. **实际应用中的例子**
-以下是 `utf8.DecodeRuneInString` 的例子（与你之前的问题相关），它也返回多个值：
+### 5. **Real-world Example**
+Here's an example of `utf8.DecodeRuneInString` (related to your previous question), which also returns multiple values:
 ```go
 package main
 
@@ -122,25 +124,25 @@ import (
 func main() {
     s := "中"
     r, size := utf8.DecodeRuneInString(s)
-    fmt.Printf("字符: %c, Unicode: %U, 字节数: %d\n", r, r, size)
-    // 输出: 字符: 中, Unicode: U+4E2D, 字节数: 3
+    fmt.Printf("Character: %c, Unicode: %U, Bytes: %d\n", r, r, size)
+    // Output: Character: 中, Unicode: U+4E2D, Bytes: 3
 }
 ```
-- `utf8.DecodeRuneInString` 返回两个值：`r`（`rune` 类型，表示解码的字符）和 `size`（`int` 类型，表示字节数）。
+- `utf8.DecodeRuneInString` returns two values: `r` (of type `rune`, representing the decoded character) and `size` (of type `int`, representing the number of bytes).
 
-### 6. **注意事项**
-- **返回值数量**：Go 没有严格限制返回值的数量，但为了代码可读性和维护性，通常建议返回值的数量不超过 3 到 4 个。
-- **性能**：多返回值是值拷贝，基本类型的拷贝开销很小，但对于大结构体，建议使用指针或优化设计。
-- **一致性**：在同一个函数中，所有 `return` 语句必须返回相同数量和类型的值，以匹配函数签名。
-- **裸返回**：仅在函数体较短且逻辑清晰时使用命名返回值的 `return` 语句，避免降低代码可读性。
+### 6. **Notes**
+- **Number of return values**: Go doesn't strictly limit the number of return values, but for code readability and maintainability, it's usually recommended to have no more than 3-4 return values.
+- **Performance**: Multiple return values are value copies. Copy overhead for basic types is very small, but for large structs, it's recommended to use pointers or optimize the design.
+- **Consistency**: In the same function, all `return` statements must return the same number and types of values to match the function signature.
+- **Naked return**: Only use named return values with `return` statement when the function body is short and logic is clear, to avoid reducing code readability.
 
-### 7. **总结**
-- Go 支持函数返回多个值，通过 `(类型1, 类型2, ...)` 语法定义。
-- 多返回值常用于结果和错误处理（如 `result, err`），也适用于返回多个相关值。
-- 可以通过命名返回值简化 `return` 语句，或用 `_` 忽略不需要的返回值。
-- 这种特性使 Go 的代码简洁且灵活，尤其在错误处理和字符串处理（如 `utf8.DecodeRuneInString`）中非常常见。
+### 7. **Summary**
+- Go supports functions returning multiple values, defined through `(type1, type2, ...)` syntax.
+- Multiple return values are commonly used for result and error handling (like `result, err`), and also suitable for returning multiple related values.
+- You can simplify `return` statements with named return values, or use `_` to ignore unwanted return values.
+- This feature makes Go code concise and flexible, especially common in error handling and string processing (like `utf8.DecodeRuneInString`).
 
-如果你有更具体的场景或想深入探讨多返回值的某种用法，请告诉我！
+If you have more specific scenarios or want to explore certain usage patterns of multiple return values, please let me know!
 
 ---
 

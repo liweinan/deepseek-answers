@@ -1,34 +1,34 @@
-# Go AST 节点类型层级结构
+# Go AST Node Type Hierarchy Structure
 
-### 1. 顶层节点 (Top-Level Nodes)
+### 1. Top-Level Nodes
 
-#### `*ast.File` - 文件节点
-这是 AST 的根节点，代表整个 Go 源文件：
+#### `*ast.File` - File Node
+This is the root node of the AST, representing the entire Go source file:
 ```go
 type File struct {
-    Doc     *CommentGroup // 文件级文档注释
-    Package token.Pos     // package 关键字位置
-    Name    *Ident        // 包名
-    Decls   []Decl        // 声明列表
-    Scope   *Scope        // 包作用域
-    Imports []*ImportSpec // 导入声明
-    Unresolved []*Ident   // 未解析的标识符
-    Comments []*CommentGroup // 注释组
+    Doc     *CommentGroup // File-level documentation comments
+    Package token.Pos     // package keyword position
+    Name    *Ident        // Package name
+    Decls   []Decl        // Declaration list
+    Scope   *Scope        // Package scope
+    Imports []*ImportSpec // Import declarations
+    Unresolved []*Ident   // Unresolved identifiers
+    Comments []*CommentGroup // Comment groups
 }
 ```
 
-### 2. 声明节点 (Declaration Nodes)
+### 2. Declaration Nodes
 
-#### `*ast.GenDecl` - 通用声明
-包含 import、const、var、type 声明：
+#### `*ast.GenDecl` - General Declaration
+Contains import, const, var, type declarations:
 ```go
 type GenDecl struct {
-    Doc    *CommentGroup // 文档注释
-    TokPos token.Pos     // 关键字位置
-    Tok    token.Token   // 关键字类型 (IMPORT, CONST, VAR, TYPE)
-    Lparen token.Pos     // '(' 位置
-    Specs  []Spec        // 规格列表
-    Rparen token.Pos     // ')' 位置
+    Doc    *CommentGroup // Documentation comments
+    TokPos token.Pos     // Keyword position
+    Tok    token.Token   // Keyword type (IMPORT, CONST, VAR, TYPE)
+    Lparen token.Pos     // '(' position
+    Specs  []Spec        // Specification list
+    Rparen token.Pos     // ')' position
 }
 ```
 
@@ -43,9 +43,9 @@ type FuncDecl struct {
 }
 ```
 
-### 3. 规格节点 (Specification Nodes)
+### 3. Specification Nodes
 
-#### `*ast.ImportSpec` - 导入规格
+#### `*ast.ImportSpec` - Import Specification
 ```go
 type ImportSpec struct {
     Doc  *CommentGroup // 文档注释
@@ -55,7 +55,7 @@ type ImportSpec struct {
 }
 ```
 
-#### `*ast.ValueSpec` - 值规格 (const, var)
+#### `*ast.ValueSpec` - Value Specification (const, var)
 ```go
 type ValueSpec struct {
     Doc     *CommentGroup // 文档注释
@@ -66,7 +66,7 @@ type ValueSpec struct {
 }
 ```
 
-#### `*ast.TypeSpec` - 类型规格
+#### `*ast.TypeSpec` - Type Specification
 ```go
 type TypeSpec struct {
     Doc     *CommentGroup // 文档注释
@@ -77,55 +77,55 @@ type TypeSpec struct {
 }
 ```
 
-### 4. 表达式节点 (Expression Nodes)
+### 4. Expression Nodes
 
-#### 基础表达式
-- `*ast.Ident` - 标识符
-- `*ast.BasicLit` - 基本字面量 (字符串、数字、布尔值)
-- `*ast.BinaryExpr` - 二元表达式
-- `*ast.UnaryExpr` - 一元表达式
+#### Basic Expressions
+- `*ast.Ident` - Identifier
+- `*ast.BasicLit` - Basic literals (strings, numbers, booleans)
+- `*ast.BinaryExpr` - Binary expressions
+- `*ast.UnaryExpr` - Unary expressions
 
-#### 复合表达式
-- `*ast.CallExpr` - 函数调用
-- `*ast.SelectorExpr` - 选择器表达式 (x.y)
-- `*ast.IndexExpr` - 索引表达式 (x[i])
-- `*ast.SliceExpr` - 切片表达式 (x[i:j])
-- `*ast.TypeAssertExpr` - 类型断言 (x.(T))
+#### Compound Expressions
+- `*ast.CallExpr` - Function calls
+- `*ast.SelectorExpr` - Selector expressions (x.y)
+- `*ast.IndexExpr` - Index expressions (x[i])
+- `*ast.SliceExpr` - Slice expressions (x[i:j])
+- `*ast.TypeAssertExpr` - Type assertions (x.(T))
 
-#### 类型表达式
-- `*ast.ArrayType` - 数组类型
-- `*ast.StructType` - 结构体类型
-- `*ast.FuncType` - 函数类型
-- `*ast.InterfaceType` - 接口类型
-- `*ast.MapType` - 映射类型
-- `*ast.ChanType` - 通道类型
-- `*ast.StarExpr` - 指针类型 (*T)
+#### Type Expressions
+- `*ast.ArrayType` - Array types
+- `*ast.StructType` - Struct types
+- `*ast.FuncType` - Function types
+- `*ast.InterfaceType` - Interface types
+- `*ast.MapType` - Map types
+- `*ast.ChanType` - Channel types
+- `*ast.StarExpr` - Pointer types (*T)
 
-### 5. 语句节点 (Statement Nodes)
+### 5. Statement Nodes
 
-#### 简单语句
-- `*ast.ExprStmt` - 表达式语句
-- `*ast.IncDecStmt` - 自增自减语句
-- `*ast.AssignStmt` - 赋值语句
-- `*ast.GoStmt` - go 语句
-- `*ast.DeferStmt` - defer 语句
-- `*ast.ReturnStmt` - return 语句
-- `*ast.BranchStmt` - 分支语句 (break, continue, goto, fallthrough)
-- `*ast.BlockStmt` - 块语句
+#### Simple Statements
+- `*ast.ExprStmt` - Expression statements
+- `*ast.IncDecStmt` - Increment/decrement statements
+- `*ast.AssignStmt` - Assignment statements
+- `*ast.GoStmt` - go statements
+- `*ast.DeferStmt` - defer statements
+- `*ast.ReturnStmt` - return statements
+- `*ast.BranchStmt` - Branch statements (break, continue, goto, fallthrough)
+- `*ast.BlockStmt` - Block statements
 
-#### 控制流语句
-- `*ast.IfStmt` - if 语句
-- `*ast.CaseClause` - case 子句
-- `*ast.SwitchStmt` - switch 语句
-- `*ast.TypeSwitchStmt` - 类型 switch 语句
-- `*ast.CommClause` - select 通信子句
-- `*ast.SelectStmt` - select 语句
-- `*ast.ForStmt` - for 语句
-- `*ast.RangeStmt` - range 语句
+#### Control Flow Statements
+- `*ast.IfStmt` - if statements
+- `*ast.CaseClause` - case clauses
+- `*ast.SwitchStmt` - switch statements
+- `*ast.TypeSwitchStmt` - Type switch statements
+- `*ast.CommClause` - select communication clauses
+- `*ast.SelectStmt` - select statements
+- `*ast.ForStmt` - for statements
+- `*ast.RangeStmt` - range statements
 
-### 6. 结构体相关节点
+### 6. Struct-related Nodes
 
-#### `*ast.StructType` - 结构体类型
+#### `*ast.StructType` - Struct Type
 ```go
 type StructType struct {
     Struct     token.Pos  // struct 关键字位置
@@ -134,7 +134,7 @@ type StructType struct {
 }
 ```
 
-#### `*ast.FieldList` - 字段列表
+#### `*ast.FieldList` - Field List
 ```go
 type FieldList struct {
     Opening token.Pos // '(' 位置
@@ -143,7 +143,7 @@ type FieldList struct {
 }
 ```
 
-#### `*ast.Field` - 字段
+#### `*ast.Field` - Field
 ```go
 type Field struct {
     Doc     *CommentGroup // 文档注释
@@ -154,16 +154,16 @@ type Field struct {
 }
 ```
 
-### 7. 注释节点
+### 7. Comment Nodes
 
-#### `*ast.CommentGroup` - 注释组
+#### `*ast.CommentGroup` - Comment Group
 ```go
 type CommentGroup struct {
     List []*Comment // 注释列表
 }
 ```
 
-#### `*ast.Comment` - 单个注释
+#### `*ast.Comment` - Single Comment
 ```go
 type Comment struct {
     Slash token.Pos // // 或 /* 位置
@@ -171,17 +171,17 @@ type Comment struct {
 }
 ```
 
-## 层级关系示例
+## Hierarchy Example
 
 ```
-*ast.File (根节点)
-├── *ast.Ident (包名)
-├── []*ast.ImportSpec (导入列表)
+*ast.File (Root node)
+├── *ast.Ident (Package name)
+├── []*ast.ImportSpec (Import list)
 │   ├── *ast.ImportSpec
-│   │   ├── *ast.Ident (别名)
-│   │   └── *ast.BasicLit (路径)
+│   │   ├── *ast.Ident (Alias)
+│   │   └── *ast.BasicLit (Path)
 │   └── ...
-└── []ast.Decl (声明列表)
+└── []ast.Decl (Declaration list)
     ├── *ast.GenDecl (import/const/var/type)
     │   └── []ast.Spec
     │       ├── *ast.ImportSpec
@@ -190,13 +190,13 @@ type Comment struct {
     │           └── *ast.StructType
     │               └── *ast.FieldList
     │                   └── []*ast.Field
-    │                       ├── []*ast.Ident (字段名)
-    │                       ├── ast.Expr (字段类型)
-    │                       └── *ast.BasicLit (标签)
-    └── *ast.FuncDecl (函数)
-        ├── *ast.FieldList (接收者)
-        ├── *ast.Ident (函数名)
-        ├── *ast.FuncType (函数类型)
+    │                       ├── []*ast.Ident (Field names)
+    │                       ├── ast.Expr (Field types)
+    │                       └── *ast.BasicLit (Tags)
+    └── *ast.FuncDecl (Function)
+        ├── *ast.FieldList (Receiver)
+        ├── *ast.Ident (Function name)
+        ├── *ast.FuncType (Function type)
         │   ├── *ast.FieldList (参数)
         │   └── *ast.FieldList (返回值)
         └── *ast.BlockStmt (函数体)
@@ -208,35 +208,35 @@ type Comment struct {
                 └── ...
 ```
 
-## 遍历方式
+## Traversal Methods
 
-### 1. 深度优先遍历
-使用 `ast.Inspect()` 函数：
+### 1. Depth-First Traversal
+Using `ast.Inspect()` function:
 ```go
 ast.Inspect(node, func(n ast.Node) bool {
-    // 处理节点
-    return true // 继续遍历子节点
+    // Process node
+    return true // Continue traversing child nodes
 })
 ```
 
-### 2. 类型断言检查
+### 2. Type Assertion Checking
 ```go
 switch n := node.(type) {
 case *ast.File:
-    // 处理文件节点
+    // Process file node
 case *ast.FuncDecl:
-    // 处理函数声明
+    // Process function declaration
 case *ast.TypeSpec:
-    // 处理类型声明
+    // Process type declaration
 case *ast.StructType:
-    // 处理结构体类型
+    // Process struct type
 }
 ```
 
-### 3. 位置信息
-每个节点都有位置信息：
-- `node.Pos()` - 开始位置
-- `node.End()` - 结束位置
-- `fset.Position(pos)` - 转换为行列号
+### 3. Position Information
+Each node has position information:
+- `node.Pos()` - Start position
+- `node.End()` - End position
+- `fset.Position(pos)` - Convert to line and column numbers
 
-这种层级结构使得我们可以精确地分析和操作 Go 代码的各个部分，从整个文件到单个标识符，都能在 AST 中找到对应的节点。
+This hierarchical structure allows us to precisely analyze and manipulate various parts of Go code, from entire files to individual identifiers, all of which can be found as corresponding nodes in the AST.

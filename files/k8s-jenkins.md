@@ -1,24 +1,24 @@
-# 在 Kubernetes 集群中部署 Jenkins 的 **手把手完整教程**
+# Complete Step-by-Step Tutorial for Deploying Jenkins in Kubernetes Cluster
 
-以下是在 Kubernetes 集群中部署 Jenkins 的 **手把手完整教程**，涵盖持久化存储、Service 暴露、Ingress 配置及初始密码获取：
-
----
-
-### **前置条件**
-1. 已安装 Kubernetes 集群（如 Minikube、k3s、EKS 等）。
-2. 已安装 `kubectl` 并配置集群访问权限。
-3. 可选：已安装 Helm（用于简化部署）。
+Below is a **complete step-by-step tutorial** for deploying Jenkins in a Kubernetes cluster, covering persistent storage, Service exposure, Ingress configuration, and initial password retrieval:
 
 ---
 
-## **方法一：使用 kubectl 直接部署（推荐初学者）**
+### **Prerequisites**
+1. Kubernetes cluster installed (such as Minikube, k3s, EKS, etc.).
+2. `kubectl` installed and configured with cluster access permissions.
+3. Optional: Helm installed (for simplified deployment).
 
-### **步骤 1：创建 Namespace**
+---
+
+## **Method 1: Direct Deployment Using kubectl (Recommended for Beginners)**
+
+### **Step 1: Create Namespace**
 ```bash
 kubectl create namespace jenkins
 ```
 
-### **步骤 2：创建持久化存储（PVC）**
+### **Step 2: Create Persistent Storage (PVC)**
 ```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -34,11 +34,11 @@ spec:
       storage: 10Gi
 EOF
 ```
-> 📌 如果使用云服务（如 AWS EBS、Azure Disk），StorageClass 可能已自动配置；本地集群需提前部署 PV 供给器（如 NFS）。
+> 📌 If using cloud services (like AWS EBS, Azure Disk), StorageClass may be automatically configured; local clusters need to deploy PV provisioner (like NFS) in advance.
 
 ---
 
-### **步骤 3：部署 Jenkins Deployment**
+### **Step 3: Deploy Jenkins Deployment**
 ```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
@@ -74,14 +74,14 @@ spec:
         fsGroup: 1000
 EOF
 ```
-> 🔍 说明：
-> - 使用官方 LTS 镜像（`jenkins/jenkins:lts-jdk17`）。
-> - 挂载 PVC 到 `/var/jenkins_home` 确保数据持久化。
-> - `securityContext` 避免权限问题。
+> 🔍 Notes:
+> - Uses official LTS image (`jenkins/jenkins:lts-jdk17`).
+> - Mounts PVC to `/var/jenkins_home` to ensure data persistence.
+> - `securityContext` avoids permission issues.
 
 ---
 
-### **步骤 4：暴露 Jenkins Service**
+### **Step 4: Expose Jenkins Service**
 ```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -101,13 +101,13 @@ spec:
     app: jenkins
 EOF
 ```
-> 🌐 访问方式：
-> - **NodePort**：通过 `http://<节点IP>:30080` 访问。
-> - 如需域名访问，继续步骤 5（Ingress）。
+> 🌐 Access methods:
+> - **NodePort**: Access via `http://<node-ip>:30080`.
+> - For domain access, continue to Step 5 (Ingress).
 
 ---
 
-### **步骤 5（可选）：配置 Ingress**
+### **Step 5 (Optional): Configure Ingress**
 ```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: networking.k8s.io/v1
@@ -131,43 +131,43 @@ spec:
               number: 8080
 EOF
 ```
-> 📌 需提前：
-> - 安装 Ingress Controller（如 Nginx Ingress）。
-> - 将域名 `jenkins.example.com` 解析到集群 Ingress IP。
+> 📌 Prerequisites:
+> - Ingress Controller installed (like Nginx Ingress).
+> - Domain `jenkins.example.com` resolved to cluster Ingress IP.
 
 ---
 
-### **步骤 6：获取初始管理员密码**
-1. 查看 Jenkins Pod 名称：
+### **Step 6: Get Initial Admin Password**
+1. View Jenkins Pod name:
    ```bash
    kubectl get pods -n jenkins
    ```
-2. 从 Pod 日志中提取密码：
+2. Extract password from Pod logs:
    ```bash
    kubectl logs <jenkins-pod-name> -n jenkins | grep "InitialAdminPassword"
    ```
-   > 或直接进入容器获取：
+   > Or directly enter container to get:
    ```bash
    kubectl exec -it <jenkins-pod-name> -n jenkins -- cat /var/jenkins_home/secrets/initialAdminPassword
    ```
 
 ---
 
-## **方法二：使用 Helm 快速部署（适合生产环境）**
-### **步骤 1：添加 Jenkins Helm 仓库**
+## **Method 2: Quick Deployment Using Helm (Suitable for Production)**
+### **Step 1: Add Jenkins Helm Repository**
 ```bash
 helm repo add jenkins https://charts.jenkins.io
 helm repo update
 ```
 
-### **步骤 2：自定义配置**
-创建 `values.yaml`：
+### **Step 2: Custom Configuration**
+Create `values.yaml`:
 ```yaml
 controller:
   image: "jenkins/jenkins"
   tag: "lts-jdk17"
   adminUser: "admin"
-  adminPassword: "your-strong-password"  # 建议改为复杂密码
+  adminPassword: "your-strong-password"  # Recommend changing to complex password
   serviceType: NodePort
   servicePort: 8080
   serviceNodePort: 30080
@@ -179,46 +179,46 @@ controller:
     size: 10Gi
 ```
 
-### **步骤 3：安装 Jenkins**
+### **Step 3: Install Jenkins**
 ```bash
 helm install jenkins jenkins/jenkins -n jenkins -f values.yaml
 ```
 
 ---
 
-## **验证部署**
-1. 检查 Pod 状态：
+## **Verify Deployment**
+1. Check Pod status:
    ```bash
    kubectl get pods -n jenkins -w
    ```
-2. 访问 Jenkins：
-    - NodePort：`http://<节点IP>:30080`
-    - Ingress：`http://jenkins.example.com`
+2. Access Jenkins:
+   - NodePort: `http://<node-ip>:30080`
+   - Ingress: `http://jenkins.example.com`
 
 ---
 
-## **常见问题解决**
-1. **PVC 未绑定**：
-    - 检查 StorageClass 是否可用：`kubectl get storageclass`。
-    - 本地集群可改用 `hostPath`（仅测试用途）：
-      ```yaml
-      volumes:
-      - name: jenkins-storage
-        hostPath:
-          path: /data/jenkins
-          type: DirectoryOrCreate
-      ```
+## **Common Issues Resolution**
+1. **PVC not bound**:
+   - Check if StorageClass is available: `kubectl get storageclass`.
+   - Local clusters can switch to `hostPath` (for testing only):
+     ```yaml
+     volumes:
+     - name: jenkins-storage
+       hostPath:
+         path: /data/jenkins
+         type: DirectoryOrCreate
+     ```
 
-2. **插件安装失败**：
-    - 在 Jenkins 界面中更换为国内镜像源：
-        - 进入 **Manage Jenkins → Plugin Manager → Advanced**。
-        - 将 `Update Site` 改为 `https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json`。
+2. **Plugin installation failed**:
+   - Change to domestic mirror source in Jenkins interface:
+     - Go to **Manage Jenkins → Plugin Manager → Advanced**.
+     - Change `Update Site` to `https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json`.
 
 ---
 
-## **总结**
-- **kubectl 直接部署**：适合学习或快速验证。
-- **Helm 部署**：适合生产环境，支持灵活配置。
-- **关键配置**：持久化存储、Service 暴露、安全上下文。
+## **Summary**
+- **kubectl direct deployment**: Suitable for learning or quick verification.
+- **Helm deployment**: Suitable for production, supports flexible configuration.
+- **Key configurations**: Persistent storage, Service exposure, security context.
 
-按此教程操作后，你将获得一个完整可用的 Jenkins 服务，并可通过 Kubernetes 动态管理构建代理（需安装 `kubernetes` 插件）。
+Following this tutorial, you'll get a complete and usable Jenkins service, and can dynamically manage build agents through Kubernetes (requires installing `kubernetes` plugin).

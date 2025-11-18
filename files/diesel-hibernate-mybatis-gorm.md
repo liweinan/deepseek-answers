@@ -1,151 +1,151 @@
-# ORM 框架比较: Diesel vs Hibernate vs MyBatis vs GORM
+# ORM Framework Comparison: Diesel vs Hibernate vs MyBatis vs GORM
 
-以下是 Rust 的 Diesel 与其他流行 ORM 框架的详细比较：
+Here is a detailed comparison of Rust's Diesel with other popular ORM frameworks:
 
-## 1. 基本概况
+## 1. Basic Overview
 
-| 特性        | Diesel (Rust)       | Hibernate (Java)    | MyBatis (Java)      | GORM (Go)          |
-|------------|--------------------|--------------------|--------------------|-------------------|
-| 类型         | 类型安全 ORM + 查询构建器 | 全功能 ORM          | SQL 映射框架        | 全功能 ORM         |
-| 语言         | Rust               | Java               | Java               | Go                |
-| 主要特点     | 编译时查询验证       | 丰富的关联支持       | SQL 灵活性          | 开发效率高        |
+| Feature        | Diesel (Rust)       | Hibernate (Java)    | MyBatis (Java)      | GORM (Go)          |
+|---------------|--------------------|--------------------|--------------------|-------------------|
+| Type          | Type-safe ORM + Query Builder | Full-featured ORM | SQL Mapping Framework | Full-featured ORM |
+| Language      | Rust               | Java               | Java               | Go                |
+| Key Features  | Compile-time query validation | Rich association support | SQL flexibility | High development efficiency |
 
-## 2. 技术特性比较
+## 2. Technical Feature Comparison
 
-### 类型安全
-- **Diesel**: 强类型，编译时检查查询正确性
-- **Hibernate**: 运行时类型检查
-- **MyBatis**: 弱类型，基于 XML/注解的 SQL 映射
-- **GORM**: 运行时类型检查
+### Type Safety
+- **Diesel**: Strong typing, compile-time query correctness checking
+- **Hibernate**: Runtime type checking
+- **MyBatis**: Weak typing, XML/annotation-based SQL mapping
+- **GORM**: Runtime type checking
 
-### 查询方式
-- **Diesel**: 基于 Rust 宏的类型安全查询构建器
+### Query Methods
+- **Diesel**: Type-safe query builder based on Rust macros
   ```rust
   users.filter(name.eq("John")).load(&conn)
   ```
-- **Hibernate**: HQL (Hibernate Query Language) 或 Criteria API
+- **Hibernate**: HQL (Hibernate Query Language) or Criteria API
   ```java
   session.createQuery("FROM User WHERE name = :name")
   ```
-- **MyBatis**: 直接写 SQL (XML 或注解)
+- **MyBatis**: Direct SQL writing (XML or annotations)
   ```xml
   <select id="selectUser" resultType="User">
     SELECT * FROM user WHERE name = #{name}
   </select>
   ```
-- **GORM**: 方法链式调用
+- **GORM**: Method chaining
   ```go
   db.Where("name = ?", "John").Find(&users)
   ```
 
-### 性能
-- **Diesel**: 高性能，无运行时反射
-- **Hibernate**: 中等，有缓存机制但可能产生 N+1 问题
-- **MyBatis**: 高性能，接近原生 JDBC
-- **GORM**: 中等，使用反射有一定开销
+### Performance
+- **Diesel**: High performance, no runtime reflection
+- **Hibernate**: Medium, has caching mechanisms but may have N+1 issues
+- **MyBatis**: High performance, close to native JDBC
+- **GORM**: Medium, has some overhead due to reflection
 
-### 学习曲线
-- **Diesel**: 陡峭 (需要理解 Rust 类型系统)
-- **Hibernate**: 中等 (复杂功能多)
-- **MyBatis**: 简单 (对 SQL 友好)
-- **GORM**: 简单 (Go 风格的简单 API)
+### Learning Curve
+- **Diesel**: Steep (requires understanding Rust type system)
+- **Hibernate**: Medium (many complex features)
+- **MyBatis**: Simple (SQL-friendly)
+- **GORM**: Simple (Go-style simple API)
 
-## 3. 优缺点分析
+## 3. Pros and Cons Analysis
 
 ### Diesel
-**优点**:
-- 无运行时错误 (编译时验证)
-- 极佳的性能
-- 明确的 SQL 生成 (可预测)
+**Pros**:
+- No runtime errors (compile-time verification)
+- Excellent performance
+- Predictable SQL generation
 
-**缺点**:
-- Rust 特有的学习曲线
-- 关联处理相对简单
-- 生态系统较小
+**Cons**:
+- Rust-specific learning curve
+- Relatively simple association handling
+- Smaller ecosystem
 
 ### Hibernate
-**优点**:
-- 功能全面 (缓存、延迟加载等)
-- 成熟的生态系统
-- 数据库无关性
+**Pros**:
+- Comprehensive features (caching, lazy loading, etc.)
+- Mature ecosystem
+- Database independence
 
-**缺点**:
-- 复杂的配置
-- 可能产生低效查询
-- 学习曲线较陡
+**Cons**:
+- Complex configuration
+- May generate inefficient queries
+- Steep learning curve
 
 ### MyBatis
-**优点**:
-- SQL 完全可控
-- 简单直接
-- 性能接近原生 JDBC
+**Pros**:
+- Complete SQL control
+- Simple and direct
+- Performance close to native JDBC
 
-**缺点**:
-- 需要手写更多代码
-- 类型安全性较弱
-- 数据库移植性较差
+**Cons**:
+- Requires more handwritten code
+- Weak type safety
+- Poor database portability
 
 ### GORM
-**优点**:
-- 开发速度快
-- 简洁的 API
-- 良好的约定优于配置
+**Pros**:
+- Fast development speed
+- Simple API
+- Good convention over configuration
 
-**缺点**:
-- 反射带来的性能开销
-- 复杂查询可能受限
-- 错误处理不如 Rust 严格
+**Cons**:
+- Performance overhead from reflection
+- Complex queries may be limited
+- Error handling not as strict as Rust
 
-## 4. 适用场景
+## 4. Use Cases
 
-- **选择 Diesel**:
-    - 需要最高级别的安全性和性能
-    - 使用 Rust 开发关键系统
-    - 愿意接受更严格的编译时检查
+- **Choose Diesel**:
+    - Need highest level of safety and performance
+    - Using Rust for critical systems
+    - Willing to accept stricter compile-time checks
 
-- **选择 Hibernate**:
-    - 需要复杂对象关系映射
-    - 企业级 Java 应用
-    - 需要二级缓存等高级特性
+- **Choose Hibernate**:
+    - Need complex object-relational mapping
+    - Enterprise Java applications
+    - Need advanced features like second-level cache
 
-- **选择 MyBatis**:
-    - 需要精细控制 SQL
-    - 遗留数据库或复杂查询
-    - 喜欢 SQL 优先方法
+- **Choose MyBatis**:
+    - Need fine-grained SQL control
+    - Legacy databases or complex queries
+    - Prefer SQL-first approach
 
-- **选择 GORM**:
-    - 快速开发 Go 应用
-    - 简单到中等复杂度的数据模型
-    - 偏好约定优于配置
+- **Choose GORM**:
+    - Rapid development of Go applications
+    - Simple to medium complexity data models
+    - Prefer convention over configuration
 
-## 5. 总结
+## 5. Summary
 
-这些 ORM 反映了各自语言的设计哲学:
-- Rust 的 Diesel 强调安全性和零成本抽象
-- Java 的 Hibernate/MyBatis 分别代表全功能 ORM 和 SQL 映射两种风格
-- Go 的 GORM 体现了 Go 的简洁和实用主义
+These ORMs reflect the design philosophy of their respective languages:
+- Rust's Diesel emphasizes safety and zero-cost abstractions
+- Java's Hibernate/MyBatis represent full-featured ORM and SQL mapping styles respectively
+- Go's GORM embodies Go's simplicity and pragmatism
 
-选择哪个框架取决于项目需求、团队技能和对类型安全/灵活性的权衡。
+The choice of framework depends on project requirements, team skills, and the trade-off between type safety and flexibility.
 
 ---
 
-# ORM 框架在工作流上的区别：Diesel vs Hibernate vs MyBatis vs GORM
+# ORM Framework Workflow Differences: Diesel vs Hibernate vs MyBatis vs GORM
 
-这些 ORM 框架在工作流程上有显著差异，主要体现在开发阶段、运行时行为和数据库交互方式上。以下是详细比较：
+These ORM frameworks have significant differences in their workflows, mainly reflected in development phase, runtime behavior, and database interaction methods. Here's a detailed comparison:
 
-## 1. 开发阶段工作流
+## 1. Development Phase Workflow
 
 ### **Diesel (Rust)**
-- **迁移管理**：
-    - 使用 `diesel migration` CLI 工具管理迁移
-    - 迁移文件是纯 SQL 或 Rust 代码
-    - 迁移在编译时验证
-- **模型定义**：
-    - 通过 `#[derive(Queryable, Insertable)]` 宏定义模型
-    - 表结构与 Rust 结构体严格对应
-- **查询构建**：
-    - 编译时检查的查询构建器
-    - 查询错误在编译期捕获
+- **Migration Management**: 
+    - Uses `diesel migration` CLI tool to manage migrations
+    - Migration files are pure SQL or Rust code
+    - Migrations are validated at compile time
+- **Model Definition**: 
+    - Models are defined through `#[derive(Queryable, Insertable)]` macros
+    - Table structure strictly corresponds to Rust structs
+- **Query Building**: 
+    - Compile-time checked query builder
+    - Query errors are caught at compile time
 
 ```rust
 // 迁移文件 (up.sql)
@@ -157,14 +157,14 @@ struct User { id: i32, name: String }
 ```
 
 ### **Hibernate (Java)**
-- **实体映射**：
-    - 通过注解或 XML 配置实体关系
-    - 支持复杂的继承策略
-- **HBM 文件或注解**：
-    - 使用 `@Entity`, `@OneToMany` 等注解
-    - 或配置 `hbm.xml` 映射文件
-- **会话管理**：
-    - 需要管理 SessionFactory 和 Session 生命周期
+- **Entity Mapping**: 
+    - Configure entity relationships through annotations or XML
+    - Support complex inheritance strategies
+- **HBM Files or Annotations**: 
+    - Use annotations like `@Entity`, `@OneToMany`
+    - Or configure `hbm.xml` mapping files
+- **Session Management**: 
+    - Need to manage SessionFactory and Session lifecycle
 
 ```java
 @Entity
@@ -177,12 +177,12 @@ public class User {
 ```
 
 ### **MyBatis (Java)**
-- **SQL 映射**：
-    - 编写 XML 映射文件或使用注解
-    - 每个 SQL 语句明确对应方法
-- **接口绑定**：
-    - 接口方法与 SQL 语句绑定
-    - 需要手动编写结果映射
+- **SQL Mapping**: 
+    - Write XML mapping files or use annotations
+    - Each SQL statement explicitly corresponds to a method
+- **Interface Binding**: 
+    - Interface methods are bound to SQL statements
+    - Need to manually write result mappings
 
 ```xml
 <mapper namespace="com.example.UserMapper">
@@ -193,14 +193,14 @@ public class User {
 ```
 
 ### **GORM (Go)**
-- **模型定义**：
-    - 使用 Go 结构体 + 标签
-    - 自动推断表结构
-- **自动迁移**：
-    - `AutoMigrate()` 自动创建/修改表
-    - 无独立迁移文件
-- **约定优于配置**：
-    - 默认遵循命名约定 (如 `ID` 主键)
+- **Model Definition**: 
+    - Use Go structs + tags
+    - Automatically infer table structure
+- **Auto Migration**: 
+    - `AutoMigrate()` automatically creates/modifies tables
+    - No separate migration files
+- **Convention over Configuration**: 
+    - Default naming conventions (e.g., `ID` as primary key)
 
 ```go
 type User struct {
@@ -209,22 +209,22 @@ type User struct {
 }
 ```
 
-## 2. 运行时工作流
+## 2. Runtime Workflow
 
-| 阶段          | Diesel                     | Hibernate                  | MyBatis                   | GORM                      |
+| Stage          | Diesel                     | Hibernate                  | MyBatis                   | GORM                      |
 |---------------|---------------------------|---------------------------|--------------------------|--------------------------|
-| **连接获取**  | 从 r2d2 池获取明确类型连接 | 从 SessionFactory 获取 Session | 从 SqlSessionFactory 获取 SqlSession | 从 `*gorm.DB` 直接操作 |
-| **查询执行**  | 编译生成的 SQL             | 可能生成复杂 SQL (N+1 风险) | 执行明确编写的 SQL        | 方法链构建 SQL           |
-| **事务管理**  | 显式 `begin_transaction`   | 声明式 `@Transactional`   | 显式 `sqlSession.commit` | `db.Transaction` 回调    |
-| **缓存**      | 无内置缓存                 | 一级/二级缓存              | 无内置缓存               | 无内置缓存              |
+| **Connection Acquisition** | Get explicitly typed connection from r2d2 pool | Get Session from SessionFactory | Get SqlSession from SqlSessionFactory | Direct operation from `*gorm.DB` |
+| **Query Execution** | Compile-generated SQL | May generate complex SQL (N+1 risk) | Execute explicitly written SQL | Method chain builds SQL |
+| **Transaction Management** | Explicit `begin_transaction` | Declarative `@Transactional` | Explicit `sqlSession.commit` | `db.Transaction` callback |
+| **Caching**      | No built-in cache | First/second level cache | No built-in cache | No built-in cache |
 
-## 3. 典型工作流对比
+## 3. Typical Workflow Comparison
 
-### **插入数据流程**
+### **Data Insertion Process**
 
 **Diesel**:
 ```rust
-// 显式插入，编译时验证类型
+// Explicit insertion, compile-time type validation
 diesel::insert_into(users::table)
     .values(&NewUser { name: "John" })
     .execute(&conn)?;
@@ -232,76 +232,76 @@ diesel::insert_into(users::table)
 
 **Hibernate**:
 ```java
-// 对象导向，自动生成 INSERT
+// Object-oriented, automatically generates INSERT
 Session session = sessionFactory.openSession();
 User user = new User("John");
-session.save(user); // INSERT 可能延迟执行
+session.save(user); // INSERT may be delayed
 session.flush();
 ```
 
 **MyBatis**:
 ```java
-// 明确调用映射的 SQL
+// Explicitly call mapped SQL
 UserMapper mapper = session.getMapper(UserMapper.class);
-mapper.insertUser(new User("John")); // 对应 XML 中的 <insert>
+mapper.insertUser(new User("John")); // Corresponds to <insert> in XML
 ```
 
 **GORM**:
 ```go
-// 类似 ActiveRecord 模式
-db.Create(&User{Name: "John"}) // 自动生成 SQL
+// Similar to ActiveRecord pattern
+db.Create(&User{Name: "John"}) // Automatically generates SQL
 ```
 
-### **查询流程**
+### **Query Process**
 
-**Diesel** (编译时验证):
+**Diesel** (Compile-time validation):
 ```rust
 let users = users::table
     .filter(name.eq("John"))
-    .load::<User>(&conn)?; // 错误表名或字段会在编译时报错
+    .load::<User>(&conn)?; // Wrong table or field names cause compile errors
 ```
 
-**Hibernate** (运行时 HQL):
+**Hibernate** (Runtime HQL):
 ```java
-// HQL 错误只在运行时发现
+// HQL errors are only discovered at runtime
 List<User> = session.createQuery("FROM User WHERE name = :name", User.class)
                  .setParameter("name", "John")
                  .list();
 ```
 
-**MyBatis** (明确 SQL):
+**MyBatis** (Explicit SQL):
 ```java
-// SQL 完全控制但无编译时检查
+// Complete SQL control but no compile-time checking
 List<User> users = mapper.selectUsersByName("John");
 ```
 
-**GORM** (链式调用):
+**GORM** (Chain calling):
 ```go
 var users []User
-db.Where("name = ?", "John").Find(&users) // 字符串条件无编译检查
+db.Where("name = ?", "John").Find(&users) // String conditions have no compile checking
 ```
 
-## 4. 核心工作流差异总结
+## 4. Core Workflow Differences Summary
 
-1. **SQL 生成时机**：
-    - Diesel: 编译时生成查询结构
-    - Hibernate: 运行时动态生成
-    - MyBatis: 开发时明确编写
-    - GORM: 运行时反射生成
+1. **SQL Generation Timing**:
+    - Diesel: Compile-time query structure generation
+    - Hibernate: Runtime dynamic generation
+    - MyBatis: Explicit writing during development
+    - GORM: Runtime reflection generation
 
-2. **错误检测阶段**：
-    - Diesel: 编译时 (类型不匹配/表不存在)
-    - 其他: 运行时 (可能生产环境才发现错误)
+2. **Error Detection Stage**:
+    - Diesel: Compile-time (type mismatch/table doesn't exist)
+    - Others: Runtime (errors may only be discovered in production)
 
-3. **数据库模式同步**：
-    - Diesel: 需显式迁移
-    - Hibernate: 可自动更新表结构 (hbm2ddl)
-    - GORM: 通过 AutoMigrate 自动同步
-    - MyBatis: 完全手动管理
+3. **Database Schema Synchronization**:
+    - Diesel: Requires explicit migrations
+    - Hibernate: Can automatically update table structure (hbm2ddl)
+    - GORM: Automatic synchronization through AutoMigrate
+    - MyBatis: Completely manual management
 
-4. **事务边界**：
-    - Diesel/GORM: 显式代码块
-    - Hibernate: 声明式注解
-    - MyBatis: 混合模式
+4. **Transaction Boundaries**:
+    - Diesel/GORM: Explicit code blocks
+    - Hibernate: Declarative annotations
+    - MyBatis: Mixed mode
 
-这些差异反映了各语言生态的设计哲学：Rust 强调安全性和显式控制，Java 企业级框架提供丰富功能但复杂，Go 追求简单和开发效率。
+These differences reflect the design philosophy of each language ecosystem: Rust emphasizes safety and explicit control, Java enterprise frameworks provide rich features but are complex, Go pursues simplicity and development efficiency.

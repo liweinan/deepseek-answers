@@ -1,44 +1,44 @@
-# 理解递归和循环
+# Understanding Recursion and Loops
 
-在开始探讨递归是否可以全部改写为循环之前，我首先需要明确什么是递归，什么是循环，以及它们各自的特点。
+Before exploring whether all recursion can be rewritten as loops, I first need to clarify what recursion and loops are, and their respective characteristics.
 
-**递归（Recursion）**：在计算机科学中，递归是指一个函数在其定义中直接或间接调用自身的方法。递归通常用于解决可以分解为相似子问题的问题，例如树的遍历、阶乘计算、斐波那契数列等。
+**Recursion**: In computer science, recursion refers to a method where a function calls itself directly or indirectly in its definition. Recursion is typically used to solve problems that can be decomposed into similar subproblems, such as tree traversal, factorial calculation, Fibonacci sequence, etc.
 
-**循环（Loop）**：循环是通过重复执行一段代码直到满足某个条件为止的控制结构。常见的循环结构包括`for`循环、`while`循环和`do-while`循环等。
+**Loop**: A loop is a control structure that repeatedly executes a block of code until a certain condition is met. Common loop structures include `for` loops, `while` loops, and `do-while` loops.
 
-### 递归与循环的对比
+### Comparison of Recursion and Loops
 
-递归和循环都可以用来重复执行某些操作，但它们的工作方式不同：
+Both recursion and loops can be used to repeatedly execute operations, but they work differently:
 
-1. **递归**：
-    - 基于函数调用。
-    - 每次递归调用都会在调用栈上创建一个新的栈帧，保存当前的状态。
-    - 需要有明确的终止条件（base case），否则会导致无限递归和栈溢出。
-    - 代码通常更简洁，更符合问题的数学定义。
-    - 可能会因为栈深度过大而导致栈溢出。
+1. **Recursion**:
+    - Based on function calls.
+    - Each recursive call creates a new stack frame on the call stack, saving the current state.
+    - Requires a clear base case, otherwise it leads to infinite recursion and stack overflow.
+    - Code is usually more concise and better matches the mathematical definition of the problem.
+    - May cause stack overflow due to excessive stack depth.
 
-2. **循环**：
-    - 基于迭代。
-    - 不需要额外的函数调用开销，通常使用固定的内存空间。
-    - 通过修改循环变量来控制循环的终止。
-    - 代码可能更冗长，但效率通常更高。
-    - 不会因为深度问题导致栈溢出。
+2. **Loop**:
+    - Based on iteration.
+    - No additional function call overhead, typically uses fixed memory space.
+    - Controls loop termination by modifying loop variables.
+    - Code may be more verbose, but efficiency is usually higher.
+    - Will not cause stack overflow due to depth issues.
 
-### 递归转循环的必要性
+### Necessity of Converting Recursion to Loops
 
-虽然递归在某些情况下代码更简洁，但它也有一些缺点：
+While recursion can make code more concise in some cases, it also has some disadvantages:
 
-- **栈溢出**：对于深度较大的递归，可能会耗尽调用栈的空间。
-- **性能开销**：函数调用比循环迭代有更多的开销，如参数传递、栈帧创建等。
-- **可读性和调试**：对于不熟悉递归的人来说，递归代码可能较难理解和调试。
+- **Stack overflow**: For deep recursion, it may exhaust the call stack space.
+- **Performance overhead**: Function calls have more overhead than loop iteration, such as parameter passing, stack frame creation, etc.
+- **Readability and debugging**: For those unfamiliar with recursion, recursive code may be harder to understand and debug.
 
-因此，有时候我们需要将递归算法转换为循环，以提高效率和避免栈溢出。
+Therefore, sometimes we need to convert recursive algorithms to loops to improve efficiency and avoid stack overflow.
 
-### 递归转循环的可能性
+### Possibility of Converting Recursion to Loops
 
-现在回到核心问题：**是否所有的递归都可以改写为循环？是否有通用的范式？**
+Now back to the core question: **Can all recursion be rewritten as loops? Is there a universal paradigm?**
 
-从理论计算机科学的角度来看，**所有的递归函数都可以转换为等价的循环形式**。这是因为递归和循环在计算能力上是等价的，它们都是图灵完备的。也就是说，任何可以用递归解决的问题，也可以用循环来解决，反之亦然。
+From the perspective of theoretical computer science, **all recursive functions can be converted to equivalent loop forms**. This is because recursion and loops are equivalent in computational power, and they are both Turing complete. That is, any problem that can be solved with recursion can also be solved with loops, and vice versa.
 
 ### 递归转循环的通用方法
 

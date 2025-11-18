@@ -1,69 +1,69 @@
 # Disconnected Cluster Creation
 
-## 在Private Cluster中的使用
+## Usage in Private Cluster
 
-### 1. **可以使用的场景**
+### 1. **Scenarios Where It Can Be Used**
 
-#### **需要镜像同步的Private Cluster**
+#### **Private Cluster Requiring Image Synchronization**
 ```bash
-# 当private cluster需要预先同步镜像时
-# 例如：网络带宽限制、安全要求、性能优化
+# When private cluster needs to pre-sync images
+# For example: network bandwidth limitations, security requirements, performance optimization
 ```
 
-#### **混合网络环境**
+#### **Hybrid Network Environment**
 ```bash
-# 集群私有，但需要临时访问外部资源
-# 例如：安装时同步镜像，运行后断开
+# Cluster is private but needs temporary access to external resources
+# For example: sync images during installation, disconnect after installation
 ```
 
-### 2. **脚本的通用性设计**
+### 2. **Script Universal Design**
 
-脚本本身设计得比较通用，包含了多种配置选项：
+The script itself is designed to be universal, containing multiple configuration options:
 
 ```bash
-# 支持自定义AMI
+# Support custom AMI
 if [[ "${BASTION_HOST_AMI}" == "" ]]; then
-  # 动态创建
+  # Dynamic creation
 else
-  # 使用BYO (Bring Your Own) bastion host
+  # Use BYO (Bring Your Own) bastion host
   ami_id=${BASTION_HOST_AMI}
 fi
 ```
 
-### 3. **在Private Cluster中的具体用途**
+### 3. **Specific Uses in Private Cluster**
 
-#### **A. 镜像预同步**
+#### **A. Image Pre-synchronization**
 ```bash
-# 在private cluster安装前同步镜像
-# 避免安装过程中的网络问题
+# Pre-sync images before private cluster installation
+# Avoid network issues during installation process
 MIRROR_REGISTRY_URL="${BASTION_HOST_PUBLIC_DNS}:5000"
 ```
 
-#### **B. 代理服务**
+#### **B. Proxy Service**
 ```bash
-# 为private cluster提供代理访问
+# Provide proxy access for private cluster
 PROXY_PUBLIC_URL="http://${PROXY_CREDENTIAL}@${BASTION_HOST_PUBLIC_DNS}:3128"
 PROXY_PRIVATE_URL="http://${PROXY_CREDENTIAL}@${BASTION_HOST_PRIVATE_DNS}:3128"
 ```
 
-#### **C. 临时外部访问**
+#### **C. Temporary External Access**
 ```bash
-# 在安装过程中提供临时的外部访问能力
-# 安装完成后可以移除
+# Provide temporary external access capability during installation
+# Can be removed after installation is complete
 ```
 
-## 使用差异
+## Usage Differences
 
 ### **Private Cluster vs Disconnected Cluster**
 
-| 方面 | Private Cluster | Disconnected Cluster |
+| Aspect | Private Cluster | Disconnected Cluster |
 |------|----------------|---------------------|
-| **必要性** | 可选 | 必需 |
-| **使用时长** | 临时 | 永久 |
-| **网络配置** | 安装后可能移除 | 持续使用 |
-| **镜像同步** | 可选优化 | 必需步骤 |
+| **Necessity** | Optional | Required |
+| **Usage Duration** | Temporary | Permanent |
+| **Network Configuration** | May be removed after installation | Continuously used |
+| **Image Synchronization** | Optional optimization | Required step |
 
-### **Private Cluster中的配置示例**
+### **Configuration Example for Private Cluster**
 
 ```yaml
 # install-config.yaml for Private Cluster
@@ -71,101 +71,101 @@ publish: Internal
 platform:
   aws:
     privateLink: true
-# 可以选择性地配置镜像仓库
+# Can optionally configure mirror registry
 imageContentSources:
 - mirrors:
   - bastion-host:5000/openshift4/ose-kube-rbac-proxy
   source: registry.redhat.io/openshift4/ose-kube-rbac-proxy
 ```
 
-## 实际使用场景
+## Actual Usage Scenarios
 
-### **场景1: 网络受限的Private Cluster**
+### **Scenario 1: Network-limited Private Cluster**
 ```bash
-# 企业网络有带宽限制
-# 使用bastion host预先同步镜像
-# 安装时从本地仓库拉取
+# Enterprise network has bandwidth limitations
+# Use bastion host to pre-sync images
+# Pull from local registry during installation
 ```
 
-### **场景2: 安全要求高的Private Cluster**
+### **Scenario 2: High Security Requirements Private Cluster**
 ```bash
-# 需要预先验证所有镜像
-# 使用bastion host作为镜像验证点
-# 确保所有镜像都经过安全扫描
+# Need to pre-validate all images
+# Use bastion host as image validation point
+# Ensure all images pass security scanning
 ```
 
-### **场景3: 性能优化的Private Cluster**
+### **Scenario 3: Performance-optimized Private Cluster**
 ```bash
-# 避免安装时的网络延迟
-# 预先同步镜像到本地
-# 提高安装速度和稳定性
+# Avoid network latency during installation
+# Pre-sync images locally
+# Improve installation speed and stability
 ```
 
-## 配置选项
+## Configuration Options
 
-### **可选使用**
+### **Optional Usage**
 ```bash
-# 可以通过环境变量控制是否使用
-BASTION_HOST_AMI=""  # 不使用自定义AMI
-CUSTOM_PROXY_CREDENTIAL="false"  # 使用默认代理配置
+# Can control whether to use via environment variables
+BASTION_HOST_AMI=""  # Don't use custom AMI
+CUSTOM_PROXY_CREDENTIAL="false"  # Use default proxy configuration
 ```
 
-### **部分功能使用**
+### **Partial Function Usage**
 ```bash
-# 只使用镜像仓库功能
-# 不使用代理功能
-# 或者只使用代理功能，不使用镜像仓库
+# Only use mirror registry functionality
+# Don't use proxy functionality
+# Or only use proxy functionality, don't use mirror registry
 ```
 
-## 总结
+## Summary
 
-这个脚本**完全可以用于private cluster的安装**，但通常是**可选的**，而不是必需的。在private cluster中，它主要用于：
+This script **can definitely be used for private cluster installation**, but is usually **optional** rather than required. In private clusters, it is mainly used for:
 
-1. **性能优化**: 预先同步镜像
-2. **网络优化**: 减少安装时的网络依赖
-3. **安全增强**: 镜像验证和扫描
-4. **临时访问**: 安装过程中的外部资源访问
+1. **Performance Optimization**: Pre-sync images
+2. **Network Optimization**: Reduce network dependencies during installation
+3. **Security Enhancement**: Image validation and scanning
+4. **Temporary Access**: External resource access during installation process
 
-与disconnected cluster不同，private cluster安装完成后，这些bastion host和镜像仓库服务通常可以移除，因为集群本身仍然可以访问互联网来拉取镜像。
+Unlike disconnected clusters, after private cluster installation is complete, these bastion hosts and mirror registry services can usually be removed, because the cluster itself can still access the internet to pull images.
 
 ---
 
-我来为你详细介绍这个项目中与disconnected cluster和mirror registry相关的内容。
+Let me introduce in detail the content related to disconnected cluster and mirror registry in this project.
 
-## 项目结构与Disconnected Cluster相关组件
+## Project Structure and Disconnected Cluster Related Components
 
-### 1. **AWS基础设施层 (step-registry/aws/provision/)**
+### 1. **AWS Infrastructure Layer (step-registry/aws/provision/)**
 
-#### **A. VPC配置**
+#### **A. VPC Configuration**
 ```bash
 step-registry/aws/provision/vpc/disconnected/
 ├── aws-provision-vpc-disconnected-ref.yaml
 ├── aws-provision-vpc-disconnected-commands.sh
 └── aws-provision-vpc-disconnected-ref.metadata.json
 ```
-**作用**: 为disconnected cluster创建专用的VPC网络环境
+**Purpose**: Create dedicated VPC network environment for disconnected cluster
 
-#### **B. Bastion Host配置**
+#### **B. Bastion Host Configuration**
 ```bash
 step-registry/aws/provision/bastionhost/
 ├── aws-provision-bastionhost-ref.yaml
 ├── aws-provision-bastionhost-commands.sh
 └── aws-provision-bastionhost-chain.yaml
 ```
-**作用**: 创建跳板机，提供镜像仓库和代理服务
+**Purpose**: Create bastion host, provide mirror registry and proxy services
 
-#### **C. CCO静态用户配置**
+#### **C. CCO Static User Configuration**
 ```bash
 step-registry/aws/provision/cco-manual-users/static/
 ├── aws-provision-cco-manual-users-static-ref.yaml
 ├── aws-provision-cco-manual-users-static-commands.sh
 └── aws-provision-cco-manual-users-static-ref.metadata.json
 ```
-**作用**: 为disconnected cluster创建静态IAM用户和权限
+**Purpose**: Create static IAM users and permissions for disconnected cluster
 
-### 2. **镜像同步层 (step-registry/mirror-images/)**
+### 2. **Image Synchronization Layer (step-registry/mirror-images/)**
 
-#### **A. 主要镜像同步工具**
+#### **A. Main Image Synchronization Tool**
 ```bash
 step-registry/mirror-images/by-oc-mirror/
 ├── mirror-images-by-oc-mirror-ref.yaml
@@ -175,69 +175,69 @@ step-registry/mirror-images/by-oc-mirror/
     └── mirror-images-by-oc-mirror-conf-mirror-commands.sh
 ```
 
-**核心功能**:
+**Core Functions**:
 ```bash
-# 使用oc-mirror工具同步镜像
+# Use oc-mirror tool to synchronize images
 oc-mirror --config=imageset.yaml docker://${MIRROR_REGISTRY_HOST}
 
-# 生成ImageContentSourcePolicy和CatalogSource
-# 输出到oc-mirror-workspace/results-*/
+# Generate ImageContentSourcePolicy and CatalogSource
+# Output to oc-mirror-workspace/results-*/
 ```
 
-#### **B. 镜像标签处理**
+#### **B. Image Tag Processing**
 ```bash
 step-registry/mirror-images/tag-images/
 ├── mirror-images-tag-images-ref.yaml
 └── mirror-images-tag-images-commands.sh
 ```
-**作用**: 处理镜像标签，确保disconnected环境中的镜像引用正确
+**Purpose**: Process image tags to ensure correct image references in disconnected environment
 
-### 3. **集群安装配置层 (step-registry/ipi/)**
+### 3. **Cluster Installation Configuration Layer (step-registry/ipi/)**
 
-#### **A. 镜像配置**
+#### **A. Image Configuration**
 ```bash
 step-registry/ipi/conf/mirror/
 ├── ipi-conf-mirror-ref.yaml
 └── ipi-conf-mirror-commands.sh
 ```
-**作用**: 配置install-config.yaml中的镜像仓库设置
+**Purpose**: Configure mirror registry settings in install-config.yaml
 
-#### **B. 安装流程**
+#### **B. Installation Process**
 ```bash
 step-registry/ipi/install/install/
 ├── ipi-install-install-ref.yaml
 └── ipi-install-install-commands.sh
 ```
-**作用**: 执行OpenShift集群安装
+**Purpose**: Execute OpenShift cluster installation
 
-### 4. **安装后配置层**
+### 4. **Post-Installation Configuration Layer**
 
-#### **A. Catalog Source配置**
+#### **A. Catalog Source Configuration**
 ```bash
 step-registry/enable-qe-catalogsource/disconnected/
 ├── enable-qe-catalogsource-disconnected-ref.yaml
 └── enable-qe-catalogsource-disconnected-commands.sh
 ```
-**作用**: 为disconnected环境配置本地operator catalog
+**Purpose**: Configure local operator catalog for disconnected environment
 
-#### **B. 镜像仓库配置**
+#### **B. Image Registry Configuration**
 ```bash
 step-registry/ipi/install/registry/
 ├── ipi-install-vsphere-registry-ref.yaml
 └── ipi-install-vsphere-registry-commands.sh
 ```
-**作用**: 配置集群内部的镜像仓库
+**Purpose**: Configure internal image registry of the cluster
 
-### 5. **完整安装链 (step-registry/cucushift/)**
+### 5. **Complete Installation Chain (step-registry/cucushift/)**
 
-#### **A. Disconnected Cluster安装链**
+#### **A. Disconnected Cluster Installation Chain**
 ```bash
 step-registry/cucushift/installer/rehearse/vsphere/ipi/disconnected/provision/
 ├── cucushift-installer-rehearse-vsphere-ipi-disconnected-provision-chain.yaml
 └── cucushift-installer-rehearse-vsphere-ipi-disconnected-provision-workflow.yaml
 ```
 
-**安装步骤**:
+**Installation Steps**:
 ```yaml
 steps:
   - chain: ipi-conf-vsphere
@@ -252,19 +252,19 @@ steps:
   - ref: set-sample-operator-disconnected
 ```
 
-### 6. **工具和脚本**
+### 6. **Tools and Scripts**
 
-#### **A. oc-mirror工具使用**
+#### **A. oc-mirror Tool Usage**
 ```bash
-# 下载和安装
+# Download and install
 curl -L -o oc-mirror.tar.gz https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/latest/oc-mirror.tar.gz
 tar -xvzf oc-mirror.tar.gz
 
-# 镜像同步
+# Image synchronization
 ./oc-mirror --config=imageset.yaml docker://${MIRROR_REGISTRY_HOST} --continue-on-error --skip-missing
 ```
 
-#### **B. ImageSetConfiguration配置**
+#### **B. ImageSetConfiguration Configuration**
 ```yaml
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
@@ -277,7 +277,7 @@ mirror:
   - name: quay.io/openshifttest/helm:3.17.0
 ```
 
-### 7. **配置文件示例**
+### 7. **Configuration File Examples**
 
 #### **A. install-config.yaml (disconnected)**
 ```yaml
@@ -296,7 +296,7 @@ imageContentSources:
   source: registry.redhat.io/openshift4/ose-kube-rbac-proxy
 additionalTrustBundle: |
   -----BEGIN CERTIFICATE-----
-  # 镜像仓库的CA证书
+  # Mirror registry CA certificate
   -----END CERTIFICATE-----
 ```
 
@@ -313,22 +313,22 @@ spec:
     source: registry.redhat.io/openshift4
 ```
 
-### 8. **关键环境变量**
+### 8. **Key Environment Variables**
 
 ```bash
-# 镜像仓库配置
+# Mirror registry configuration
 MIRROR_REGISTRY_HOST="bastion-host.example.com:5000"
 MIRROR_REGISTRY_URL="${MIRROR_REGISTRY_HOST}"
 
-# 代理配置
+# Proxy configuration
 PROXY_PUBLIC_URL="http://user:pass@bastion-host.example.com:3128"
 PROXY_PRIVATE_URL="http://user:pass@bastion-host.example.com:3128"
 
-# CCO配置
+# CCO configuration
 CREDENTIALS_MODE="Manual"
 ```
 
-### 9. **工作流程总结**
+### 9. **Workflow Summary**
 
 ```mermaid
 graph TD
@@ -349,23 +349,23 @@ graph TD
     F2[Image Policies] --> F
 ```
 
-### 10. **项目特色**
+### 10. **Project Features**
 
-1. **模块化设计**: 每个组件职责明确，可独立使用
-2. **多平台支持**: 支持AWS、vSphere、Nutanix等平台
-3. **工具集成**: 深度集成oc-mirror等OpenShift官方工具
-4. **配置灵活**: 支持多种disconnected场景配置
-5. **自动化程度高**: 从基础设施到应用部署全流程自动化
+1. **Modular Design**: Each component has clear responsibilities and can be used independently
+2. **Multi-platform Support**: Supports AWS, vSphere, Nutanix and other platforms
+3. **Tool Integration**: Deep integration with OpenShift official tools like oc-mirror
+4. **Flexible Configuration**: Supports multiple disconnected scenario configurations
+5. **High Automation**: Full automation from infrastructure to application deployment
 
-这个项目为disconnected OpenShift集群的部署提供了完整的解决方案，涵盖了从基础设施准备到应用部署的各个环节。
+This project provides a complete solution for deploying disconnected OpenShift clusters, covering all aspects from infrastructure preparation to application deployment.
 
 ---
 
-是的，mirror registry通常是安装在bastion host里面的。让我详细解释一下这个架构：
+Yes, mirror registry is usually installed inside the bastion host. Let me explain this architecture in detail:
 
-## Mirror Registry在Bastion Host中的部署
+## Mirror Registry Deployment in Bastion Host
 
-### 1. **架构设计**
+### 1. **Architecture Design**
 
 ```mermaid
 graph TD
@@ -381,26 +381,26 @@ graph TD
     B --> I[Local Storage]
 ```
 
-### 2. **Bastion Host中的服务配置**
+### 2. **Service Configuration in Bastion Host**
 
-从`aws-provision-bastionhost-commands.sh`可以看到，bastion host配置了多个端口：
+From `aws-provision-bastionhost-commands.sh`, we can see the bastion host is configured with multiple ports:
 
 ```yaml
-# 安全组配置
+# Security group configuration
 - IpProtocol: tcp
   FromPort: 5000
   ToPort: 5000
-  CidrIp: 0.0.0.0/0  # Mirror Registry端口
+  CidrIp: 0.0.0.0/0  # Mirror Registry port
 
 - IpProtocol: tcp
   FromPort: 6001
   ToPort: 6002
-  CidrIp: 0.0.0.0/0  # 额外的镜像仓库端口
+  CidrIp: 0.0.0.0/0  # Additional mirror registry ports
 
 - IpProtocol: tcp
   FromPort: 3128
   ToPort: 3128
-  CidrIp: 0.0.0.0/0  # HTTP代理端口
+  CidrIp: 0.0.0.0/0  # HTTP proxy port
 ```
 
 ### 3. **Mirror Registry的URL配置**

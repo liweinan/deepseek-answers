@@ -206,7 +206,7 @@ macro_rules! enum_with_values {
         impl $name {
             fn new(variant: &str, value: impl Into<String>) -> Option<Self> {
                 match variant {
-                    $(stringify!($variant) => Some(Self::$variant(value.into().parse::<$type>().ok()?)),*
+                    $(stringify!($variant) => Some(Self::$variant(value.into().parse::<$type>().ok()?)),)*
                     _ => None
                 }
             }

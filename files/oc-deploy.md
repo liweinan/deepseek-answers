@@ -1,30 +1,29 @@
-# 在 OpenShift Local（CRC）上部署 Nginx 应用的简洁教程
+# Concise Tutorial for Deploying Nginx Application on OpenShift Local (CRC)
 
-本教程指导你在 macOS 上使用 OpenShift Local（CRC）部署一个 Nginx 应用，基于 OpenShift 4.18.2，在 `my-demo` 命名空间运行，通过
-`127.0.0.1` 和 CRC 自动修改的 `/etc/hosts` 访问服务。教程包括代理配置、权限配置、正确的配置文件和访问 Service 的方式。
+This tutorial guides you through deploying an Nginx application on OpenShift Local (CRC) on macOS, based on OpenShift 4.18.2, running in the `my-demo` namespace, accessing the service through `127.0.0.1` and CRC's automatically modified `/etc/hosts`. The tutorial includes proxy configuration, permission configuration, correct configuration files, and methods to access the Service.
 
-## 前提条件
+## Prerequisites
 
-- **环境**：macOS，安装了 CRC 和 `oc` CLI。
-- **命名空间**：`my-demo`（已通过 `oc new-project my-demo` 创建）。
-- **镜像**：`docker.io/library/nginx:latest`（无需认证）。
-- **网络**：使用 `127.0.0.1`，CRC 自动更新 `/etc/hosts` 解析域名，代理为 `squid.corp.redhat.com:3128`。
+- **Environment**: macOS, with CRC and `oc` CLI installed.
+- **Namespace**: `my-demo` (created via `oc new-project my-demo`).
+- **Image**: `docker.io/library/nginx:latest` (no authentication required).
+- **Network**: Uses `127.0.0.1`, CRC automatically updates `/etc/hosts` to resolve domain names, proxy is `squid.corp.redhat.com:3128`.
 
-## 目标
+## Objectives
 
-- 部署 Nginx Pod，状态为 `Running`。
-- 配置 Service 和 Route，通过 `127.0.0.1` 访问服务。
-- 确保代理和权限正确设置。
+- Deploy Nginx Pod with `Running` status.
+- Configure Service and Route, access service through `127.0.0.1`.
+- Ensure proxy and permissions are correctly set.
 
 ---
 
-## 教程步骤
+## Tutorial Steps
 
-### 1. 代理配置
+### 1. Proxy Configuration
 
-配置 CRC 和集群使用代理，确保镜像拉取正常。
+Configure CRC and cluster to use proxy, ensuring normal image pulling.
 
-#### 1.1 设置代理
+#### 1.1 Set Proxy
 
 ```bash
 export HTTP_PROXY=http://squid.corp.redhat.com:3128
@@ -35,7 +34,7 @@ crc config set https-proxy $HTTPS_PROXY
 crc config set no-proxy "$NO_PROXY"
 ```
 
-#### 1.2 重启 CRC
+#### 1.2 Restart CRC
 
 ```bash
 crc stop
@@ -44,19 +43,19 @@ crc start
 
 ---
 
-### 2. 权限配置
+### 2. Permission Configuration
 
-为 `developer` 用户和 `default` 服务账户授予必要权限，确保可以创建资源和使用 `anyuid` SCC。
+Grant necessary permissions to `developer` user and `default` service account, ensuring ability to create resources and use `anyuid` SCC.
 
-#### 2.1 授予 `developer` 权限
+#### 2.1 Grant `developer` Permissions
 
-为 `developer` 用户在 `my-demo` 命名空间绑定 `edit` 角色：
+Bind `edit` role to `developer` user in `my-demo` namespace:
 
 ```bash
 oc create rolebinding developer-edit --clusterrole=edit --user=developer -n my-demo
 ```
 
-验证：
+Verify:
 
 ```bash
 oc auth can-i create configmaps -n my-demo
@@ -65,11 +64,11 @@ oc auth can-i create services -n my-demo
 oc auth can-i create routes -n my-demo
 ```
 
-- 预期：`yes`
+- Expected: `yes`
 
-#### 2.2 授予 `anyuid` SCC
+#### 2.2 Grant `anyuid` SCC
 
-以 `kubeadmin` 用户为 `default` 服务账户绑定 `anyuid` SCC：
+As `kubeadmin` user, bind `anyuid` SCC to `default` service account:
 
 ```bash
 oc login -u kubeadmin
@@ -77,23 +76,23 @@ oc adm policy add-scc-to-user anyuid -z default -n my-demo
 oc login -u developer
 ```
 
-验证：
+Verify:
 
 ```bash
 oc describe clusterrolebinding | grep anyuid
 ```
 
-- 确认包含 `system:serviceaccount:my-demo:default`。
+- Confirm inclusion of `system:serviceaccount:my-demo:default`.
 
 ---
 
-### 3. 配置文件
+### 3. Configuration Files
 
-以下是验证可运行的配置文件，用于部署 Nginx Pod、Service 和 Route。
+Here are verified runnable configuration files for deploying Nginx Pod, Service, and Route.
 
-#### 3.1 ConfigMap（`nginx-config.yaml`）
+#### 3.1 ConfigMap (`nginx-config.yaml`)
 
-创建 Nginx 配置文件，监听 8080 端口：
+Create Nginx configuration file, listening on port 8080:
 
 ```yaml
 apiVersion: v1
@@ -121,15 +120,15 @@ data:
     }
 ```
 
-应用：
+Apply:
 
 ```bash
 oc apply -f nginx-config.yaml
 ```
 
-#### 3.2 Pod（`nginx-pod.yaml`）
+#### 3.2 Pod (`nginx-pod.yaml`)
 
-部署 Nginx Pod，使用 `anyuid` SCC 和 `emptyDir` 卷：
+Deploy Nginx Pod, using `anyuid` SCC and `emptyDir` volumes:
 
 ```yaml
 apiVersion: v1
@@ -171,15 +170,15 @@ spec:
       emptyDir: { }
 ```
 
-应用：
+Apply:
 
 ```bash
 oc apply -f nginx-pod.yaml
 ```
 
-#### 3.3 Service（`nginx-service.yaml`）
+#### 3.3 Service (`nginx-service.yaml`)
 
-暴露 Nginx Pod：
+Expose Nginx Pod:
 
 ```yaml
 apiVersion: v1
@@ -196,15 +195,15 @@ spec:
       targetPort: 8080
 ```
 
-应用：
+Apply:
 
 ```bash
 oc apply -f nginx-service.yaml
 ```
 
-#### 3.4 Route（`nginx-route.yaml`）
+#### 3.4 Route (`nginx-route.yaml`)
 
-创建外部路由：
+Create external route:
 
 ```yaml
 apiVersion: route.openshift.io/v1
@@ -221,7 +220,7 @@ spec:
   wildcardPolicy: None
 ```
 
-应用：
+Apply:
 
 ```bash
 oc apply -f nginx-route.yaml
@@ -229,31 +228,31 @@ oc apply -f nginx-route.yaml
 
 ---
 
-### 4. 访问 Service
+### 4. Access Service
 
-服务通过 `127.0.0.1` 访问，CRC 自动将路由主机名添加到 `/etc/hosts`。
+Service is accessed through `127.0.0.1`, CRC automatically adds route hostname to `/etc/hosts`.
 
-#### 4.1 确认 `/etc/hosts`
+#### 4.1 Confirm `/etc/hosts`
 
-检查 `/etc/hosts`：
+Check `/etc/hosts`:
 
 ```bash
 cat /etc/hosts
 ```
 
-- CRC 会自动添加：
+- CRC will automatically add:
   ```
   127.0.0.1        nginx-route-my-demo.apps-crc.testing
   ```
-- 无需手动修改，CRC 在 Route 创建或集群启动时更新。
+- No manual modification needed, CRC updates when Route is created or cluster starts.
 
-#### 4.2 访问路由
+#### 4.2 Access Route
 
 ```bash
 curl http://nginx-route-my-demo.apps-crc.testing
 ```
 
-- 预期：返回 Nginx 欢迎页面：
+- Expected: Returns Nginx welcome page:
   ```
   <!DOCTYPE html>
   <html>
@@ -265,16 +264,16 @@ curl http://nginx-route-my-demo.apps-crc.testing
   </html>
   ```
 
-#### 4.3 绕过代理
+#### 4.3 Bypass Proxy
 
-如果访问失败，确保代理不干扰：
+If access fails, ensure proxy doesn't interfere:
 
 ```bash
 unset HTTP_PROXY HTTPS_PROXY
 curl http://nginx-route-my-demo.apps-crc.testing
 ```
 
-或：
+Or:
 
 ```bash
 export NO_PROXY=localhost,127.0.0.1,.crc.testing,.apps-crc.testing
@@ -283,7 +282,7 @@ curl http://nginx-route-my-demo.apps-crc.testing
 
 ---
 
-### 验证
+### Verification
 
 ```bash
 oc get pods -n my-demo
@@ -294,7 +293,7 @@ curl http://nginx-route-my-demo.apps-crc.testing
 
 ---
 
-### 清理
+### Cleanup
 
 ```bash
 oc login -u kubeadmin
@@ -309,12 +308,12 @@ oc delete rolebinding developer-edit -n my-demo
 
 ---
 
-### 注意事项
+### Notes
 
-- **代理**：确保 `NO_PROXY` 包含 `localhost`, `127.0.0.1`, `.crc.testing`, `.apps-crc.testing`，避免干扰本地访问。
-- **权限**：`developer` 用户需 `edit` 角色，`default` 服务账户需 `anyuid` SCC。
-- **域名**：CRC 自动管理 `/etc/hosts`，无需手动修改。
-- **防火墙**：如访问失败，检查 macOS 防火墙：
+- **Proxy**: Ensure `NO_PROXY` includes `localhost`, `127.0.0.1`, `.crc.testing`, `.apps-crc.testing` to avoid interfering with local access.
+- **Permissions**: `developer` user needs `edit` role, `default` service account needs `anyuid` SCC.
+- **Domain**: CRC automatically manages `/etc/hosts`, no manual modification needed.
+- **Firewall**: If access fails, check macOS firewall:
   ```bash
   sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
   sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate off
@@ -322,15 +321,14 @@ oc delete rolebinding developer-edit -n my-demo
 
 ---
 
-### 总结
+### Summary
 
-本教程提供了在 macOS 上使用 CRC 部署 Nginx 应用的完整流程，通过 `127.0.0.1` 和 CRC 自动更新的 `/etc/hosts`
-访问服务。代理配置确保镜像拉取，权限配置支持 Pod 部署，配置文件经过验证，访问方式简单可靠。
+This tutorial provides a complete process for deploying Nginx applications on macOS using CRC, accessing services through `127.0.0.1` and CRC's automatically updated `/etc/hosts`. Proxy configuration ensures image pulling, permission configuration supports Pod deployment, configuration files are verified, and access methods are simple and reliable.
 
-如需进一步帮助，请提供：
+For further assistance, please provide:
 
-- `oc get route -n my-demo` 输出。
-- `/etc/hosts` 最新内容。
-- `curl http://nginx-route-my-demo.apps-crc.testing` 的结果（若失败）。
+- Output of `oc get route -n my-demo`.
+- Latest content of `/etc/hosts`.
+- Result of `curl http://nginx-route-my-demo.apps-crc.testing` (if failed).
 
-祝你部署顺利！
+Wish you successful deployment!

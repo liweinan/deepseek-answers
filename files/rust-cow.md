@@ -1,10 +1,10 @@
-# 好的，我们来详细讲解一下 Rust 中的 `Cow`（Clone-On-Write）指针。
+# Let's explain in detail Rust's `Cow` (Clone-On-Write) pointer.
 
-### 核心概念
+### Core Concept
 
-`Cow` 是一个枚举（enum），全称是 `Clone-On-Write`。它是一种智能指针，旨在通过**延迟克隆（拷贝）** 来优化性能。它的核心思想是：在大多数只读场景下，直接借用数据；只有在确实需要修改数据时，才执行克隆操作，获得数据的所有权并进行修改。
+`Cow` is an enum, short for `Clone-On-Write`. It's a smart pointer designed to optimize performance through **delayed cloning (copying)**. Its core idea is: in most read-only scenarios, directly borrow data; only when modification is truly needed, perform the clone operation to obtain ownership of the data and make modifications.
 
-这完美体现了 Rust 的所有权哲学：默认情况下不可变，需要改变时才获取可变性，并且避免不必要的拷贝。
+This perfectly embodies Rust's ownership philosophy: immutable by default, obtain mutability only when change is needed, and avoid unnecessary copying.
 
 ### 定义
 

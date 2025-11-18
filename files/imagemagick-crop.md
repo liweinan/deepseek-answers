@@ -1,53 +1,53 @@
-# 使用ImageMagick对图片进行剪裁 
+# Using ImageMagick to Crop Images
 
-要将一张图片剪裁为 150 x 150 像素（px），可以使用 ImageMagick 的 `convert` 或 `magick` 命令（取决于你的 ImageMagick 版本）。以下是具体指令：
+To crop an image to 150 x 150 pixels (px), you can use ImageMagick's `convert` or `magick` command (depending on your ImageMagick version). Here are the specific commands:
 
-### 1. **基本剪裁（居中剪裁）**
+### 1. **Basic Crop (Center Crop)**
 ```bash
 convert input.jpg -resize 150x150^ -gravity center -extent 150x150 output.jpg
 ```
-或（ImageMagick 7+）：
+Or (ImageMagick 7+):
 ```bash
 magick input.jpg -resize 150x150^ -gravity center -extent 150x150 output.jpg
 ```
-#### 参数说明：
-- `-resize 150x150^`：将图片按比例缩放，至少一边为 150px（`^` 表示填充整个区域）。
-- `-gravity center`：设置剪裁的中心对齐。
-- `-extent 150x150`：最终剪裁为 150x150 像素。
+#### Parameter Explanation:
+- `-resize 150x150^`: Scale the image proportionally, with at least one side being 150px (`^` means fill the entire area).
+- `-gravity center`: Set center alignment for cropping.
+- `-extent 150x150`: Final crop to 150x150 pixels.
 
 ---
 
-### 2. **直接剪裁（不缩放，从左上角开始）**
-如果只想剪裁原图的左上角 150x150 区域（不调整比例）：
+### 2. **Direct Crop (No Scaling, From Top-left)**
+If you only want to crop the top-left 150x150 area of the original image (without adjusting proportions):
 ```bash
 convert input.jpg -crop 150x150+0+0 output.jpg
 ```
-或：
+Or:
 ```bash
 magick input.jpg -crop 150x150+0+0 output.jpg
 ```
-#### 参数说明：
-- `-crop 150x150+0+0`：从坐标 `(0,0)` 开始剪裁 150x150 区域。
+#### Parameter Explanation:
+- `-crop 150x150+0+0`: Crop a 150x150 area starting from coordinates `(0,0)`.
 
 ---
 
-### 3. **按比例缩放后剪裁**
-如果希望先缩放图片，使短边匹配 150px，然后剪裁长边（保持比例）：
+### 3. **Scale Proportionally Then Crop**
+If you want to first scale the image so the shorter side matches 150px, then crop the longer side (maintaining proportions):
 ```bash
 convert input.jpg -resize 150x150^ -gravity center -extent 150x150 output.jpg
 ```
-（与第一种方法相同，这是最常用的方式。）
+(Same as the first method, this is the most commonly used approach.)
 
 ---
 
-### 注意事项：
-- 替换 `input.jpg` 为你的输入文件，`output.jpg` 为输出文件名。
-- 支持所有常见格式（如 PNG、JPG、GIF 等）。
-- 如果图片已经是正方形，可以直接用 `-resize 150x150`。
+### Notes:
+- Replace `input.jpg` with your input file, `output.jpg` with the output filename.
+- Supports all common formats (such as PNG, JPG, GIF, etc.).
+- If the image is already square, you can directly use `-resize 150x150`.
 
-如果需要进一步调整（如背景填充），可以添加 `-background` 参数。例如，填充白色背景：
+If you need further adjustments (like background fill), you can add the `-background` parameter. For example, to fill with white background:
 ```bash
 convert input.jpg -resize 150x150 -background white -gravity center -extent 150x150 output.jpg
 ```
 
-希望这对你有帮助！
+Hope this helps!

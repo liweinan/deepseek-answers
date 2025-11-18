@@ -1,15 +1,15 @@
-# 如何编写基于Go的单元测试
+# How to Write Unit Tests in Go
 
-Go语言内置了强大的测试框架，使得编写单元测试非常简单。下面我将详细介绍如何编写Go单元测试。
+Go has a powerful built-in testing framework that makes writing unit tests very simple. Below I'll provide a detailed introduction to writing Go unit tests.
 
 ## 基本单元测试
 
-1. **测试文件命名**：测试文件必须以`_test.go`结尾
-2. **测试函数签名**：测试函数必须以`Test`开头，接收`*testing.T`参数
+1. **Test file naming**: Test files must end with `_test.go`
+2. **Test function signature**: Test functions must start with `Test` and accept a `*testing.T` parameter
 
-### 示例
+### Example
 
-假设我们有一个`math.go`文件：
+Suppose we have a `math.go` file:
 
 ```go
 // math.go
@@ -20,7 +20,7 @@ func Add(a, b int) int {
 }
 ```
 
-对应的测试文件`math_test.go`：
+The corresponding test file `math_test.go`:
 
 ```go
 // math_test.go
@@ -49,43 +49,43 @@ func TestAdd(t *testing.T) {
 }
 ```
 
-## 表格驱动测试
+## Table-Driven Tests
 
-上面的例子展示了表格驱动测试(table-driven tests)，这是Go中推荐的测试方式：
+The above example demonstrates table-driven tests, which is the recommended testing approach in Go:
 
-1. 定义测试用例结构体切片
-2. 每个测试用例包含输入和期望输出
-3. 遍历所有测试用例运行测试
+1. Define a slice of test case structs
+2. Each test case contains input and expected output
+3. Iterate through all test cases to run tests
 
-## 常用testing.T方法
+## Common testing.T Methods
 
-- `t.Error` / `t.Errorf`：标记测试失败但继续执行
-- `t.Fatal` / `t.Fatalf`：标记测试失败并立即终止
-- `t.Log` / `t.Logf`：输出日志信息
-- `t.Run`：创建子测试
+- `t.Error` / `t.Errorf`: Marks test as failed but continues execution
+- `t.Fatal` / `t.Fatalf`: Marks test as failed and terminates immediately
+- `t.Log` / `t.Logf`: Outputs log information
+- `t.Run`: Creates subtests
 
-## 运行测试
+## Running Tests
 
 ```bash
-# 运行当前包的所有测试
+# Run all tests in current package
 go test
 
-# 显示详细测试信息
+# Show detailed test information
 go test -v
 
-# 运行特定测试函数
+# Run specific test function
 go test -run TestAdd
 
-# 运行基准测试
+# Run benchmark tests
 go test -bench .
 
-# 显示测试覆盖率
+# Show test coverage
 go test -cover
 ```
 
-## 基准测试
+## Benchmark Tests
 
-Go还支持基准测试：
+Go also supports benchmark tests:
 
 ```go
 func BenchmarkAdd(b *testing.B) {
@@ -95,9 +95,9 @@ func BenchmarkAdd(b *testing.B) {
 }
 ```
 
-## 示例测试
+## Example Tests
 
-示例测试可以同时作为测试和文档：
+Example tests can serve as both tests and documentation:
 
 ```go
 func ExampleAdd() {
@@ -106,9 +106,9 @@ func ExampleAdd() {
 }
 ```
 
-## 测试辅助函数
+## Test Helper Functions
 
-可以使用`t.Helper()`标记辅助函数：
+You can use `t.Helper()` to mark helper functions:
 
 ```go
 func assertEqual(t *testing.T, got, want int) {
@@ -119,9 +119,9 @@ func assertEqual(t *testing.T, got, want int) {
 }
 ```
 
-## 测试初始化与清理
+## Test Initialization and Cleanup
 
-可以使用`TestMain`进行测试初始化和清理：
+You can use `TestMain` for test initialization and cleanup:
 
 ```go
 func TestMain(m *testing.M) {
@@ -138,12 +138,12 @@ func TestMain(m *testing.M) {
 }
 ```
 
-## 第三方测试库
+## Third-Party Testing Libraries
 
-除了标准库，还可以使用这些流行的测试库：
+Besides the standard library, you can also use these popular testing libraries:
 
-- `testify/assert`：提供更丰富的断言方法
-- `httptest`：HTTP测试工具
-- `gomock`：生成mock对象
+- `testify/assert`: Provides richer assertion methods
+- `httptest`: HTTP testing tools
+- `gomock`: Generates mock objects
 
-Go的测试框架简单而强大，遵循这些模式可以编写出清晰、可维护的单元测试。
+Go's testing framework is simple yet powerful. Following these patterns allows you to write clear, maintainable unit tests.

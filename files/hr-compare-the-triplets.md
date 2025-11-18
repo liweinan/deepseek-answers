@@ -1,17 +1,17 @@
-# Java题 - Compare the Triplets
+# Java Problem - Compare the Triplets
 
 - https://www.hackerrank.com/challenges/compare-the-triplets/problem
 
-# 要优化这段代码，我们可以从以下几个方面入手：
+# To optimize this code, we can approach it from the following aspects:
 
-1. **减少 `if` 语句**：可以用更简洁的逻辑替代 `if-else` 条件。
-2. **直接操作 `List`**：避免中间数组 `arr`，直接构建结果 `List`。
-3. **利用 Stream API**：结合 Stream 特性简化比较和收集逻辑。
-4. **提高可读性**：保持代码简洁且易于理解。
+1. **Reduce `if` statements**: Can use more concise logic to replace `if-else` conditions.
+2. **Directly manipulate `List`**: Avoid intermediate array `arr`, build result `List` directly.
+3. **Utilize Stream API**: Combine Stream features to simplify comparison and collection logic.
+4. **Improve readability**: Keep code concise and easy to understand.
 
 以下是优化后的代码，以及逐步分析：
 
-### 优化后的代码
+### Optimized Code
 
 ```java
 public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
@@ -24,30 +24,30 @@ public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
 }
 ```
 
-### 优化点分析
+### Optimization Analysis
 
-1. **替代 `if` 语句**：
-    - 原代码使用 `if (a.get(i) > b.get(i))` 和 `else if (a.get(i) < b.get(i))` 更新数组。
-    - 优化后使用三元运算符 `a.get(i) > b.get(i) ? 1 : 0` 和 `a.get(i) < b.get(i) ? 1 : 0`，直接累加得分。
-    - 三元运算符更简洁，且逻辑清晰。
+1. **Replace `if` statements**:
+    - Original code uses `if (a.get(i) > b.get(i))` and `else if (a.get(i) < b.get(i))` to update array.
+    - After optimization uses ternary operators `a.get(i) > b.get(i) ? 1 : 0` and `a.get(i) < b.get(i) ? 1 : 0`, directly accumulating scores.
+    - Ternary operators are more concise and logic is clear.
 
-2. **移除中间数组**：
-    - 原代码使用 `int[] arr` 存储结果，再转换为 `List<Integer>`。
-    - 优化后直接用两个变量 `scoreA` 和 `scoreB` 记录得分，最后用 `List.of(scoreA, scoreB)` 创建结果。
-    - 减少了数组到 `List` 的转换开销。
+2. **Remove intermediate array**:
+    - Original code uses `int[] arr` to store results, then converts to `List<Integer>`.
+    - After optimization directly uses two variables `scoreA` and `scoreB` to record scores, finally creates result with `List.of(scoreA, scoreB)`.
+    - Reduces conversion overhead from array to `List`.
 
-3. **使用 `List.of`**：
+3. **Use `List.of`**:
     - `List.of(scoreA, scoreB)`（Java 9+）直接创建不可修改的 `List<Integer>`，比
-      `Arrays.stream().boxed().collect(Collectors.toList())` 更简洁。
-    - 注意：`List.of` 创建的 `List` 是不可修改的。如果调用方需要修改 `List`，可以用
-      `new ArrayList<>(List.of(scoreA, scoreB))`。
+      `Arrays.stream().boxed().collect(Collectors.toList())` it's more concise.
+    - Note: `List` created by `List.of` is unmodifiable. If the caller needs to modify `List`, can use
+      `new ArrayList<>(List.of(scoreA, scoreB))`.
 
-4. **命名更直观**：
-    - 用 `scoreA` 和 `scoreB` 替代 `arr[0]` 和 `arr[1]`，语义更明确，代码更易读。
+4. **More intuitive naming**:
+    - Using `scoreA` and `scoreB` instead of `arr[0]` and `arr[1]`, semantics are clearer and code is more readable.
 
-### 进一步优化：使用 Stream API
+### Further Optimization: Using Stream API
 
-如果更倾向于函数式编程，可以用 Stream API 完全消除循环：
+If you prefer functional programming, you can use Stream API to completely eliminate loops:
 
 ```java
 public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
@@ -61,45 +61,45 @@ public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
 }
 ```
 
-**Stream 版本分析**：
+**Stream Version Analysis**:
 
-- 使用 `IntStream.range(0, a.size())` 遍历索引。
-- `filter(i -> a.get(i) > b.get(i))` 筛选 `a` 得分的情况，`count()` 计算次数。
-- 类似地计算 `b` 的得分。
-- 优点：声明式编程，逻辑更简洁。
-- 缺点：需要两次遍历（`scoreA` 和 `scoreB` 各一次），性能略低于单次循环版本。
+- Uses `IntStream.range(0, a.size())` to traverse indices.
+- `filter(i -> a.get(i) > b.get(i))` filters cases where `a` scores, `count()` calculates the count.
+- Similarly calculates `b`'s score.
+- Advantages: declarative programming, logic is more concise.
+- Disadvantages: requires two traversals (once each for `scoreA` and `scoreB`), performance is slightly lower than single loop version.
 
-### 性能与可读性权衡
+### Performance vs Readability Trade-off
 
-- **单循环版本**（第一个优化代码）：
-    - 性能最佳：只遍历一次，O(n) 时间复杂度。
-    - 可读性高：逻辑直观，适合大多数场景。
-- **Stream 版本**：
-    - 代码更简洁，函数式风格。
-    - 性能稍差：两次遍历，O(2n) 时间复杂度。
-    - 适合追求声明式代码的场景，但对小数据量（如题目中的三元组）性能差异可以忽略。
+- **Single loop version** (first optimized code):
+    - Best performance: only traverses once, O(n) time complexity.
+    - High readability: logic is intuitive, suitable for most scenarios.
+- **Stream version**:
+    - Code is more concise, functional style.
+    - Slightly worse performance: two traversals, O(2n) time complexity.
+    - Suitable for scenarios pursuing declarative code, but for small data (like triplets in the problem) performance difference is negligible.
 
-### 假设与注意事项
+### Assumptions and Notes
 
-- 假设 `a` 和 `b` 长度相等（如题目中通常为 3），且元素为有效整数。
-- 如果需要处理输入校验（例如检查长度或 null），可以在方法开头添加：
+- Assumes `a` and `b` have equal length (usually 3 in the problem), and elements are valid integers.
+- If input validation is needed (e.g., checking length or null), can add at method beginning:
   ```java
   if (a == null || b == null || a.size() != b.size()) {
       throw new IllegalArgumentException("Invalid input lists");
   }
   ```
-- 如果调用方需要可修改的 `List`，将 `List.of(scoreA, scoreB)` 替换为 `Arrays.asList(scoreA, scoreB)` 或
-  `new ArrayList<>(List.of(scoreA, scoreB))`。
+- If caller needs modifiable `List`, replace `List.of(scoreA, scoreB)` with `Arrays.asList(scoreA, scoreB)` or
+  `new ArrayList<>(List.of(scoreA, scoreB))`.
 
-### 最终推荐
+### Final Recommendation
 
-**单循环版本**（第一个优化代码）是最佳选择，因为：
+**Single loop version** (first optimized code) is the best choice because:
 
-- 性能最高（单次遍历）。
-- 代码简洁，易于维护。
-- 避免了 Stream API 的额外开销。
+- Highest performance (single traversal).
+- Code is concise and easy to maintain.
+- Avoids additional overhead of Stream API.
 
-**示例运行**：
+**Example run**:
 
 ```java
 List<Integer> a = Arrays.asList(5, 6, 7);
@@ -110,9 +110,9 @@ System.out.
 println(result); // 输出: [2, 1]
 ```
 
-- `a` 得分 2（5>3, 6=6 不计分，7>10），`b` 得分 1（10>7）。
+- `a` scores 2 (5>3, 6=6 doesn't count, 7>10), `b` scores 1 (10>7).
 
-如果有特定场景（如需要 Stream 或其他约束），请告诉我，我可以进一步调整！
+If you have specific scenarios (like needing Stream or other constraints), please let me know and I can adjust further!
 
 ---
 

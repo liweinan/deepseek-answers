@@ -1,42 +1,41 @@
-# React中的`useMemo`和`useEffect`
+# React's `useMemo` and `useEffect`
 
-React 中，`useMemo` 和 `useEffect` 的执行行为取决于它们的依赖数组和组件的渲染机制。以下是对两者是否会执行多次的详细分析：
+In React, the execution behavior of `useMemo` and `useEffect` depends on their dependency arrays and the component's rendering mechanism. Here's a detailed analysis of whether both will execute multiple times:
 
-### 1. `useMemo` 是否会执行多次
+### 1. Will `useMemo` execute multiple times?
 
-- **基本行为**：
-    - `useMemo` 是一个用于记忆计算结果的 Hook，它会在组件渲染时检查其依赖数组（`dependencies`）中的值是否发生变化。
-    - 如果依赖数组中的值没有变化，`useMemo` 会返回缓存的结果，而不会重新执行其回调函数。
-    - 如果依赖数组中的任意值发生变化，`useMemo` 会重新执行回调函数，并返回新的结果。
-- **是否执行多次**：
-    - `useMemo` 的回调函数只在以下情况下执行：
-        1. 组件首次渲染时。
-        2. 依赖数组中的值发生变化时。
-    - 如果组件多次渲染但依赖数组中的值保持不变，`useMemo` 不会重新执行回调函数，而是直接返回缓存的值。
-- **示例**：
+- **Basic behavior**:
+    - `useMemo` is a Hook for memoizing calculation results. It checks whether values in its dependency array (`dependencies`) have changed during component rendering.
+    - If values in the dependency array haven't changed, `useMemo` returns the cached result without re-executing its callback function.
+    - If any value in the dependency array changes, `useMemo` re-executes the callback function and returns a new result.
+- **Will it execute multiple times?**:
+    - The callback function of `useMemo` only executes in these situations:
+        1. During component's first render.
+        2. When values in the dependency array change.
+    - If the component renders multiple times but values in the dependency array remain unchanged, `useMemo` won't re-execute the callback function, instead directly returning the cached value.
+- **Example**:
   ```jsx
   const memoizedValue = useMemo(() => {
     console.log('useMemo executed');
     return expensiveCalculation(propA, propB);
   }, [propA, propB]);
   ```
-    - 上述代码中，`useMemo` 的回调函数只在 `propA` 或 `propB` 变化时执行。如果组件多次渲染但 `propA` 和 `propB` 不变，
-      `console.log` 不会重复触发。
+    - In the above code, the callback function of `useMemo` only executes when `propA` or `propB` changes. If the component renders multiple times but `propA` and `propB` remain unchanged, `console.log` won't trigger repeatedly.
 
-### 2. `useEffect` 是否会执行多次
+### 2. Will `useEffect` execute multiple times?
 
-- **基本行为**：
-    - `useEffect` 是一个用于处理副作用的 Hook，它会在组件渲染后执行其回调函数。
-    - 与 `useMemo` 类似，`useEffect` 也依赖于一个依赖数组（`dependencies`）。
-    - 如果依赖数组中的值发生变化，`useEffect` 会重新执行其回调函数。
-    - 如果没有提供依赖数组，`useEffect` 会在每次渲染后都执行。
-- **是否执行多次**：
-    - `useEffect` 的回调函数会在以下情况下执行：
-        1. 组件首次渲染时。
-        2. 依赖数组中的任意值发生变化时。
-        3. 如果没有依赖数组（`useEffect(() => {...})`），每次组件渲染后都会执行。
-    - 如果依赖数组为空（`[]`），`useEffect` 只在组件挂载时执行一次，卸载时执行清理函数（如果有）。
-- **示例**：
+- **Basic behavior**:
+    - `useEffect` is a Hook for handling side effects. It executes its callback function after component rendering is complete.
+    - Similar to `useMemo`, `useEffect` also depends on a dependency array (`dependencies`).
+    - If values in the dependency array change, `useEffect` re-executes its callback function.
+    - If no dependency array is provided, `useEffect` executes after every render.
+- **Will it execute multiple times?**:
+    - The callback function of `useEffect` executes in these situations:
+        1. During component's first render.
+        2. When any value in the dependency array changes.
+        3. If no dependency array is provided (`useEffect(() => {...})`), it executes after every component render.
+    - If the dependency array is empty (`[]`), `useEffect` only executes once when the component mounts, and executes the cleanup function (if any) when unmounting.
+- **Example**:
   ```jsx
   useEffect(() => {
     console.log('useEffect executed');
@@ -45,63 +44,62 @@ React 中，`useMemo` 和 `useEffect` 的执行行为取决于它们的依赖数
     };
   }, [propA]);
   ```
-    - 上述代码中，`useEffect` 的回调函数会在首次渲染和 `propA` 变化时执行。如果组件多次渲染但 `propA` 不变，
-      `console.log('useEffect executed')` 不会重复触发。
+    - In the above code, the callback function of `useEffect` executes during first render and when `propA` changes. If the component renders multiple times but `propA` remains unchanged, `console.log('useEffect executed')` won't trigger repeatedly.
 
-### 总结
+### Summary
 
-- **`useMemo`**：
-    - 不会无故执行多次，只有在依赖数组中的值变化时才会重新执行回调函数。
-    - 用于优化性能，避免重复计算昂贵的操作。
-- **`useEffect`**：
-    - 可能执行多次，具体取决于依赖数组：
-        - 无依赖数组：每次渲染都执行。
-        - 空依赖数组：仅在挂载和卸载时执行。
-        - 有依赖值：依赖值变化时执行。
-    - 用于处理副作用，如数据获取、订阅或 DOM 操作。
+- **`useMemo`**:
+    - Won't execute multiple times without reason, only re-executes the callback function when values in the dependency array change.
+    - Used to optimize performance, avoiding repeated calculation of expensive operations.
+- **`useEffect`**:
+    - May execute multiple times, depending on the dependency array:
+        - No dependency array: executes after every render.
+        - Empty dependency array: only executes during mount and unmount.
+        - Has dependency values: executes when dependency values change.
+    - Used to handle side effects, like data fetching, subscriptions, or DOM operations.
 
-### 注意事项
+### Considerations
 
-- 确保依赖数组正确设置，避免遗漏或多余的依赖项，否则可能导致意外的多次执行或逻辑错误。
-- 使用 ESLint 插件（如 `eslint-plugin-react-hooks`）可以帮助检测依赖数组的问题。
-- 如果发现 `useMemo` 或 `useEffect` 执行次数不符合预期，检查依赖数组中的值是否稳定（例如，对象或函数是否每次渲染都创建新的引用）。
+- Ensure dependency arrays are correctly set, avoid missing or unnecessary dependencies, otherwise it may lead to unexpected multiple executions or logic errors.
+- Use ESLint plugins (like `eslint-plugin-react-hooks`) to help detect dependency array issues.
+- If you find `useMemo` or `useEffect` execution times don't meet expectations, check whether values in the dependency array are stable (for example, whether objects or functions create new references on every render).
 
-如果有具体代码或场景需要进一步分析，请提供更多细节，我可以帮你调试！
+If you need further analysis of specific code or scenarios, please provide more details, I can help debug!
 
 ---
 
-# 虽然 `useMemo` 和 `useEffect` 都是 React 的 Hook，且都依赖于依赖数组来控制行为，但它们的用途和执行时机有本质区别：
+# Although `useMemo` and `useEffect` are both React Hooks and both depend on dependency arrays to control behavior, their purposes and execution timing are fundamentally different:
 
-- **`useMemo`**：用于**记忆计算结果**，在组件渲染期间同步执行，优化性能，避免重复计算昂贵的操作。返回的是一个值。
-- **`useEffect`**：用于处理**副作用**，在组件渲染完成后异步执行，适合执行与外部系统交互的操作（如数据请求、DOM 操作）。不返回值。
+- **`useMemo`**: Used for **memoizing calculation results**, executes synchronously during the component rendering phase, optimizing performance by avoiding repeated calculation of expensive operations. Returns a value.
+- **`useEffect`**: Used for handling **side effects**, executes asynchronously after component rendering is complete, suitable for operations that interact with external systems (like data requests, DOM operations). Returns no value.
 
-以下是一个示例，清晰展示两者的区别：
+Here's an example that clearly demonstrates the difference between the two:
 
-### 示例场景
+### Example Scenario
 
-假设我们有一个组件，显示一个基于输入的昂贵计算结果（比如 Fibonacci 数列），并且在每次计算结果变化时，发送日志到服务器。
+Suppose we have a component that displays an expensive calculation result based on input (like Fibonacci sequence), and sends logs to the server whenever the calculation result changes.
 
 ```jsx
 import React, {useState, useMemo, useEffect} from 'react';
 
 const FibonacciCalculator = ({input}) => {
-    // 昂贵的 Fibonacci 计算函数
+    // Expensive Fibonacci calculation function
     const calculateFibonacci = (n) => {
         console.log('Calculating Fibonacci...');
         if (n <= 1) return n;
         return calculateFibonacci(n - 1) + calculateFibonacci(n - 2);
     };
 
-    // 使用 useMemo 记忆 Fibonacci 计算结果
+    // Use useMemo to memoize Fibonacci calculation result
     const fibResult = useMemo(() => {
         console.log('useMemo executed');
         return calculateFibonacci(input);
     }, [input]);
 
-    // 使用 useEffect 记录计算结果到服务器
+    // Use useEffect to log calculation result to server
     useEffect(() => {
         console.log('useEffect executed');
-        // 模拟发送日志到服务器
+        // Simulate sending log to server
         fetch('/api/log', {
             method: 'POST',
             body: JSON.stringify({fibResult}),
@@ -117,7 +115,7 @@ const FibonacciCalculator = ({input}) => {
     );
 };
 
-// 使用组件
+// Use the component
 const App = () => {
     const [input, setInput] = useState(10);
     return (
@@ -131,140 +129,139 @@ const App = () => {
 export default App;
 ```
 
-### 代码运行分析
+### Code Execution Analysis
 
-1. **初始渲染（`input = 10`）**：
-    - `useMemo` 执行：
-        - 计算 `calculateFibonacci(10)`，输出 `Calculating Fibonacci...` 和 `useMemo executed`。
-        - 返回结果（例如 `fibResult = 55`）并缓存。
-    - `useEffect` 执行：
-        - 输出 `useEffect executed`。
-        - 发送 `fibResult`（55）到服务器，输出 `Log sent to server`。
+1. **Initial render (`input = 10`)**:
+    - `useMemo` executes:
+        - Calculates `calculateFibonacci(10)`, outputs `Calculating Fibonacci...` and `useMemo executed`.
+        - Returns result (e.g., `fibResult = 55`) and caches it.
+    - `useEffect` executes:
+        - Outputs `useEffect executed`.
+        - Sends `fibResult` (55) to server, outputs `Log sent to server`.
 
-2. **无关状态更新（组件重新渲染但 `input` 不变）**：
-    - `useMemo`：
-        - 检查依赖 `[input]`，发现 `input` 未变，直接返回缓存的 `fibResult`（55）。
-        - **不输出** `Calculating Fibonacci...` 或 `useMemo executed`。
-    - `useEffect`：
-        - 检查依赖 `[fibResult]`，发现 `fibResult` 未变，不执行回调。
-        - **不输出** `useEffect executed` 或发送请求。
+2. **Unrelated state update (component re-renders but `input` unchanged)**:
+    - `useMemo`:
+        - Checks dependency `[input]`, finds `input` unchanged, directly returns cached `fibResult` (55).
+        - **Does not output** `Calculating Fibonacci...` or `useMemo executed`.
+    - `useEffect`:
+        - Checks dependency `[fibResult]`, finds `fibResult` unchanged, doesn't execute callback.
+        - **Does not output** `useEffect executed` or send request.
 
-3. **点击按钮，`input` 变为 `11`**：
-    - `useMemo` 执行：
-        - `input` 变化，重新计算 `calculateFibonacci(11)`，输出 `Calculating Fibonacci...` 和 `useMemo executed`。
-        - 返回新结果（例如 `fibResult = 89`）并缓存。
-    - `useEffect` 执行：
-        - `fibResult` 变化，执行回调，输出 `useEffect executed`。
-        - 发送新 `fibResult`（89）到服务器，输出 `Log sent to server`。
+3. **Click button, `input` becomes `11`**:
+    - `useMemo` executes:
+        - `input` changes, recalculates `calculateFibonacci(11)`, outputs `Calculating Fibonacci...` and `useMemo executed`.
+        - Returns new result (e.g., `fibResult = 89`) and caches it.
+    - `useEffect` executes:
+        - `fibResult` changes, executes callback, outputs `useEffect executed`.
+        - Sends new `fibResult` (89) to server, outputs `Log sent to server`.
 
-### 关键区别
+### Key Differences
 
-| 特性         | `useMemo`                               | `useEffect`               |
-|------------|-----------------------------------------|---------------------------|
-| **用途**     | 记忆计算结果，优化性能，避免重复计算                      | 处理副作用，如数据请求、DOM 操作、订阅等    |
-| **执行时机**   | 组件渲染期间同步执行                              | 组件渲染完成后异步执行（浏览器绘制后）       |
-| **返回值**    | 返回一个缓存的值（如 `fibResult`）                 | 无返回值，仅执行副作用               |
-| **依赖数组作用** | 控制是否重新计算并返回新值                           | 控制是否执行副作用回调               |
-| **示例中的作用** | 缓存昂贵的 Fibonacci 计算结果，避免 `input` 不变时重复计算 | 在 `fibResult` 变化时发送日志到服务器 |
+| Feature             | `useMemo`                                      | `useEffect`                          |
+|-------------------|-----------------------------------------------|-------------------------------------|
+| **Purpose**         | Memoize calculation results, optimize performance, avoid repeated calculation of expensive operations | Handle side effects, like data requests, DOM operations, subscriptions |
+| **Execution Timing** | Executes synchronously during component rendering phase | Executes asynchronously after component rendering completes (after browser painting) |
+| **Return Value**     | Returns a cached value (like `fibResult`)         | Returns no value, only executes side effects |
+| **Dependency Array Role** | Controls whether to recalculate and return new value | Controls whether to execute side effect callback |
+| **Example Role**     | Caches expensive Fibonacci calculation result, avoids recalculation when `input` unchanged | Sends log to server when `fibResult` changes |
 
-### 为什么不能互换？
+### Why They Can't Be Interchanged?
 
-- 如果用 `useEffect` 替代 `useMemo` 来计算 `fibResult`：
-    - 计算会在渲染后异步进行，可能导致 UI 延迟或闪烁（因为 `fibResult` 不可立即用于渲染）。
-    - 不符合 `useEffect` 的副作用处理语义，增加调试难度。
-- 如果用 `useMemo` 替代 `useEffect` 来发送请求：
-    - 请求会在渲染期间同步发送，可能阻塞渲染，降低性能。
-    - `useMemo` 不能处理清理逻辑（如取消请求），而 `useEffect` 可以通过返回清理函数实现。
+- If using `useEffect` instead of `useMemo` to calculate `fibResult`:
+    - Calculation would happen asynchronously after rendering, potentially causing UI delays or flickering (because `fibResult` isn't immediately available for rendering).
+    - Doesn't conform to `useEffect`'s side effect handling semantics, increases debugging difficulty.
+- If using `useMemo` instead of `useEffect` to send requests:
+    - Requests would be sent synchronously during rendering, potentially blocking rendering and reducing performance.
+    - `useMemo` can't handle cleanup logic (like canceling requests), while `useEffect` can implement this through returning cleanup functions.
 
-### 总结
+### Summary
 
-- **`useMemo`** 适合需要同步返回值且计算昂贵的场景（如 Fibonacci 计算）。
-- **`useEffect`** 适合处理异步副作用（如发送日志、订阅事件）。
-- 示例中，`useMemo` 确保计算结果高效复用，`useEffect` 确保副作用在适当时候触发，两者配合完成不同任务。
+- **`useMemo`** is suitable for scenarios requiring synchronous return values and expensive calculations (like Fibonacci calculation).
+- **`useEffect`** is suitable for handling asynchronous side effects (like sending logs, subscribing to events).
+- In the example, `useMemo` ensures efficient reuse of calculation results, `useEffect` ensures side effects trigger at appropriate times, both cooperate to complete different tasks.
 
-如果有其他场景或疑问，请提供更多细节，我可以进一步定制示例！
+If you have other scenarios or questions, please provide more details, I can further customize examples!
 
 ---
 
-为了使用 Mermaid 图表展示 `useMemo` 和 `useEffect` 在 React 组件生命周期中的位置，我们需要表示 React 函数组件的主要生命周期阶段，并标注这两个
-Hook 的执行时机。React 函数组件的生命周期主要包括：
+To show the position of `useMemo` and `useEffect` in the React component lifecycle using a Mermaid diagram, we need to represent the main lifecycle stages of React function components and mark the execution timing of these two Hooks. The React function component lifecycle mainly includes:
 
-- **挂载（Mounting）**：组件被创建并插入 DOM。
-- **渲染（Rendering）**：组件根据状态或属性变化进行渲染或重新渲染。
-- **提交（Commit）**：DOM 更新完成，副作用被调度。
-- **卸载（Unmounting）**：组件从 DOM 中移除。
+- **Mounting**: Component is created and inserted into DOM.
+- **Rendering**: Component renders or re-renders based on state or prop changes.
+- **Commit**: DOM updates are complete, side effects are scheduled.
+- **Unmounting**: Component is removed from DOM.
 
-### Hook 执行说明
+### Hook Execution Explanation
 
-- **`useMemo`**：在**渲染阶段**同步执行，作为组件计算输出的一部分。根据依赖数组记忆值，避免重复计算。
-- **`useEffect`**：在**渲染和提交阶段之后**异步执行，在 DOM 更新并完成浏览器绘制后运行，处理副作用。
+- **`useMemo`**: Executes **synchronously during the rendering phase** as part of component calculation output. Memoizes values based on dependency array, avoiding repeated calculations.
+- **`useEffect`**: Executes **asynchronously after rendering and commit phases**, running after DOM updates and browser painting is complete, handling side effects.
 
-### Mermaid 图表
+### Mermaid Diagram
 
-我们将使用 Mermaid 的流程图（flowchart）来描述 React 生命周期，并标注 `useMemo` 和 `useEffect` 的执行位置。以下是基于中文的
-Mermaid 代码，展示生命周期流程和 Hook 位置。
+We'll use Mermaid's flowchart to describe the React lifecycle and mark the execution positions of `useMemo` and `useEffect`. Here's the Mermaid code in Chinese showing the lifecycle flow and Hook positions.
 
 ```mermaid
 graph TD
-    A[组件挂载开始] --> B[渲染阶段]
-    B -->|useMemo执行: 同步计算记忆值| C{依赖数组变化?}
-    C -->|是| D[重新计算useMemo值]
-    C -->|否| E[返回缓存的useMemo值]
-    D --> F[完成渲染]
+    A[Component Mount Start] --> B[Rendering Phase]
+    B -->|useMemo executes: synchronously calculates memoized value| C{Dependency array changed?}
+    C -->|Yes| D[Recalculate useMemo value]
+    C -->|No| E[Return cached useMemo value]
+    D --> F[Complete rendering]
     E --> F
-    F --> G[提交阶段: 更新DOM]
-    G --> H[浏览器绘制]
-    H -->|useEffect执行: 异步处理副作用| I{依赖数组变化?}
-    I -->|是| J[运行useEffect回调]
-    I -->|否| K[跳过useEffect回调]
-    J --> L[等待下一次渲染或卸载]
+    F --> G[Commit Phase: Update DOM]
+    G --> H[Browser painting]
+    H -->|useEffect executes: asynchronously handles side effects| I{Dependency array changed?}
+    I -->|Yes| J[Run useEffect callback]
+    I -->|No| K[Skip useEffect callback]
+    J --> L[Wait for next render or unmount]
     K --> L
-    L -->|状态/属性更新| B
-    L --> M[组件卸载]
-    M -->|useEffect清理: 执行清理函数| N[卸载完成]
+    L -->|State/prop update| B
+    L --> M[Component unmount]
+    M -->|useEffect cleanup: execute cleanup function| N[Unmount complete]
 ```
 
-### 图表说明
+### Diagram Explanation
 
-- **流程**：
-    - 从“组件挂载开始”进入“渲染阶段”，`useMemo` 在此同步执行，检查依赖数组决定是否重新计算。
-    - 渲染完成后进入“提交阶段”，更新 DOM，随后浏览器绘制。
-    - 绘制后，`useEffect` 异步执行，检查依赖数组决定是否运行副作用回调。
-    - 组件可能因状态/属性更新重新渲染，或进入卸载阶段，触发 `useEffect` 的清理函数。
-- **标注**：
-    - `useMemo` 标注在渲染阶段，强调其同步性。
-    - `useEffect` 标注在浏览器绘制后，强调其异步副作用处理。
-    - 清理函数在卸载时执行。
+- **Flow**:
+    - From "Component Mount Start" enters "Rendering Phase", `useMemo` executes synchronously here, checking dependency array to decide whether to recalculate.
+    - After rendering completes, enters "Commit Phase", updates DOM, then browser paints.
+    - After painting, `useEffect` executes asynchronously, checking dependency array to decide whether to run side effect callback.
+    - Component may re-render due to state/prop updates, or enter unmount phase, triggering `useEffect`'s cleanup function.
+- **Annotations**:
+    - `useMemo` annotated in rendering phase, emphasizing its synchronous nature.
+    - `useEffect` annotated after browser painting, emphasizing its asynchronous side effect handling.
+    - Cleanup function executes during unmount.
 
-### 使用说明
+### Usage Instructions
 
-- 该 Mermaid 代码可以在支持 Mermaid 的环境中渲染（如 Mermaid Live Editor 或支持 Mermaid 的 Markdown 渲染器）。
-- 如果需要调整图表样式或添加更多细节（例如具体副作用类型），请告诉我，我可以进一步优化！
+- This Mermaid code can be rendered in Mermaid-supported environments (like Mermaid Live Editor or Markdown renderers that support Mermaid).
+- If you need to adjust diagram style or add more details (like specific side effect types), please let me know, I can further optimize!
 
 ---
 
-`useEffect` 自身**不会直接触发下一次渲染**，但它内部执行的代码可能会导致状态或属性的变化，从而间接触发渲染。以下是详细分析：
+**`useEffect` itself will not directly trigger the next rendering**, but the code executed inside it may cause changes in state or props, thereby indirectly triggering rendering. Here's a detailed analysis:
 
-### 1. `useEffect` 的执行机制
+### 1. `useEffect` Execution Mechanism
 
-- `useEffect` 是在**组件渲染完成后**（DOM 更新和浏览器绘制后）异步执行的。
-- 它的主要作用是处理副作用（如数据获取、订阅、DOM 操作等），不直接影响组件的渲染流程。
-- `useEffect` 的回调函数运行时，React 的渲染阶段已经完成，因此它不会直接导致当前渲染周期的重新渲染。
+- `useEffect` executes **after component rendering is complete** (after DOM updates and browser painting).
+- Its main purpose is to handle side effects (like data fetching, subscriptions, DOM operations), and it doesn't directly affect the component's rendering flow.
+- When `useEffect`'s callback function runs, React's rendering phase is already complete, so it won't directly cause re-rendering in the current render cycle.
 
-### 2. 间接触发渲染的情况
+### 2. Situations that Indirectly Trigger Rendering
 
-尽管 `useEffect` 本身不触发渲染，但其回调函数中可能会执行以下操作，导致状态或属性变化，进而触发下一次渲染：
+Although `useEffect` itself doesn't trigger rendering, its callback function may perform operations that lead to state or prop changes, thereby triggering the next rendering:
 
-- **更新状态（`setState`）**：
-  如果在 `useEffect` 中调用了状态更新函数（如 `setState`），React 会检测到状态变化并调度一次新的渲染。
+- **Updating state (`setState`)**:
+  If state update functions (like `setState`) are called inside `useEffect`, React detects state changes and schedules a new render.
   ```jsx
   useEffect(() => {
-    setCount(count + 1); // 更新状态，可能触发渲染
+    setCount(count + 1); // State update may trigger rendering
   }, [count]);
   ```
-    - **注意**：这种代码可能导致无限渲染循环，因为 `count` 变化会触发新的 `useEffect` 执行，除非有适当的依赖控制或条件逻辑。
-- **修改父组件传递的属性**：
-  如果 `useEffect` 通过回调函数或其他方式修改了父组件的状态，父组件可能会重新渲染，从而导致子组件重新渲染。
+    - **Note**: This code may cause infinite rendering loops, as `count` changes trigger new `useEffect` execution, unless there are appropriate dependency controls or conditional logic.
+
+- **Modifying props passed from parent component**:
+  If `useEffect` modifies parent component state through callback functions or other means, the parent component may re-render, causing child components to re-render too.
   ```jsx
   const Parent = () => {
     const [value, setValue] = useState(0);
@@ -273,65 +270,65 @@ graph TD
 
   const Child = ({ onUpdate }) => {
     useEffect(() => {
-      onUpdate(); // 修改父组件状态，触发父组件重新渲染
+      onUpdate(); // Modifies parent component state, triggers parent re-render
     }, [onUpdate]);
     return <div>Child</div>;
   };
   ```
-- **外部数据变化**：
-  如果 `useEffect` 发起异步操作（如 API 请求），并在响应后更新状态，也会触发渲染。
+
+- **External data changes**:
+  If `useEffect` initiates asynchronous operations (like API requests) and updates state after receiving responses, it also triggers rendering.
   ```jsx
   useEffect(() => {
-    fetchData().then((data) => setData(data)); // 异步更新状态，触发渲染
+    fetchData().then((data) => setData(data)); // Asynchronous state update triggers rendering
   }, []);
   ```
 
-### 3. 不会触发渲染的情况
+### 3. Situations that Won't Trigger Rendering
 
-如果 `useEffect` 的回调函数不修改状态、不影响父组件属性或不触发其他导致渲染的操作，它不会引发下一次渲染。例如：
+If `useEffect`'s callback function doesn't modify state, doesn't affect parent component props, or doesn't trigger other operations that cause rendering, it won't cause the next rendering. For example:
 
 ```jsx
 useEffect(() => {
-    console.log('Effect ran'); // 仅打印日志，不影响状态
-    document.title = 'Updated'; // 修改 DOM，不触发 React 渲染
+    console.log('Effect ran'); // Only logs, doesn't affect state
+    document.title = 'Updated'; // Modifies DOM, doesn't trigger React rendering
 }, []);
 ```
 
-- 这种情况下，`useEffect` 仅执行副作用，React 不会调度新的渲染。
+- In this case, `useEffect` only executes side effects, React won't schedule new rendering.
 
-### 4. 避免无限渲染循环
+### 4. Avoiding Infinite Rendering Loops
 
-当 `useEffect` 可能触发状态更新时，需要小心管理依赖数组和逻辑，以避免无限循环。例如：
+When `useEffect` may trigger state updates, carefully manage dependency arrays and logic to avoid infinite loops. For example:
 
 ```jsx
 useEffect(() => {
-    setCount(count + 1); // 错误：每次渲染后更新 count，导致无限循环
+    setCount(count + 1); // Error: Updates count after every render, causing infinite loop
 }, [count]);
 ```
 
-**解决方法**：
+**Solutions**:
 
-- 使用条件逻辑：
+- Use conditional logic:
   ```jsx
   useEffect(() => {
     if (count < 5) {
-      setCount(count + 1); // 有限次更新
+      setCount(count + 1); // Limited updates
     }
   }, [count]);
   ```
-- 移除不必要的依赖：
+- Remove unnecessary dependencies:
   ```jsx
   useEffect(() => {
-    setCount((prev) => prev + 1); // 仅在特定条件下运行
-  }, []); // 空依赖数组，运行一次
+    setCount((prev) => prev + 1); // Runs only under specific conditions
+  }, []); // Empty dependency array, runs once
   ```
 
-### 5. 对比 `useMemo`
+### 5. Comparison with `useMemo`
 
-与 `useMemo` 相比，`useMemo` 是同步执行于渲染阶段，其结果直接用于当前渲染。如果 `useMemo`
-的计算中调用了状态更新函数，会导致立即重新渲染（通常是错误用法）。而 `useEffect` 的异步性质使其更适合处理可能触发状态更新的副作用。
+Compared with `useMemo`, `useMemo` executes synchronously during the rendering phase, and its result is directly used for the current rendering. If state update functions are called in `useMemo`'s calculation, it causes immediate re-rendering (usually incorrect usage). The asynchronous nature of `useEffect` makes it more suitable for handling side effects that may trigger subsequent rendering.
 
-### 示例：明确是否触发渲染
+### Example: Clearly Whether to Trigger Rendering
 
 ```jsx
 import {useState, useEffect} from 'react';
@@ -339,17 +336,17 @@ import {useState, useEffect} from 'react';
 const Example = () => {
     const [count, setCount] = useState(0);
 
-    // 不会触发渲染
+    // Won't trigger rendering
     useEffect(() => {
         console.log('Effect: No state update');
         document.title = `Count: ${count}`;
     }, [count]);
 
-    // 可能触发渲染
+    // May trigger rendering
     useEffect(() => {
         if (count < 3) {
             console.log('Effect: Updating state');
-            setCount(count + 1); // 触发渲染，直到 count >= 3
+            setCount(count + 1); // Triggers rendering until count >= 3
         }
     }, [count]);
 
@@ -358,7 +355,7 @@ const Example = () => {
 };
 ```
 
-**输出**：
+**Output**:
 
 ```
 Rendering
@@ -374,31 +371,30 @@ Rendering
 Effect: No state update
 ```
 
-- 第一个 `useEffect` 不触发渲染，仅更新文档标题。
-- 第二个 `useEffect` 更新状态，导致多次渲染，直到 `count` 达到 3。
+- The first `useEffect` doesn't trigger rendering, only updates document title.
+- The second `useEffect` updates state, causing multiple renders until `count` reaches 3.
 
-### 总结
+### Summary
 
-- **`useEffect` 自身不触发渲染**，它只执行副作用。
-- **可能间接触发渲染**，如果其回调函数更新了状态、修改了父组件属性或引发其他导致重新渲染的操作。
-- **避免无限循环**：通过条件逻辑、正确的依赖数组或限制状态更新来控制 `useEffect` 的行为。
-- 如果需要进一步分析特定代码或场景，请提供代码，我可以帮你详细调试！
+- **`useEffect` itself doesn't trigger rendering**, it only executes side effects.
+- **May indirectly trigger rendering** if its callback function updates state, modifies parent component props, or causes other operations that lead to re-rendering.
+- **Avoid infinite loops**: Control `useEffect` behavior through conditional logic, correct dependency arrays, or limiting state updates.
+- If you need further analysis of specific code or scenarios, please provide the code, I can help debug in detail!
 
 ---
 
-**`useMemo` 自身不会直接触发重复渲染**，它的作用是记忆计算结果以优化性能，避免在每次渲染时重复执行昂贵的计算。然而，
-`useMemo` 的使用方式或其回调函数中的逻辑可能间接导致状态或属性的变化，从而触发渲染。以下是详细分析：
+**`useMemo` itself will not directly trigger repeated rendering**, its role is to memoize calculation results to optimize performance, avoiding repeated execution of expensive calculations during each render. However, the usage of `useMemo` or the logic in its callback function may indirectly cause changes in state or props, thereby triggering rendering. Here's a detailed analysis:
 
-### 1. `useMemo` 的执行机制
+### 1. `useMemo` Execution Mechanism
 
-- `useMemo` 在**组件渲染阶段**同步执行，检查其依赖数组（`dependencies`）中的值是否变化。
-- 如果依赖数组中的值未变，`useMemo` 返回缓存的结果，不重新执行回调函数。
-- 如果依赖数组中的值发生变化，`useMemo` 重新执行回调函数，生成新的结果。
-- 它的主要目的是优化性能，避免重复计算，而不直接影响 React 的渲染调度。
+- `useMemo` executes **synchronously during the component rendering phase**, checking whether values in its dependency array (`dependencies`) have changed.
+- If values in the dependency array haven't changed, `useMemo` returns the cached result without re-executing the callback function.
+- If values in the dependency array change, `useMemo` re-executes the callback function to generate a new result.
+- Its main purpose is to optimize performance, avoiding repeated calculations, without directly affecting React's rendering scheduling.
 
-### 2. 不会触发重复渲染的典型情况
+### 2. Typical Situations that Won't Trigger Repeated Rendering
 
-在正常使用中，`useMemo` 仅返回一个值，供组件渲染使用，不会导致额外的渲染。例如：
+In normal usage, `useMemo` only returns a value for component rendering use and won't cause additional rendering. For example:
 
 ```jsx
 const memoizedValue = useMemo(() => {
@@ -407,35 +403,35 @@ const memoizedValue = useMemo(() => {
 }, [propA, propB]);
 ```
 
-- 每次组件渲染时，`useMemo` 检查 `[propA, propB]` 是否变化：
-    - 如果未变，返回缓存值，不会重复执行 `expensiveCalculation`。
-    - 如果变化，重新计算并返回新值，但这仅影响当前渲染，不触发额外渲染。
-- 这种用法不会导致重复渲染，只是优化了当前渲染的性能。
+- During each component render, `useMemo` checks whether `[propA, propB]` has changed:
+    - If unchanged, returns cached value, won't repeatedly execute `expensiveCalculation`.
+    - If changed, recalculates and returns new value, but this only affects the current render, won't trigger additional rendering.
+- This usage won't cause repeated rendering, only optimizes the performance of the current render.
 
-### 3. 可能间接触发渲染的情况
+### 3. Situations that May Indirectly Trigger Rendering
 
-尽管 `useMemo` 本身不触发渲染，其回调函数或返回值的使用可能导致状态/属性变化，间接触发渲染。以下是几种情况：
+Although `useMemo` itself doesn't trigger rendering, its callback function or the use of its return value may cause state/prop changes, indirectly triggering rendering. Here are several situations:
 
-#### (1) 回调函数中更新状态
+#### (1) Updating state in callback function
 
-如果 `useMemo` 的回调函数直接或间接调用状态更新函数（如 `setState`），可能导致渲染：
+If `useMemo`'s callback function directly or indirectly calls state update functions (like `setState`), it may cause rendering:
 
 ```jsx
 const [count, setCount] = useState(0);
 
 const memoizedValue = useMemo(() => {
-    setCount(count + 1); // 错误：直接在渲染阶段更新状态
+    setCount(count + 1); // Error: Directly updates state during rendering phase
     return count * 2;
 }, [count]);
 ```
 
-- **问题**：`setCount` 在渲染阶段（`useMemo` 执行时）触发状态更新，导致 React 重新渲染。
-- **结果**：可能引发无限渲染循环，因为 `count` 变化会触发新的 `useMemo` 执行。
-- **建议**：避免在 `useMemo` 中直接更新状态，这不符合其设计意图。状态更新通常应放在 `useEffect` 或事件处理函数中。
+- **Problem**: `setCount` triggers state update during rendering phase (when `useMemo` executes), causing React to re-render.
+- **Result**: May cause infinite rendering loops, because `count` changes trigger new `useMemo` execution.
+- **Suggestion**: Avoid directly updating state in `useMemo`, which doesn't conform to its design intent. State updates should typically be placed in `useEffect` or event handlers.
 
-#### (2) 返回值引发状态更新
+#### (2) Return value causing state update
 
-如果 `useMemo` 的返回值被用作触发状态更新的依据，也可能导致渲染：
+If `useMemo`'s return value is used as the basis for triggering state updates, it may also cause rendering:
 
 ```jsx
 const [value, setValue] = useState(0);
@@ -445,38 +441,38 @@ const memoizedResult = useMemo(() => {
 }, [propA]);
 
 useEffect(() => {
-    setValue(memoizedResult); // memoizedResult 变化触发状态更新
+    setValue(memoizedResult); // memoizedResult changes trigger state update
 }, [memoizedResult]);
 ```
 
-- **分析**：`useMemo` 本身不触发渲染，但其结果（`memoizedResult`）变化时，`useEffect` 检测到依赖变化并更新状态，导致重新渲染。
-- **注意**：这是 `useEffect` 的行为导致的渲染，而非 `useMemo` 直接触发。
+- **Analysis**: `useMemo` itself doesn't trigger rendering, but when its result (`memoizedResult`) changes, `useEffect` detects dependency changes and updates state, causing re-rendering.
+- **Note**: This is `useEffect`'s behavior causing rendering, not `useMemo` directly triggering it.
 
-#### (3) 依赖数组不稳定
+#### (3) Unstable dependency array
 
-如果 `useMemo` 的依赖数组包含不稳定的引用（例如每次渲染都创建的新对象或函数），可能导致 `useMemo` 频繁重新计算，间接影响性能或触发渲染：
+If `useMemo`'s dependency array contains unstable references (like new objects or functions created on every render), it may cause `useMemo` to recalculate frequently, indirectly affecting performance or triggering rendering:
 
 ```jsx
 const memoizedValue = useMemo(() => {
-    return someCalculation({data: propA}); // 对象每次渲染都是新引用
-}, [{data: propA}]); // 错误：依赖数组包含不稳定引用
+    return someCalculation({data: propA}); // Object is new reference on every render
+}, [{data: propA}]); // Error: Dependency array contains unstable reference
 ```
 
-- **问题**：依赖数组中的 `{ data: propA }` 每次渲染都是新对象，导致 `useMemo` 每次都重新执行。
-- **结果**：虽然不直接触发渲染，但频繁重新计算可能导致性能问题，或因返回值变化引发其他副作用（如 `useEffect` 触发状态更新）。
-- **解决**：确保依赖值稳定，或使用 `useCallback` 记忆函数，使用原始值（如 `propA`）作为依赖。
+- **Problem**: The `{ data: propA }` in the dependency array is a new object on every render, causing `useMemo` to execute every time.
+- **Result**: Although it doesn't directly trigger rendering, frequent recalculation may cause performance problems, or trigger other side effects due to return value changes (like `useEffect` triggering state updates).
+- **Solution**: Ensure dependency values are stable, or use `useCallback` to memoize functions, use primitive values (like `propA`) as dependencies.
 
-### 4. 对比 `useEffect`
+### 4. Comparison with `useEffect`
 
-- **`useEffect`**：异步执行，适合处理副作用，可能通过状态更新间接触发渲染（见前述问题）。
-- **`useMemo`**：同步执行于渲染阶段，旨在优化计算性能。如果在 `useMemo` 中更新状态，会立即影响当前渲染，可能导致错误或无限循环。
-- **关键区别**：
-    - `useMemo` 是渲染阶段的一部分，其结果直接用于当前渲染。
-    - `useEffect` 在渲染后运行，适合处理可能触发后续渲染的副作用。
+- **`useEffect`**: Executes asynchronously, suitable for handling side effects, may indirectly trigger rendering through state updates (see previous question).
+- **`useMemo`**: Executes synchronously during rendering phase, aims to optimize calculation performance. If state is updated in `useMemo`, it immediately affects the current render, potentially causing errors or infinite loops.
+- **Key difference**:
+    - `useMemo` is part of the rendering phase, its result is directly used for the current render.
+    - `useEffect` runs after rendering, suitable for handling side effects that may trigger subsequent rendering.
 
-### 5. 示例：明确是否触发渲染
+### 5. Example: Clearly Whether to Trigger Rendering
 
-以下示例对比 `useMemo` 的正常使用和错误使用：
+The following example compares normal and incorrect usage of `useMemo`:
 
 ```jsx
 import {useState, useMemo} from 'react';
@@ -485,16 +481,16 @@ const Example = () => {
     const [count, setCount] = useState(0);
     const [trigger, setTrigger] = useState(0);
 
-    // 正常使用：不会触发渲染
+    // Normal usage: won't trigger rendering
     const memoizedValue = useMemo(() => {
         console.log('useMemo executed');
         return count * 2;
     }, [count]);
 
-    // 错误使用：在 useMemo 中更新状态
+    // Incorrect usage: updates state in useMemo
     const badMemoizedValue = useMemo(() => {
         console.log('badMemoizedValue executed');
-        setCount(count + 1); // 错误：触发渲染，可能无限循环
+        setCount(count + 1); // Error: triggers rendering, may cause infinite loop
         return count * 3;
     }, [count]);
 
@@ -509,9 +505,9 @@ const Example = () => {
 };
 ```
 
-**输出分析**：
+**Output Analysis**:
 
-- **初始渲染**：
+- **Initial render**:
   ```
   Rendering
   useMemo executed
@@ -521,28 +517,28 @@ const Example = () => {
   badMemoizedValue executed
   ...
   ```
-    - `badMemoizedValue` 的 `setCount` 触发无限渲染循环（需避免）。
-    - `memoizedValue` 正常计算，仅在 `count` 变化时重新执行。
-- **点击按钮（`trigger` 变化）**：
+    - `badMemoizedValue`'s `setCount` triggers infinite rendering loop (should be avoided).
+    - `memoizedValue` calculates normally, only re-executes when `count` changes.
+- **Click button (`trigger` changes)**:
   ```
   Rendering
   ```
-    - `memoizedValue` 不重新计算（依赖 `[count]` 未变），不触发额外渲染。
-    - `badMemoizedValue` 若未修复，会因 `count` 变化继续导致循环。
+    - `memoizedValue` doesn't recalculate (dependency `[count]` unchanged), doesn't trigger additional rendering.
+    - `badMemoizedValue` continues to cause loops if not fixed, due to `count` changes.
 
-### 6. 避免问题的建议
+### 6. Suggestions to Avoid Problems
 
-- **不要在 `useMemo` 中更新状态**：状态更新应放在 `useEffect`、事件处理函数或其他适当位置。
-- **确保依赖数组正确**：使用稳定的依赖值，避免不必要的重新计算。
-- **检查返回值使用**：如果 `useMemo` 的结果触发 `useEffect` 或其他逻辑，确保这是预期的行为。
-- **使用 ESLint 插件**：`eslint-plugin-react-hooks` 可以检测 `useMemo` 的依赖数组问题。
+- **Don't update state in `useMemo`**: State updates should be placed in `useEffect`, event handlers, or other appropriate locations.
+- **Ensure dependency array is correct**: Use stable dependency values, avoid unnecessary recalculation.
+- **Check return value usage**: If `useMemo`'s result triggers `useEffect` or other logic, ensure this is expected behavior.
+- **Use ESLint plugins**: `eslint-plugin-react-hooks` can detect dependency array issues in `useMemo`.
 
-### 总结
+### Summary
 
-- **`useMemo` 自身不触发重复渲染**，它仅在渲染阶段计算并返回记忆值，优化性能。
-- **可能间接触发渲染**，如果：
-    - 回调函数中错误地更新状态（不推荐）。
-    - 返回值引发其他副作用（如 `useEffect` 检测到变化并更新状态）。
-    - 依赖数组不稳定，导致频繁重新计算。
-- **正确使用**：将 `useMemo` 限制于纯计算逻辑，确保依赖稳定，避免副作用。
-- 如果有具体代码或场景需要分析，请提供细节，我可以帮你进一步调试或优化！
+- **`useMemo` itself doesn't trigger repeated rendering**, it only calculates and returns memoized values during the rendering phase, optimizing performance.
+- **May indirectly trigger rendering** if:
+    - Callback function incorrectly updates state (not recommended).
+    - Return value triggers other side effects (like `useEffect` detecting changes and updating state).
+    - Dependency array is unstable, causing frequent recalculation.
+- **Correct usage**: Limit `useMemo` to pure calculation logic, ensure stable dependencies, avoid side effects.
+- If you have specific code or scenarios that need analysis, provide details and I can help debug or optimize further!

@@ -1,21 +1,21 @@
 # OpenShift Disconnected Cluster
 
-## AWS目录中Disconnected Cluster相关脚本总结
+## AWS Directory Disconnected Cluster Related Scripts Summary
 
-### 1. **VPC配置 - `aws-provision-vpc-disconnected`**
+### 1. **VPC Configuration - `aws-provision-vpc-disconnected`**
 
-**位置**: `step-registry/aws/provision/vpc/disconnected/`
+**Location**: `step-registry/aws/provision/vpc/disconnected/`
 
-**作用**: 为disconnected cluster创建专用的VPC网络环境
+**Purpose**: Create dedicated VPC network environment for disconnected cluster
 
-**主要特点**:
-- 创建独立的VPC，支持1-3个可用区
-- 配置公共和私有子网
-- 设置Internet Gateway和NAT Gateway
-- 配置路由表和网络ACL
-- 为disconnected环境优化网络配置
+**Key Features**:
+- Create independent VPC supporting 1-3 availability zones
+- Configure public and private subnets
+- Set up Internet Gateway and NAT Gateway
+- Configure route tables and network ACLs
+- Optimize network configuration for disconnected environments
 
-**关键配置**:
+**Key Configuration**:
 ```yaml
 ref:
   as: aws-provision-vpc-disconnected
@@ -28,20 +28,20 @@ ref:
     default: "3"
 ```
 
-### 2. **IAM用户配置 - `aws-provision-cco-manual-users-static`**
+### 2. **IAM User Configuration - `aws-provision-cco-manual-users-static`**
 
-**位置**: `step-registry/aws/provision/cco-manual-users/static/`
+**Location**: `step-registry/aws/provision/cco-manual-users/static/`
 
-**作用**: 为disconnected cluster创建静态AWS IAM用户和权限
+**Purpose**: Create static AWS IAM users and permissions for disconnected cluster
 
-**主要功能**:
-- 从OpenShift release镜像中提取CredentialsRequest
-- 为每个CredentialsRequest创建对应的IAM策略
-- 创建IAM用户并分配最小权限
-- 生成Kubernetes Secret清单文件
-- 支持TechPreview功能的过滤
+**Main Functions**:
+- Extract CredentialsRequest from OpenShift release image
+- Create corresponding IAM policies for each CredentialsRequest
+- Create IAM users with minimum permissions
+- Generate Kubernetes Secret manifest files
+- Support filtering for TechPreview features
 
-**关键特性**:
+**Key Features**:
 ```yaml
 ref:
   as: aws-provision-cco-manual-users-static
@@ -49,214 +49,214 @@ ref:
     Create static AWS IAM users for disconnected cluster.
 ```
 
-### 3. **核心脚本功能分析**
+### 3. **Core Script Function Analysis**
 
-#### **VPC创建脚本** (`aws-provision-vpc-disconnected-commands.sh`):
-- 使用CloudFormation模板创建VPC
-- 配置多可用区支持
-- 设置网络标签和过期时间
-- 输出VPC ID、子网ID等关键信息
+#### **VPC Creation Script** (`aws-provision-vpc-disconnected-commands.sh`):
+- Create VPC using CloudFormation template
+- Configure multi-availability zone support
+- Set network labels and expiration time
+- Output key information like VPC ID, subnet IDs
 
-#### **IAM用户创建脚本** (`aws-provision-cco-manual-users-static-commands.sh`):
-- 使用`oc adm release extract`提取凭证请求
-- 动态生成IAM策略文档
-- 创建AWS IAM用户和访问密钥
-- 生成Kubernetes Secret YAML文件
-- 支持镜像仓库认证配置
+#### **IAM User Creation Script** (`aws-provision-cco-manual-users-static-commands.sh`):
+- Use `oc adm release extract` to extract credential requests
+- Dynamically generate IAM policy documents
+- Create AWS IAM users and access keys
+- Generate Kubernetes Secret YAML files
+- Support mirror registry authentication configuration
 
-### 4. **Disconnected Cluster的特殊考虑**
+### 4. **Special Considerations for Disconnected Cluster**
 
-**网络隔离**:
-- VPC配置为disconnected环境优化
-- 支持私有子网配置
-- 可配置NAT Gateway用于有限的互联网访问
+**Network Isolation**:
+- VPC configuration optimized for disconnected environments
+- Support private subnet configuration
+- Configurable NAT Gateway for limited internet access
 
-**镜像仓库**:
-- 支持mirror registry配置
-- 处理pull secret和认证
-- 配置ImageContentSourcePolicy
+**Image Registry**:
+- Support mirror registry configuration
+- Handle pull secret and authentication
+- Configure ImageContentSourcePolicy
 
-**权限管理**:
-- 最小权限原则
-- 静态IAM用户而非动态创建
-- 支持CCO (Cloud Credential Operator) 手动模式
+**Permission Management**:
+- Principle of least privilege
+- Static IAM users instead of dynamic creation
+- Support CCO (Cloud Credential Operator) manual mode
 
-### 5. **与其他组件的集成**
+### 5. **Integration with Other Components**
 
-这些脚本通常与其他disconnected相关组件配合使用：
-- **镜像同步**: 使用`oc-mirror`工具同步镜像到本地registry
-- **Catalog Source**: 配置本地operator catalog
-- **Registry配置**: 设置镜像仓库的镜像策略
-- **网络配置**: 配置DNS和路由
+These scripts typically work with other disconnected-related components:
+- **Image Synchronization**: Use `oc-mirror` tool to sync images to local registry
+- **Catalog Source**: Configure local operator catalog
+- **Registry Configuration**: Set up mirror policies for image registry
+- **Network Configuration**: Configure DNS and routing
 
-### 6. **使用场景**
+### 6. **Use Cases**
 
-这些脚本主要用于：
-- **CI/CD环境**: 在隔离的AWS环境中测试OpenShift
-- **离线部署**: 在没有互联网访问的环境中部署OpenShift
-- **安全合规**: 满足企业安全策略要求
-- **性能测试**: 在受控环境中进行性能基准测试
+These scripts are mainly used for:
+- **CI/CD Environments**: Test OpenShift in isolated AWS environments
+- **Offline Deployment**: Deploy OpenShift in environments without internet access
+- **Security Compliance**: Meet enterprise security policy requirements
+- **Performance Testing**: Conduct performance benchmarks in controlled environments
 
-这些配置文件和脚本为在AWS上部署disconnected OpenShift集群提供了完整的自动化解决方案，涵盖了网络、权限、镜像同步等关键方面。
+These configuration files and scripts provide a complete automated solution for deploying disconnected OpenShift clusters on AWS, covering key aspects like networking, permissions, and image synchronization.
 
 ---
 
-CCO 的含义
+CCO Meaning
 
-**CCO** 是 **Cloud Credential Operator** 的缩写，这是OpenShift中的一个核心组件。
+**CCO** is the abbreviation for **Cloud Credential Operator**, which is a core component in OpenShift.
 
-### 1. **Cloud Credential Operator (CCO) 的作用**
+### 1. **Role of Cloud Credential Operator (CCO)**
 
-CCO是OpenShift中负责管理云平台凭证的Operator，它的主要功能包括：
+CCO is the Operator in OpenShift responsible for managing cloud platform credentials. Its main functions include:
 
-- **凭证管理**: 管理OpenShift集群中各个组件访问云平台所需的凭证
-- **权限控制**: 确保每个组件只获得其所需的最小权限
-- **安全策略**: 实施云平台访问的安全最佳实践
+- **Credential Management**: Manage credentials required by various OpenShift cluster components to access cloud platforms
+- **Permission Control**: Ensure each component only gets the minimum permissions it needs
+- **Security Policy**: Implement security best practices for cloud platform access
 
-### 2. **CCO的工作模式**
+### 2. **CCO Working Modes**
 
-CCO支持多种工作模式：
+CCO supports multiple working modes:
 
-#### **Mint模式** (默认)
-- CCO自动创建和管理云平台凭证
-- 动态创建IAM用户/服务账户
-- 适合有足够权限的环境
+#### **Mint Mode** (Default)
+- CCO automatically creates and manages cloud platform credentials
+- Dynamically creates IAM users/service accounts
+- Suitable for environments with sufficient permissions
 
-#### **Manual模式**
-- 管理员手动创建和管理凭证
-- 使用预创建的IAM用户/服务账户
-- 适合权限受限或安全要求严格的环境
+#### **Manual Mode**
+- Administrator manually creates and manages credentials
+- Uses pre-created IAM users/service accounts
+- Suitable for permission-restricted or security-sensitive environments
 
-#### **Passthrough模式**
-- 直接使用现有的云平台凭证
-- 不进行任何凭证管理
+#### **Passthrough Mode**
+- Directly uses existing cloud platform credentials
+- Does not perform any credential management
 
-### 3. **`cco-manual-users` 目录的作用**
+### 3. **Role of `cco-manual-users` Directory**
 
-这个目录专门用于 **Manual模式** 下的CCO配置：
+This directory is specifically for CCO configuration in **Manual Mode**:
 
-#### **主要功能**:
-- **提取CredentialsRequest**: 从OpenShift release镜像中提取各个组件需要的凭证请求
-- **创建IAM策略**: 根据CredentialsRequest自动生成对应的AWS IAM策略
-- **创建IAM用户**: 为每个组件创建专用的IAM用户
-- **生成Kubernetes Secret**: 创建对应的Kubernetes Secret清单文件
+#### **Main Functions**:
+- **Extract CredentialsRequest**: Extract credential requests needed by various components from OpenShift release image
+- **Create IAM Policies**: Automatically generate corresponding AWS IAM policies based on CredentialsRequest
+- **Create IAM Users**: Create dedicated IAM users for each component
+- **Generate Kubernetes Secret**: Create corresponding Kubernetes Secret manifest files
 
-#### **工作流程**:
+#### **Workflow**:
 ```bash
-# 1. 从release镜像提取CredentialsRequest
+# 1. Extract CredentialsRequest from release image
 oc adm release extract --credentials-requests --cloud=aws
 
-# 2. 为每个CredentialsRequest创建IAM策略和用户
-# 3. 生成Kubernetes Secret YAML文件
+# 2. Create IAM policies and users for each CredentialsRequest
+# 3. Generate Kubernetes Secret YAML files
 ```
 
-### 4. **为什么需要Manual模式？**
+### 4. **Why Manual Mode is Needed?**
 
-Manual模式在以下场景中特别重要：
+Manual mode is particularly important in the following scenarios:
 
-- **Disconnected环境**: 离线部署时无法动态创建云资源
-- **安全合规**: 企业安全策略要求手动管理凭证
-- **权限限制**: 云平台账户权限不足以支持Mint模式
-- **审计要求**: 需要明确的凭证创建记录
+- **Disconnected Environment**: Cannot dynamically create cloud resources during offline deployment
+- **Security Compliance**: Enterprise security policies require manual credential management
+- **Permission Limitations**: Cloud platform account permissions are insufficient to support Mint mode
+- **Audit Requirements**: Need clear credential creation records
 
-### 5. **与其他组件的集成**
+### 5. **Integration with Other Components**
 
-CCO与以下组件紧密集成：
-- **ccoctl工具**: 用于生成云平台凭证的CLI工具
-- **CredentialsRequest**: 定义组件所需权限的CRD
-- **各种Operator**: 如image-registry、ingress、machine-api等
+CCO closely integrates with the following components:
+- **ccoctl Tool**: CLI tool for generating cloud platform credentials
+- **CredentialsRequest**: CRD that defines required permissions for components
+- **Various Operators**: Such as image-registry, ingress, machine-api, etc.
 
-### 总结
+### Summary
 
-`cco-manual-users` 目录中的脚本是OpenShift在AWS平台上使用Manual模式部署时，自动化创建和管理云平台凭证的关键组件。它确保了在disconnected或安全要求严格的环境中，OpenShift集群能够正确获得访问AWS服务所需的权限，同时遵循最小权限原则。
+The scripts in the `cco-manual-users` directory are key components for OpenShift to automatically create and manage cloud platform credentials when deploying in Manual mode on AWS platform. It ensures that in disconnected or security-sensitive environments, OpenShift clusters can correctly obtain the permissions needed to access AWS services while following the principle of least privilege.
 
 ---
 
-## Private Cluster vs Disconnected Cluster 安装过程对比
+## Private Cluster vs Disconnected Cluster Installation Process Comparison
 
-### 1. **概念定义**
+### 1. **Concept Definition**
 
-#### **Private Cluster (私有集群)**
-- **网络层面**: 集群的API服务器和Ingress控制器使用私有IP地址
-- **访问方式**: 通过VPN、跳板机或内部网络访问
-- **互联网连接**: 通常有互联网连接，但API服务器不对外暴露
+#### **Private Cluster**
+- **Network Level**: Cluster's API server and Ingress controller use private IP addresses
+- **Access Method**: Access through VPN, jump host, or internal network
+- **Internet Connection**: Usually has internet connection, but API server is not exposed externally
 
-#### **Disconnected Cluster (离线集群)**
-- **网络层面**: 完全隔离的网络环境，无法访问互联网
-- **镜像仓库**: 需要本地镜像仓库来提供所有容器镜像
-- **软件包**: 所有软件包和更新都需要预先下载到本地
+#### **Disconnected Cluster**
+- **Network Level**: Completely isolated network environment, cannot access internet
+- **Image Registry**: Requires local image registry to provide all container images
+- **Software Packages**: All software packages and updates need to be pre-downloaded locally
 
-### 2. **安装过程的主要区别**
+### 2. **Main Differences in Installation Process**
 
-#### **A. 网络配置差异**
+#### **A. Network Configuration Differences**
 
 **Private Cluster**:
 ```yaml
 # install-config.yaml
-publish: Internal  # 关键配置
+publish: Internal  # Key configuration
 platform:
   aws:
-    privateLink: true  # 使用私有链接
+    privateLink: true  # Use private link
 ```
 
 **Disconnected Cluster**:
 ```yaml
 # install-config.yaml
-publish: Internal  # 同样使用内部发布
-# 但需要额外的镜像仓库配置
+publish: Internal  # Also uses internal publishing
+# But needs additional mirror registry configuration
 additionalTrustBundle: |
   -----BEGIN CERTIFICATE-----
-  # 镜像仓库的CA证书
+  # Mirror registry CA certificate
   -----END CERTIFICATE-----
 ```
 
-#### **B. 镜像处理方式**
+#### **B. Image Processing Methods**
 
 **Private Cluster**:
-- 直接从互联网拉取镜像
-- 使用标准的pull secret
-- 不需要预先准备镜像
+- Pull images directly from internet
+- Use standard pull secret
+- No need to pre-prepare images
 
 **Disconnected Cluster**:
-- 需要预先同步所有镜像到本地仓库
-- 使用`oc-mirror`工具同步镜像
-- 配置ImageContentSourcePolicy指向本地仓库
+- Need to pre-sync all images to local registry
+- Use `oc-mirror` tool to sync images
+- Configure ImageContentSourcePolicy to point to local registry
 
 ```bash
-# Disconnected环境镜像同步
+# Disconnected environment image synchronization
 oc-mirror --config=imageset.yaml docker://local-registry:5000
 ```
 
-#### **C. 安装步骤对比**
+#### **C. Installation Steps Comparison**
 
-**Private Cluster 安装流程**:
+**Private Cluster Installation Flow**:
 ```yaml
 steps:
   - ref: ipi-conf
-  - ref: ipi-conf-private-dns  # 配置私有DNS
+  - ref: ipi-conf-private-dns  # Configure private DNS
   - ref: ipi-install-install
-  - ref: ipi-install-registry  # 配置内部镜像仓库
+  - ref: ipi-install-registry  # Configure internal image registry
 ```
 
-**Disconnected Cluster 安装流程**:
+**Disconnected Cluster Installation Flow**:
 ```yaml
 steps:
-  - chain: vsphere-provision-bastionhost  # 需要跳板机
-  - ref: mirror-images-by-oc-adm-in-bastion  # 镜像同步
-  - ref: ipi-conf-mirror  # 配置镜像仓库
+  - chain: vsphere-provision-bastionhost  # Need bastion host
+  - ref: mirror-images-by-oc-adm-in-bastion  # Image synchronization
+  - ref: ipi-conf-mirror  # Configure mirror registry
   - ref: ipi-install-install
   - ref: ipi-install-vsphere-registry
-  - ref: enable-qe-catalogsource-disconnected  # 启用离线catalog
-  - ref: mirror-images-tag-images  # 镜像标签处理
+  - ref: enable-qe-catalogsource-disconnected  # Enable offline catalog
+  - ref: mirror-images-tag-images  # Image tag processing
 ```
 
-### 3. **关键组件差异**
+### 3. **Key Component Differences**
 
-#### **A. 镜像仓库配置**
+#### **A. Image Registry Configuration**
 
 **Private Cluster**:
 ```yaml
-# 使用标准的registry.redhat.io
+# Use standard registry.redhat.io
 imageContentSources:
 - mirrors:
   - registry.redhat.io/openshift4/ose-kube-rbac-proxy
@@ -265,29 +265,29 @@ imageContentSources:
 
 **Disconnected Cluster**:
 ```yaml
-# 使用本地镜像仓库
+# Use local mirror registry
 imageContentSources:
 - mirrors:
   - mirror-registry.example.com:5000/openshift4/ose-kube-rbac-proxy
   source: registry.redhat.io/openshift4/ose-kube-rbac-proxy
 ```
 
-#### **B. CCO (Cloud Credential Operator) 配置**
+#### **B. CCO (Cloud Credential Operator) Configuration**
 
 **Private Cluster**:
-- 可以使用标准的Mint模式
-- 动态创建云平台凭证
+- Can use standard Mint mode
+- Dynamically create cloud platform credentials
 
 **Disconnected Cluster**:
-- 必须使用Manual模式
-- 预先创建静态IAM用户
-- 使用`cco-manual-users`脚本
+- Must use Manual mode
+- Pre-create static IAM users
+- Use `cco-manual-users` script
 
-#### **C. Catalog Source 配置**
+#### **C. Catalog Source Configuration**
 
 **Private Cluster**:
 ```yaml
-# 使用标准的Red Hat catalog
+# Use standard Red Hat catalog
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
@@ -298,7 +298,7 @@ spec:
 
 **Disconnected Cluster**:
 ```yaml
-# 使用本地catalog
+# Use local catalog
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
@@ -307,60 +307,60 @@ spec:
   image: mirror-registry.example.com:5000/redhat/redhat-operator-index
 ```
 
-### 4. **基础设施要求**
+### 4. **Infrastructure Requirements**
 
 #### **Private Cluster**:
-- 私有子网配置
-- NAT Gateway (可选)
-- 私有DNS区域
-- VPN或跳板机访问
+- Private subnet configuration
+- NAT Gateway (optional)
+- Private DNS zone
+- VPN or jump host access
 
 #### **Disconnected Cluster**:
-- 完全隔离的网络
-- 本地镜像仓库 (Registry)
-- 跳板机 (Bastion Host)
-- 预先下载的所有软件包
-- 本地证书颁发机构
+- Completely isolated network
+- Local image registry (Registry)
+- Bastion Host (Bastion Host)
+- All pre-downloaded software packages
+- Local certificate authority
 
-### 5. **维护和更新**
+### 5. **Maintenance and Updates**
 
 #### **Private Cluster**:
-- 可以直接从互联网拉取更新
-- 标准的升级流程
-- 自动镜像拉取
+- Can directly pull updates from internet
+- Standard upgrade process
+- Automatic image pulling
 
 #### **Disconnected Cluster**:
-- 需要预先下载所有更新
-- 手动镜像同步
-- 离线升级流程
-- 需要维护本地软件包仓库
+- Need to pre-download all updates
+- Manual image synchronization
+- Offline upgrade process
+- Need to maintain local software package repository
 
-### 6. **安全考虑**
+### 6. **Security Considerations**
 
 #### **Private Cluster**:
-- 网络层面的隔离
-- API服务器不对外暴露
-- 仍然需要互联网连接
+- Network-level isolation
+- API server not exposed externally
+- Still requires internet connection
 
 #### **Disconnected Cluster**:
-- 完全的网络隔离
-- 无互联网连接
-- 更高的安全级别
-- 需要严格的内容验证
+- Complete network isolation
+- No internet connection
+- Higher security level
+- Requires strict content validation
 
-### 总结
+### Summary
 
-**Private Cluster** 主要关注**网络访问控制**，确保集群API不对外暴露，但仍然保持互联网连接以获取镜像和更新。
+**Private Cluster** mainly focuses on **network access control**, ensuring cluster API is not exposed externally, but still maintains internet connection to obtain images and updates.
 
-**Disconnected Cluster** 关注**完全的网络隔离**，需要预先准备所有必要的镜像、软件包和配置，适合在高度安全或完全隔离的环境中部署。
+**Disconnected Cluster** focuses on **complete network isolation**, requiring pre-preparation of all necessary images, software packages, and configurations, suitable for deployment in highly secure or completely isolated environments.
 
-两者的主要区别在于：Private Cluster是"网络私有化"，而Disconnected Cluster是"完全离线化"。
+The main difference between the two is: Private Cluster is "network privatization", while Disconnected Cluster is "complete offline operation".
 
 ---
 
 # OpenShift Cluster Installation Sequence Diagrams
 
-本文档包含OpenShift Private Cluster和Disconnected Cluster安装过程的UML时序图。
+This document contains UML sequence diagrams for OpenShift Private Cluster and Disconnected Cluster installation processes.
 
 ## 1. Private Cluster Installation Sequence
 
@@ -536,33 +536,33 @@ sequenceDiagram
 
 ---
 
-你说得对！从时序图中确实没有充分展示CCO在Disconnected Cluster中的具体使用过程。让我详细解释一下CCO在Disconnected Cluster安装中的关键作用：
+You're right! The sequence diagram indeed doesn't fully demonstrate the specific usage process of CCO in Disconnected Cluster. Let me explain in detail the key role of CCO in Disconnected Cluster installation:
 
-## CCO在Disconnected Cluster中的使用过程
+## CCO Usage Process in Disconnected Cluster
 
-### 1. **CCO模式配置**
-在Disconnected Cluster中，CCO必须使用**Manual模式**，因为：
-- 集群无法访问互联网来动态创建云平台凭证
-- 需要预先创建的静态IAM用户/服务账户
+### 1. **CCO Mode Configuration**
+In Disconnected Cluster, CCO must use **Manual mode** because:
+- Cluster cannot access internet to dynamically create cloud platform credentials
+- Requires pre-created static IAM users/service accounts
 
-### 2. **具体使用步骤**
+### 2. **Specific Usage Steps**
 
-#### **步骤1: 提取CredentialsRequest**
+#### **Step 1: Extract CredentialsRequest**
 ```bash
-# 从OpenShift release镜像中提取凭证请求
+# Extract credential requests from OpenShift release image
 oc adm release extract --credentials-requests --cloud=aws ${RELEASE_IMAGE}
 ```
 
-#### **步骤2: 创建静态IAM用户**
+#### **Step 2: Create Static IAM Users**
 ```bash
-# 为每个CredentialsRequest创建对应的IAM策略和用户
-# 例如：openshift-image-registry-installer-cloud-credentials
-# 例如：openshift-ingress-operator-cloud-credentials
+# Create corresponding IAM policies and users for each CredentialsRequest
+# For example: openshift-image-registry-installer-cloud-credentials
+# For example: openshift-ingress-operator-cloud-credentials
 ```
 
-#### **步骤3: 生成Kubernetes Secret**
+#### **Step 3: Generate Kubernetes Secret**
 ```yaml
-# 为每个组件生成对应的Secret
+# Generate corresponding Secret for each component
 apiVersion: v1
 kind: Secret
 metadata:
@@ -573,15 +573,15 @@ data:
   aws_secret_access_key: <base64-encoded-secret>
 ```
 
-#### **步骤4: 应用凭证配置**
+#### **Step 4: Apply Credential Configuration**
 ```bash
-# 在集群安装过程中应用这些Secret
+# Apply these Secrets during cluster installation
 oc apply -f manifests/
 ```
 
-### 3. **CCO在时序图中的缺失部分**
+### 3. **Missing Parts of CCO in Sequence Diagram**
 
-在Disconnected Cluster时序图中，应该更详细地展示：
+In the Disconnected Cluster sequence diagram, the following should be shown in more detail:
 
 ```mermaid
 sequenceDiagram
@@ -608,29 +608,29 @@ sequenceDiagram
     Note over Admin,Cluster: CCO operates in Manual mode
 ```
 
-### 4. **CCO的关键差异**
+### 4. **Key Differences of CCO**
 
-| 方面 | Private Cluster | Disconnected Cluster |
+| Aspect | Private Cluster | Disconnected Cluster |
 |------|----------------|---------------------|
-| **CCO模式** | Mint/Manual | Manual only |
-| **凭证创建** | 动态创建 | 静态预创建 |
-| **权限管理** | 自动管理 | 手动管理 |
-| **互联网依赖** | 需要访问IAM API | 无需互联网访问 |
+| **CCO Mode** | Mint/Manual | Manual only |
+| **Credential Creation** | Dynamic creation | Static pre-creation |
+| **Permission Management** | Automatic management | Manual management |
+| **Internet Dependency** | Requires IAM API access | No internet access required |
 
-### 5. **为什么Disconnected Cluster需要Manual模式**
+### 5. **Why Disconnected Cluster Needs Manual Mode**
 
-1. **网络隔离**: 集群无法访问AWS IAM API
-2. **安全要求**: 企业安全策略要求手动管理凭证
-3. **审计需求**: 需要明确的凭证创建记录
-4. **权限控制**: 确保最小权限原则
+1. **Network Isolation**: Cluster cannot access AWS IAM API
+2. **Security Requirements**: Enterprise security policies require manual credential management
+3. **Audit Requirements**: Need clear credential creation records
+4. **Permission Control**: Ensure principle of least privilege
 
-### 6. **CCO配置示例**
+### 6. **CCO Configuration Example**
 
 ```yaml
 # install-config.yaml
-credentialsMode: Manual  # 强制使用Manual模式
+credentialsMode: Manual  # Force Manual mode
 
-# 对应的IAM策略示例
+# Example IAM policy
 {
   "Version": "2012-10-17",
   "Statement": [

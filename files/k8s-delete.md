@@ -1,76 +1,76 @@
-# 在 Kubernetes 中删除 Service、Deployment 和对应的 Pods
+# Deleting Services, Deployments and Corresponding Pods in Kubernetes
 
-在 Kubernetes 中删除一个完整的应用资源（包括 Service、Deployment 和对应的 Pods），有以下几种方法：
+In Kubernetes, there are several methods to delete a complete application resource (including Service, Deployment and corresponding Pods):
 
-## 方法1：逐个删除资源
+## Method 1: Delete Resources Individually
 
 ```bash
-# 删除 Service
+# Delete Service
 kubectl delete service <service-name>
 
-# 删除 Deployment（会自动删除对应的 ReplicaSet 和 Pods）
+# Delete Deployment (will automatically delete corresponding ReplicaSet and Pods)
 kubectl delete deployment <deployment-name>
 ```
 
-## 方法2：使用标签选择器删除
+## Method 2: Delete Using Label Selectors
 
-如果您的资源有共同的标签（推荐做法），可以使用标签选择器一次性删除：
+If your resources have common labels (recommended practice), you can use label selectors to delete them all at once:
 
 ```bash
-# 查看资源及其标签
+# View resources and their labels
 kubectl get svc,deploy,pods --show-labels
 
-# 使用标签选择器删除（例如 app=my-app）
+# Delete using label selector (e.g. app=my-app)
 kubectl delete svc,deploy,pods -l app=<your-app-label>
 ```
 
-## 方法3：删除整个命名空间（谨慎使用）
+## Method 3: Delete Entire Namespace (Use with Caution)
 
-如果您的所有资源都在同一个命名空间中，可以删除整个命名空间：
+If all your resources are in the same namespace, you can delete the entire namespace:
 
 ```bash
-# 删除命名空间及其所有资源
+# Delete namespace and all its resources
 kubectl delete namespace <namespace-name>
 ```
 
-## 方法4：使用 kubectl 通配符删除
+## Method 4: Delete Using kubectl Wildcards
 
 ```bash
-# 删除所有匹配名称模式的资源
-kubectl delete all --all -n <namespace>  # 删除命名空间中的所有资源
-kubectl delete all -l app=<your-app-label>  # 删除特定标签的所有资源
+# Delete all resources matching name patterns
+kubectl delete all --all -n <namespace>  # Delete all resources in namespace
+kubectl delete all -l app=<your-app-label>  # Delete all resources with specific label
 ```
 
-## 方法5：通过清单文件删除
+## Method 5: Delete via Manifest Files
 
-如果您最初是通过 YAML 文件创建的资源，可以使用相同的文件删除：
+If you originally created resources through YAML files, you can use the same files to delete them:
 
 ```bash
 kubectl delete -f your-deployment-and-service.yaml
 ```
 
-## 注意事项
+## Notes
 
-1. **删除顺序**：通常不需要特别关注删除顺序，因为 Kubernetes 会自动处理依赖关系
+1. **Deletion Order**: Usually no need to pay special attention to deletion order, as Kubernetes will automatically handle dependencies
 
-2. **Pod 删除**：当您删除 Deployment 时，它管理的 ReplicaSet 和 Pods 会自动被删除
+2. **Pod Deletion**: When you delete a Deployment, its managed ReplicaSet and Pods will be automatically deleted
 
-3. **验证删除**：删除后可以运行以下命令验证：
+3. **Verify Deletion**: After deletion, you can run the following commands to verify:
    ```bash
    kubectl get svc,deploy,pods
    ```
 
-4. **持久化存储**：如果使用了 PersistentVolumeClaims，需要单独删除：
+4. **Persistent Storage**: If PersistentVolumeClaims are used, they need to be deleted separately:
    ```bash
    kubectl delete pvc <pvc-name>
    ```
 
-5. **ConfigMaps 和 Secrets**：如果有相关的 ConfigMaps 或 Secrets，也需要单独删除
+5. **ConfigMaps and Secrets**: If there are related ConfigMaps or Secrets, they also need to be deleted separately
 
-## 推荐做法
+## Recommended Practices
 
-1. **使用标签**：为相关资源打上相同的标签，便于统一管理
-2. **使用命名空间**：为不同应用使用不同命名空间
-3. **使用清单文件**：通过 YAML 文件管理资源，便于版本控制和重复部署
+1. **Use Labels**: Apply the same labels to related resources for easier unified management
+2. **Use Namespaces**: Use different namespaces for different applications
+3. **Use Manifest Files**: Manage resources through YAML files for easier version control and repeated deployment
 
-通过以上方法，您可以彻底清理 Kubernetes 集群中的相关资源。
+Through these methods, you can thoroughly clean up related resources in the Kubernetes cluster.

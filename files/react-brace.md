@@ -1,15 +1,15 @@
 # 在 React 中（特别是在 JSX 中），单花括号 `{}` 和双花括号 `{{}}` 的使用有明显的区别，主要与 JSX 的语法和 JavaScript 表达式的处理方式有关。以下是详细的解释，包括它们的区别和使用场景：
 
-### 1. **单花括号 `{}`**
-#### 作用
-单花括号 `{}` 用于在 JSX 中嵌入 JavaScript 表达式。JSX 是一种 JavaScript 的扩展语法，允许你在 HTML 结构的代码中通过 `{}` 插入动态的 JavaScript 表达式，表达式会在渲染时被求值并替换为结果。
+### 1. **Single Curly Braces `{}`**
+#### Purpose
+Single curly braces `{}` are used to embed JavaScript expressions in JSX. JSX is a JavaScript extension syntax that allows you to insert dynamic JavaScript expressions through `{}` in HTML-structured code, and the expressions will be evaluated and replaced with results during rendering.
 
-#### 使用场景
-- **插入变量或简单表达式**：当你需要渲染一个变量、计算结果、函数调用结果或任何返回值的 JavaScript 表达式时，使用单花括号。
-- **动态属性值**：在 JSX 标签的属性中，也使用单花括号来动态设置属性值。
-- **条件渲染或循环**：在条件渲染或使用 `map` 等方法时，单花括号用于包裹逻辑表达式。
+#### Usage Scenarios
+- **Inserting Variables or Simple Expressions**: Use single curly braces when you need to render a variable, calculation result, function call result, or any JavaScript expression that returns a value.
+- **Dynamic Attribute Values**: In JSX tag attributes, also use single curly braces to dynamically set attribute values.
+- **Conditional Rendering or Loops**: Single curly braces are used to wrap logical expressions in conditional rendering or when using methods like `map`.
 
-#### 示例
+#### Examples
 ```jsx
 const name = "Alice";
 const age = 25;
@@ -17,20 +17,20 @@ const age = 25;
 function App() {
   return (
     <div>
-      <h1>Hello, {name}!</h1> {/* 插入变量 */}
-      <p>Age: {age + 1}</p> {/* 插入计算结果 */}
-      <p>Random: {Math.random()}</p> {/* 插入函数调用结果 */}
-      <img src={getImageUrl()} alt="example" /> {/* 动态属性值 */}
-      {isLoggedIn ? <UserProfile /> : <LoginButton />} {/* 条件渲染 */}
-      {items.map(item => <li key={item.id}>{item.name}</li>)} {/* 循环渲染 */}
+      <h1>Hello, {name}!</h1> {/* Insert variable */}
+      <p>Age: {age + 1}</p> {/* Insert calculation result */}
+      <p>Random: {Math.random()}</p> {/* Insert function call result */}
+      <img src={getImageUrl()} alt="example" /> {/* Dynamic attribute value */}
+      {isLoggedIn ? <UserProfile /> : <LoginButton />} {/* Conditional rendering */}
+      {items.map(item => <li key={item.id}>{item.name}</li>)} {/* Loop rendering */}
     </div>
   );
 }
 ```
 
-#### 注意事项
-- 单花括号中必须是一个**单一的 JavaScript 表达式**，不能是语句（如 `if`、`for`）或多行代码块。
-- 表达式的结果会被渲染为文本、数字、组件、或 JSX 元素。如果结果是 `undefined`、`null` 或布尔值，React 不会渲染任何内容。
+#### Notes
+- Single curly braces must contain a **single JavaScript expression**, not statements (like `if`, `for`) or multi-line code blocks.
+- The expression result will be rendered as text, numbers, components, or JSX elements. If the result is `undefined`, `null`, or boolean values, React won't render anything.
 
 ---
 

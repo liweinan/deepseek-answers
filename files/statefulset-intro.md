@@ -1,50 +1,53 @@
-# StatefulSet介绍
+# StatefulSet Introduction
 
-**StatefulSet** 是 Kubernetes 中用于管理有状态应用的工作负载 API 对象。与 **Deployment** 和 **ReplicaSet** 主要用于管理无状态应用不同，StatefulSet 专门为需要持久化存储、稳定网络标识和有序部署/扩展/删除的应用设计。
-
----
-
-### **StatefulSet 的核心特性**
-1. **稳定的网络标识**：
-    - 每个 Pod 都有一个唯一的、稳定的网络标识（如 `pod-name-0`, `pod-name-1`），即使 Pod 被重新调度，其名称和网络标识也不会改变。
-    - 例如，一个名为 `web` 的 StatefulSet 创建的 Pod 名称会依次为 `web-0`, `web-1`, `web-2`。
-
-2. **稳定的存储**：
-    - 每个 Pod 可以绑定一个或多个持久化存储卷（Persistent Volume，PV），即使 Pod 被删除或重新调度，存储卷也会保留并与新的 Pod 重新绑定。
-    - 存储卷的生命周期与 Pod 解耦，确保数据持久化。
-
-3. **有序部署和扩展**：
-    - StatefulSet 中的 Pod 是按顺序创建的（从 0 到 N-1），并且前一个 Pod 必须处于运行状态后，才会创建下一个 Pod。
-    - 缩容时，Pod 会按相反顺序删除（从 N-1 到 0）。
-
-4. **有序滚动更新**：
-    - 更新 StatefulSet 时，Pod 会按顺序更新（从 N-1 到 0），确保应用的稳定性。
-
-5. **唯一性**：
-    - 每个 Pod 在 StatefulSet 中是唯一的，不能随意替换或重新创建。
+**StatefulSet** is a workload API object in Kubernetes used for managing stateful applications. Unlike **Deployment** and **ReplicaSet**, which are mainly used for managing stateless applications, StatefulSet is specifically designed for applications that require persistent storage, stable network identifiers, and ordered deployment/scaling/deletion.
 
 ---
 
-### **StatefulSet 的典型使用场景**
-1. **数据库集群**：
-    - 如 MySQL、PostgreSQL、MongoDB 等需要持久化存储和稳定网络标识的数据库。
-    - 每个 Pod 对应一个数据库实例，存储卷用于保存数据。
+## **Core Features of StatefulSet**
 
-2. **分布式系统**：
-    - 如 ZooKeeper、Etcd、Kafka 等需要明确成员身份和稳定网络标识的分布式系统。
+1. **Stable Network Identity**:
+    - Each Pod has a unique and stable network identifier (such as `pod-name-0`, `pod-name-1`), and even if the Pod is rescheduled, its name and network identifier will not change.
+    - For example, a StatefulSet named `web` will create Pods named sequentially as `web-0`, `web-1`, `web-2`.
 
-3. **有状态应用**：
-    - 任何需要持久化存储或依赖特定网络标识的应用。
+2. **Stable Storage**:
+    - Each Pod can bind to one or more persistent storage volumes (Persistent Volume, PV), and even if the Pod is deleted or rescheduled, the storage volume will be retained and rebound to the new Pod.
+    - The lifecycle of the storage volume is decoupled from the Pod, ensuring data persistence.
+
+3. **Ordered Deployment and Scaling**:
+    - Pods in a StatefulSet are created in order (from 0 to N-1), and the next Pod will only be created after the previous Pod is in a running state.
+    - When scaling down, Pods are deleted in reverse order (from N-1 to 0).
+
+4. **Ordered Rolling Updates**:
+    - When updating a StatefulSet, Pods are updated in order (from N-1 to 0) to ensure application stability.
+
+5. **Uniqueness**:
+    - Each Pod in a StatefulSet is unique and cannot be randomly replaced or recreated.
 
 ---
 
-### **StatefulSet 的工作机制**
-1. **Pod 命名规则**：
-    - StatefulSet 创建的 Pod 名称遵循 `<statefulset-name>-<ordinal-index>` 的格式，例如 `web-0`, `web-1`。
+## **Typical Use Cases for StatefulSet**
 
-2. **持久化存储**：
-    - 通过 `volumeClaimTemplates` 为每个 Pod 动态创建持久化存储卷（Persistent Volume Claim，PVC）。
-    - 示例：
+1. **Database Clusters**:
+    - Databases such as MySQL, PostgreSQL, MongoDB that require persistent storage and stable network identifiers.
+    - Each Pod corresponds to a database instance, and storage volumes are used to save data.
+
+2. **Distributed Systems**:
+    - Distributed systems such as ZooKeeper, Etcd, Kafka that require clear member identity and stable network identifiers.
+
+3. **Stateful Applications**:
+    - Any application that requires persistent storage or depends on specific network identifiers.
+
+---
+
+## **How StatefulSet Works**
+
+1. **Pod Naming Rules**:
+    - Pods created by StatefulSet follow the format `<statefulset-name>-<ordinal-index>`, such as `web-0`, `web-1`.
+
+2. **Persistent Storage**:
+    - Dynamically creates persistent storage volumes (Persistent Volume Claim, PVC) for each Pod through `volumeClaimTemplates`.
+    - Example:
       ```yaml
       volumeClaimTemplates:
       - metadata:
@@ -56,19 +59,20 @@
               storage: 10Gi
       ```
 
-3. **服务发现**：
-    - 通过 Headless Service（无头服务）为每个 Pod 提供唯一的 DNS 记录。
-    - 例如，一个名为 `web` 的 StatefulSet 和一个名为 `web` 的 Headless Service 会生成如下 DNS 记录：
+3. **Service Discovery**:
+    - Provides unique DNS records for each Pod through Headless Service (headless service).
+    - For example, a StatefulSet named `web` and a Headless Service named `web` will generate the following DNS records:
         - `web-0.web.default.svc.cluster.local`
         - `web-1.web.default.svc.cluster.local`
 
-4. **有序操作**：
-    - 部署、扩展、缩容和更新时，StatefulSet 会严格按照顺序执行操作。
+4. **Ordered Operations**:
+    - When deploying, scaling, scaling down, and updating, StatefulSet strictly performs operations in order.
 
 ---
 
-### **StatefulSet 的示例**
-以下是一个简单的 StatefulSet 示例，用于部署一个包含 3 个副本的 MySQL 集群：
+## **Example of StatefulSet**
+
+The following is a simple StatefulSet example for deploying a MySQL cluster with 3 replicas:
 
 ```yaml
 apiVersion: apps/v1
@@ -106,18 +110,22 @@ spec:
 
 ---
 
-### **StatefulSet 与 Deployment 的区别**
-| 特性                | StatefulSet                     | Deployment                     |
-|---------------------|---------------------------------|--------------------------------|
-| **网络标识**         | 稳定且唯一                      | 随机生成                       |
-| **存储**            | 每个 Pod 有独立的持久化存储      | 通常无持久化存储               |
-| **Pod 命名**        | 有序且稳定（如 `web-0`, `web-1`）| 随机命名                       |
-| **部署顺序**        | 有序（从 0 到 N-1）             | 并行                           |
-| **适用场景**        | 有状态应用（如数据库、分布式系统）| 无状态应用（如 Web 服务）      |
+## **Differences Between StatefulSet and Deployment**
+
+| Feature                | StatefulSet                     | Deployment                     |
+|------------------------|---------------------------------|--------------------------------|
+| **Network Identity**    | Stable and unique               | Randomly generated             |
+| **Storage**            | Each Pod has independent persistent storage | Usually no persistent storage |
+| **Pod Naming**         | Ordered and stable (e.g., `web-0`, `web-1`) | Random naming                 |
+| **Deployment Order**   | Ordered (from 0 to N-1)         | Parallel                       |
+| **Use Cases**          | Stateful applications (e.g., databases, distributed systems) | Stateless applications (e.g., web services) |
 
 ---
 
-### **总结**
-- StatefulSet 是 Kubernetes 中管理有状态应用的核心工具，适用于需要稳定网络标识、持久化存储和有序操作的场景。
-- 通过 StatefulSet，可以轻松部署和管理数据库、分布式系统等有状态应用，同时确保数据的高可用性和一致性。
-- 如果你需要部署无状态应用，使用 Deployment 或 ReplicaSet 更为合适。
+## **Summary**
+
+- StatefulSet is a core tool in Kubernetes for managing stateful applications, suitable for scenarios that require stable network identifiers, persistent storage, and ordered operations.
+
+- Through StatefulSet, you can easily deploy and manage stateful applications such as databases and distributed systems while ensuring high availability and consistency of data.
+
+- If you need to deploy stateless applications, using Deployment or ReplicaSet is more appropriate.

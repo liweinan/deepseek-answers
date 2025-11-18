@@ -1,37 +1,37 @@
-# 当一个 pod 包含多个容器时，需要指定容器名称来登录特定的容器。以下是详细的方法：
+# When a pod contains multiple containers, you need to specify the container name to log into a specific container. Here are the detailed methods:
 
-## 1. 查看 pod 中的容器
+## 1. View Containers in Pod
 
 ```bash
-# 查看 pod 的详细信息，包括所有容器
+# View pod details including all containers
 kubectl describe pod <pod-name>
 
-# 或者使用更简洁的方式查看容器列表
+# Or use a more concise way to view container list
 kubectl get pod <pod-name> -o jsonpath='{.spec.containers[*].name}'
 ```
 
-## 2. 登录到特定容器
+## 2. Log into Specific Container
 
-### 基本语法
+### Basic Syntax
 ```bash
-# 指定容器名称登录
+# Specify container name to log in
 kubectl exec -it <pod-name> -c <container-name> -- /bin/bash
 
-# 如果容器没有 bash，使用 sh
+# If container doesn't have bash, use sh
 kubectl exec -it <pod-name> -c <container-name> -- /bin/sh
 ```
 
-### 实际示例
+### Practical Example
 ```bash
-# 假设你的 pod 有多个容器：nginx, redis, mysql
+# Assume your pod has multiple containers: nginx, redis, mysql
 kubectl exec -it my-pod -c nginx -- /bin/bash
 kubectl exec -it my-pod -c redis -- /bin/bash
 kubectl exec -it my-pod -c mysql -- /bin/bash
 ```
 
-## 3. 多容器 pod 的常见场景
+## 3. Common Scenarios for Multi-Container Pods
 
-### 示例：Web 应用 + 数据库 + 缓存
+### Example: Web Application + Database + Cache
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -53,118 +53,118 @@ spec:
     - containerPort: 6379
 ```
 
-### 登录到各个容器
+### Log into Each Container
 ```bash
-# 登录到 web 服务器容器
+# Log into web server container
 kubectl exec -it web-app -c web-server -- /bin/bash
 
-# 登录到数据库容器
+# Log into database container
 kubectl exec -it web-app -c database -- /bin/bash
 
-# 登录到缓存容器
+# Log into cache container
 kubectl exec -it web-app -c cache -- /bin/bash
 ```
 
-## 4. 实用技巧
+## 4. Practical Tips
 
-### 查看所有容器状态
+### View Status of All Containers
 ```bash
-# 查看 pod 中所有容器的状态
+# View status of all containers in pod
 kubectl get pod <pod-name> -o jsonpath='{range .status.containerStatuses[*]}{.name}: {.state}{"\n"}{end}'
 ```
 
-### 获取容器日志
+### Get Container Logs
 ```bash
-# 获取特定容器的日志
+# Get logs for specific container
 kubectl logs <pod-name> -c <container-name>
 
-# 获取所有容器的日志
+# Get logs for all containers
 kubectl logs <pod-name> --all-containers=true
 ```
 
-### 在容器中执行命令
+### Execute Commands in Container
 ```bash
-# 在特定容器中执行命令
+# Execute command in specific container
 kubectl exec <pod-name> -c <container-name> -- ls -la
 
-# 在容器中运行交互式命令
+# Run interactive command in container
 kubectl exec -it <pod-name> -c <container-name> -- mysql -u root -p
 ```
 
-## 5. 调试多容器 pod 的完整流程
+## 5. Complete Debugging Process for Multi-Container Pods
 
 ```bash
-# 1. 查看 pod 状态
+# 1. View pod status
 kubectl get pods
 
-# 2. 查看 pod 详细信息
+# 2. View pod details
 kubectl describe pod <pod-name>
 
-# 3. 查看所有容器状态
+# 3. View status of all containers
 kubectl get pod <pod-name> -o jsonpath='{range .status.containerStatuses[*]}{.name}: {.ready} - {.state}{"\n"}{end}'
 
-# 4. 查看特定容器日志
+# 4. View logs for specific container
 kubectl logs <pod-name> -c <container-name>
 
-# 5. 登录到特定容器
+# 5. Log into specific container
 kubectl exec -it <pod-name> -c <container-name> -- /bin/bash
 ```
 
-## 6. 常见问题和解决方案
+## 6. Common Issues and Solutions
 
-### 问题1：容器名称不明确
+### Issue 1: Container Name Not Clear
 ```bash
-# 列出 pod 中所有容器名称
+# List all container names in pod
 kubectl get pod <pod-name> -o jsonpath='{.spec.containers[*].name}' | tr ' ' '\n'
 ```
 
-### 问题2：容器没有 bash
+### Issue 2: Container Has No Bash
 ```bash
-# 尝试不同的 shell
+# Try different shells
 kubectl exec -it <pod-name> -c <container-name> -- /bin/sh
 kubectl exec -it <pod-name> -c <container-name> -- /bin/zsh
 kubectl exec -it <pod-name> -c <container-name> -- /bin/ash
 ```
 
-### 问题3：容器崩溃重启
+### Issue 3: Container Crashes and Restarts
 ```bash
-# 查看容器重启历史
+# View container restart history
 kubectl describe pod <pod-name> | grep -A 10 "Containers:"
 
-# 查看前一个容器的日志
+# View previous container's logs
 kubectl logs <pod-name> -c <container-name> --previous
 ```
 
-## 7. 实际应用示例
+## 7. Practical Application Example
 
-假设你有一个包含 nginx 和 php-fpm 的 pod：
+Assume you have a pod with nginx and php-fpm:
 
 ```bash
-# 查看容器列表
+# View container list
 kubectl get pod my-app -o jsonpath='{.spec.containers[*].name}'
-# 输出：nginx php-fpm
+# Output: nginx php-fpm
 
-# 登录到 nginx 容器
+# Log into nginx container
 kubectl exec -it my-app -c nginx -- /bin/bash
 
-# 登录到 php-fpm 容器
+# Log into php-fpm container
 kubectl exec -it my-app -c php-fpm -- /bin/bash
 
-# 在 nginx 容器中检查配置
+# Check nginx configuration in nginx container
 kubectl exec my-app -c nginx -- nginx -t
 
-# 在 php-fpm 容器中检查 PHP 版本
+# Check PHP version in php-fpm container
 kubectl exec my-app -c php-fpm -- php -v
 ```
 
-## 8. 批量操作多容器
+## 8. Batch Operations on Multiple Containers
 
 ```bash
-# 在所有容器中执行相同命令
+# Execute same command in all containers
 for container in $(kubectl get pod <pod-name> -o jsonpath='{.spec.containers[*].name}'); do
   echo "=== Container: $container ==="
   kubectl exec <pod-name> -c $container -- ps aux
 done
 ```
 
-这样你就可以灵活地登录和调试 pod 中的任何容器了！
+This way you can flexibly log into and debug any container in the pod!

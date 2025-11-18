@@ -1,99 +1,99 @@
 # Python Cheat Sheet
 
-## 基础语法
+## Basic Syntax
 
 ```python
-# 打印输出
+# Print Output
 print("Hello, World!")
 
-# 变量赋值
+# Variable Assignment
 x = 10
 name = "Alice"
 
-# 获取输入
+# Get Input
 user_input = input("Enter something: ")
 
-# 注释
-# 这是单行注释
+# Comments
+# This is a single-line comment
 """
-这是多行注释
-可以跨越多行
+This is a multi-line comment
+that can span multiple lines
 """
 ```
 
-## 数据类型
+## Data Types
 
 ```python
-# 数字
-int_num = 42        # 整数
-float_num = 3.14    # 浮点数
-complex_num = 2 + 3j # 复数
+# Numbers
+int_num = 42        # integer
+float_num = 3.14    # float
+complex_num = 2 + 3j # complex number
 
-# 布尔值
+# Boolean Values
 true_val = True
 false_val = False
 
-# 字符串
+# Strings
 str1 = "Hello"
 str2 = 'World'
 multiline_str = """This is a
 multi-line string"""
 
-# 列表
+# Lists
 my_list = [1, 2, 3, "a", "b"]
 empty_list = []
 
-# 元组
-my_tuple = (1, 2, 3)  # 不可变
+# Tuples
+my_tuple = (1, 2, 3)  # immutable
 empty_tuple = ()
 
-# 字典
+# Dictionaries
 my_dict = {"name": "Alice", "age": 25}
 empty_dict = {}
 
-# 集合
-my_set = {1, 2, 3}  # 唯一元素
+# Sets
+my_set = {1, 2, 3}  # unique elements
 empty_set = set()
 ```
 
-## 运算符
+## Operators
 
 ```python
-# 算术运算符
-x + y    # 加法
-x - y    # 减法
-x * y    # 乘法
-x / y    # 除法
-x // y   # 整除
-x % y    # 取模
-x ** y   # 幂运算
+# Arithmetic Operators
+x + y    # addition
+x - y    # subtraction
+x * y    # multiplication
+x / y    # division
+x // y   # floor division
+x % y    # modulo
+x ** y   # exponentiation
 
-# 比较运算符
-x == y   # 等于
-x != y   # 不等于
-x > y    # 大于
-x < y    # 小于
-x >= y   # 大于等于
-x <= y   # 小于等于
+# Comparison Operators
+x == y   # equal to
+x != y   # not equal to
+x > y    # greater than
+x < y    # less than
+x >= y   # greater than or equal to
+x <= y   # less than or equal to
 
-# 逻辑运算符
-x and y  # 与
-x or y   # 或
-not x    # 非
+# Logical Operators
+x and y  # and
+x or y   # or
+not x    # not
 
-# 成员运算符
-x in y       # 如果在y中找到x返回True
-x not in y   # 如果在y中没有找到x返回True
+# Membership Operators
+x in y       # returns True if x is found in y
+x not in y   # returns True if x is not found in y
 
-# 身份运算符
-x is y       # 如果x和y是同一个对象返回True
-x is not y   # 如果x和y不是同一个对象返回True
+# Identity Operators
+x is y       # returns True if x and y are the same object
+x is not y   # returns True if x and y are not the same object
 ```
 
-## 控制流
+## Control Flow
 
 ```python
-# if语句
+# if statement
 if x > 0:
     print("Positive")
 elif x == 0:
@@ -101,129 +101,129 @@ elif x == 0:
 else:
     print("Negative")
 
-# for循环
-for i in range(5):  # 0到4
+# for loop
+for i in range(5):  # 0 to 4
     print(i)
 
 for item in my_list:
     print(item)
 
-# while循环
+# while loop
 while x > 0:
     print(x)
     x -= 1
 
-# 循环控制
-break      # 退出循环
-continue   # 跳过当前迭代
+# Loop Control
+break      # exit loop
+continue   # skip current iteration
 ```
 
-## 函数
+## Functions
 
 ```python
-# 定义函数
+# Define function
 def greet(name):
-    """这是一个问候函数"""
+    """This is a greeting function"""
     return f"Hello, {name}!"
 
-# 调用函数
+# Call function
 result = greet("Alice")
 
-# 默认参数
+# Default parameters
 def power(x, n=2):
     return x ** n
 
-# 可变参数
+# Variable arguments
 def sum_all(*args):
     return sum(args)
 
-# 关键字参数
+# Keyword arguments
 def person_info(**kwargs):
     for key, value in kwargs.items():
         print(f"{key}: {value}")
 
-# lambda函数
+# Lambda functions
 square = lambda x: x ** 2
 ```
 
-## 列表操作
+## List Operations
 
 ```python
-# 创建列表
+# Create lists
 numbers = [1, 2, 3, 4, 5]
 
-# 访问元素
+# Access elements
 first = numbers[0]      # 1
 last = numbers[-1]      # 5
 sublist = numbers[1:3]  # [2, 3]
 
-# 修改列表
+# Modify lists
 numbers.append(6)       # [1, 2, 3, 4, 5, 6]
 numbers.insert(0, 0)    # [0, 1, 2, 3, 4, 5, 6]
 numbers.remove(3)       # [0, 1, 2, 4, 5, 6]
 del numbers[0]          # [1, 2, 4, 5, 6]
 
-# 列表操作
-len(numbers)            # 长度
-numbers.sort()          # 排序
-numbers.reverse()       # 反转
-numbers.index(4)        # 查找索引
-numbers.count(2)        # 计数
+# List operations
+len(numbers)            # length
+numbers.sort()          # sort
+numbers.reverse()       # reverse
+numbers.index(4)        # find index
+numbers.count(2)        # count
 
-# 列表推导式
+# List comprehensions
 squares = [x**2 for x in range(10)]
 even_squares = [x**2 for x in range(10) if x % 2 == 0]
 ```
 
-## 字符串操作
+## String Operations
 
 ```python
-# 字符串方法
+# String methods
 s = "hello world"
 s.upper()           # "HELLO WORLD"
 s.lower()           # "hello world"
 s.capitalize()      # "Hello world"
 s.title()           # "Hello World"
-s.strip()           # 去除两端空白
+s.strip()           # remove whitespace from both ends
 s.split()           # ['hello', 'world']
 "-".join(["a", "b"]) # "a-b"
 
-# 字符串格式化
+# String formatting
 name = "Alice"
 age = 25
 f"Name: {name}, Age: {age}"  # f-string (Python 3.6+)
 "Name: {}, Age: {}".format(name, age)
 "Name: %s, Age: %d" % (name, age)
 
-# 字符串检查
+# String checks
 s.startswith("hello")  # True
 s.endswith("world")    # True
-s.isalpha()           # False (包含空格)
+s.isalpha()           # False (contains spaces)
 s.isdigit()           # False
 ```
 
-## 文件操作
+## File Operations
 
 ```python
-# 读取文件
+# Read files
 with open("file.txt", "r") as f:
-    content = f.read()  # 读取全部内容
-    lines = f.readlines()  # 读取所有行
+    content = f.read()  # read all content
+    lines = f.readlines()  # read all lines
 
-# 写入文件
+# Write files
 with open("output.txt", "w") as f:
     f.write("Hello\n")
     f.writelines(["Line 1\n", "Line 2\n"])
 
-# 文件模式
-# "r" - 读取 (默认)
-# "w" - 写入 (会覆盖)
-# "a" - 追加
-# "r+" - 读写
-# "b" - 二进制模式 (如 "rb")
+# File modes
+# "r" - read (default)
+# "w" - write (overwrites)
+# "a" - append
+# "r+" - read and write
+# "b" - binary mode (e.g., "rb")
 ```
 
-## 异常处理
+## Exception Handling
 
 ```python
 try:
@@ -237,44 +237,44 @@ else:
 finally:
     print("This always executes")
 
-# 抛出异常
+# Raise exceptions
 if x < 0:
     raise ValueError("x cannot be negative")
 ```
 
-## 面向对象编程
+## Object-Oriented Programming
 
 ```python
-# 类定义
+# Class definition
 class Person:
-    # 类属性
+    # Class attribute
     species = "Homo sapiens"
     
-    # 初始化方法
+    # Initialization method
     def __init__(self, name, age):
-        self.name = name  # 实例属性
+        self.name = name  # instance attribute
         self.age = age
     
-    # 实例方法
+    # Instance method
     def greet(self):
         return f"Hello, my name is {self.name}"
     
-    # 类方法
+    # Class method
     @classmethod
     def from_birth_year(cls, name, birth_year):
         age = 2023 - birth_year
         return cls(name, age)
     
-    # 静态方法
+    # Static method
     @staticmethod
     def is_adult(age):
         return age >= 18
 
-# 创建实例
+# Create instance
 person = Person("Alice", 25)
 print(person.greet())
 
-# 继承
+# Inheritance
 class Student(Person):
     def __init__(self, name, age, student_id):
         super().__init__(name, age)
@@ -284,89 +284,89 @@ class Student(Person):
         return f"Hi, I'm student {self.student_id}, my name is {self.name}"
 ```
 
-## 常用模块
+## Common Modules
 
 ```python
-# math模块
+# math module
 import math
 math.sqrt(16)       # 4.0
 math.pi             # 3.141592653589793
 math.ceil(3.2)      # 4
 math.floor(3.8)     # 3
 
-# random模块
+# random module
 import random
-random.random()     # 0.0到1.0之间的随机数
-random.randint(1, 10)  # 1到10之间的随机整数
-random.choice(["a", "b", "c"])  # 随机选择
+random.random()     # random number between 0.0 and 1.0
+random.randint(1, 10)  # random integer between 1 and 10
+random.choice(["a", "b", "c"])  # random choice
 
-# datetime模块
+# datetime module
 from datetime import datetime, date, timedelta
 now = datetime.now()
 today = date.today()
 future = now + timedelta(days=7)
 
-# os模块
+# os module
 import os
-os.getcwd()         # 当前工作目录
-os.listdir()        # 列出目录内容
-os.path.exists("file.txt")  # 检查文件是否存在
+os.getcwd()         # current working directory
+os.listdir()        # list directory contents
+os.path.exists("file.txt")  # check if file exists
 
-# sys模块
+# sys module
 import sys
-sys.argv            # 命令行参数
-sys.exit()          # 退出程序
+sys.argv            # command line arguments
+sys.exit()          # exit program
 
-# json模块
+# json module
 import json
-json_str = json.dumps({"name": "Alice"})  # 字典转JSON
-data = json.loads(json_str)               # JSON转字典
+json_str = json.dumps({"name": "Alice"})  # dict to JSON
+data = json.loads(json_str)               # JSON to dict
 ```
 
-## 虚拟环境
+## Virtual Environment
 
 ```bash
-# 创建虚拟环境
+# Create virtual environment
 python -m venv myenv
 
-# 激活虚拟环境 (Windows)
+# Activate virtual environment (Windows)
 myenv\Scripts\activate
 
-# 激活虚拟环境 (macOS/Linux)
+# Activate virtual environment (macOS/Linux)
 source myenv/bin/activate
 
-# 停用虚拟环境
+# Deactivate virtual environment
 deactivate
 
-# 安装包
+# Install packages
 pip install package_name
 
-# 列出已安装包
+# List installed packages
 pip list
 
-# 生成requirements.txt
+# Generate requirements.txt
 pip freeze > requirements.txt
 
-# 从requirements.txt安装
+# Install from requirements.txt
 pip install -r requirements.txt
 ```
 
-## PEP 8 编码风格指南要点
+## PEP 8 Coding Style Guide Key Points
 
-- 使用4个空格缩进
-- 每行不超过79个字符
-- 导入通常应该分行写：
+- Use 4 spaces for indentation
+- Maximum 79 characters per line
+- Imports should usually be on separate lines:
   ```python
   import os
   import sys
   ```
-- 类名使用驼峰命名法：`MyClass`
-- 函数和变量名使用小写加下划线：`my_function`
-- 常量使用全大写：`CONSTANT_NAME`
-- 运算符周围和逗号后使用空格：
+- Class names use CamelCase: `MyClass`
+- Function and variable names use lowercase with underscores: `my_function`
+- Constants use all uppercase: `CONSTANT_NAME`
+- Use spaces around operators and after commas:
   ```python
   x = 1 + 2
   my_list = [1, 2, 3]
   ```
 
-这个速查表涵盖了Python的主要功能，适合快速参考。根据你的具体需求，可能需要更详细的信息或特定领域的知识。
+This cheat sheet covers the main features of Python and is suitable for quick reference. Depending on your specific needs, you may require more detailed information or domain-specific knowledge.

@@ -1,38 +1,38 @@
-# few-shot learning
+# Few-shot Learning
 
-在训练大语言模型（LLM）时，**few-shot** 指的是 **few-shot learning**（少样本学习），一种模型训练或应用方式，旨在让模型通过**少量示例**（通常是几个样本）就能完成特定任务，而无需大量标注数据或专门的微调。
+When training Large Language Models (LLM), **few-shot** refers to **few-shot learning**, a model training or application approach designed to enable models to complete specific tasks with **a small number of examples** (typically just a few samples), without requiring large amounts of labeled data or specialized fine-tuning.
 
-### 具体解释：
-- **定义**：Few-shot learning 是一种提示（prompting）技术，通过在输入中提供少量任务相关的示例（输入-输出对），引导模型理解任务并生成正确输出。这些示例通常嵌入在提示中，称为 **in-context learning**。
-- **与训练的关系**：Few-shot 通常不涉及修改模型权重，而是利用预训练模型的泛化能力，在推理阶段通过提示提供上下文信息。因此，它更常见于使用阶段，而非传统意义上的训练阶段。
-- **示例**：
-  如果你想让模型翻译英文到中文，可以在提示中提供几个翻译示例：
+### Detailed Explanation:
+- **Definition**: Few-shot learning is a prompting technique that guides the model to understand tasks and generate correct outputs by providing a small number of task-related examples (input-output pairs) in the input. These examples are typically embedded in the prompt and are called **in-context learning**.
+- **Relationship with Training**: Few-shot typically does not involve modifying model weights, but rather leverages the generalization capabilities of pre-trained models to provide contextual information during the inference phase through prompts. Therefore, it is more commonly used in the application phase rather than in the traditional sense of the training phase.
+- **Example**:
+  If you want the model to translate English to Chinese, you can provide a few translation examples in the prompt:
   ```
-  任务：将英文翻译成中文。
-  示例：
+  Task: Translate English to Chinese.
+  Examples:
   1. English: I love reading books. -> Chinese: 我爱读书。
   2. English: The sky is blue. -> Chinese: 天空是蓝色的。
-  现在翻译：English: The cat is sleeping. -> Chinese: ?
+  Now translate: English: The cat is sleeping. -> Chinese: ?
   ```
-  模型会根据示例推断规律，输出：`Chinese: 猫在睡觉。`
+  The model will infer the pattern based on the examples and output: `Chinese: 猫在睡觉。`
 
-### 与其他方法的对比：
-- **Zero-shot**：不提供任何示例，直接要求模型完成任务，依赖模型的预训练知识。
-- **One-shot**：提供一个示例，模型根据单一示例推断任务。
-- **Few-shot**：提供多个（通常2-10个）示例，帮助模型更好理解任务模式。
-- **Fine-tuning**：通过大量标注数据调整模型权重，相比few-shot需要更多资源。
+### Comparison with Other Methods:
+- **Zero-shot**: No examples are provided, the model completes the task directly, relying on the model's pre-trained knowledge.
+- **One-shot**: One example is provided, the model infers the task based on a single example.
+- **Few-shot**: Multiple examples (typically 2-10) are provided to help the model better understand task patterns.
+- **Fine-tuning**: Model weights are adjusted through large amounts of labeled data, requiring more resources compared to few-shot.
 
-### 优点：
-- **高效**：无需大量标注数据或重新训练，节省时间和计算资源。
-- **灵活**：适用于多种任务，只需调整提示和示例。
-- **适应性强**：能快速适配新任务，尤其是数据稀缺场景。
+### Advantages:
+- **Efficient**: No need for large amounts of labeled data or retraining, saving time and computational resources.
+- **Flexible**: Applicable to various tasks, only requiring adjustment of prompts and examples.
+- **Strong Adaptability**: Can quickly adapt to new tasks, especially in scenarios with scarce data.
 
-### 局限性：
-- **依赖提示质量**：示例的选择和提示设计对结果影响很大。
-- **上下文长度限制**：模型能处理的提示长度有限，示例过多可能被截断。
-- **性能可能不如微调**：在复杂任务上，few-shot可能不如专门微调的模型效果好。
+### Limitations:
+- **Dependent on Prompt Quality**: The selection of examples and prompt design have a significant impact on results.
+- **Context Length Limitations**: The model can only handle limited prompt lengths, too many examples may be truncated.
+- **Performance May Be Inferior to Fine-tuning**: For complex tasks, few-shot may not be as effective as specially fine-tuned models.
 
-### 在LLM训练中的角色：
-虽然 few-shot 更多用于推理阶段，但在训练大语言模型时，研究者可能会通过构造 few-shot 风格的数据集（如包含任务描述和少量示例的提示）来增强模型的 in-context learning 能力。这种训练方式让模型在预训练或指令调优阶段就能学会如何根据少量示例完成任务。
+### Role in LLM Training:
+Although few-shot is more commonly used in the inference phase, when training large language models, researchers might enhance the model's in-context learning capabilities by constructing few-shot style datasets (such as prompts containing task descriptions and a few examples) during the pre-training or instruction tuning phases. This training approach enables the model to learn how to complete tasks based on a few examples during the pre-training or instruction tuning stages.
 
-总结来说，few-shot 是一种通过少量示例引导大语言模型完成任务的强大技术，尤其适用于资源有限或快速适配新任务的场景。
+In summary, few-shot is a powerful technique for guiding large language models to complete tasks through a small number of examples, particularly suitable for scenarios with limited resources or rapid adaptation to new tasks.

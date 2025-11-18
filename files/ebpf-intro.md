@@ -1,4 +1,4 @@
-# 以下是一份**eBPF 的极简教程**，帮助你快速上手这项强大的 Linux 内核技术：
+# Here's a **Minimal eBPF Tutorial** to help you quickly get started with this powerful Linux kernel technology:
 
 ```mermaid
 flowchart TD
@@ -42,15 +42,15 @@ flowchart TD
 
 ---
 
-### **1. 什么是 eBPF？**
-- **eBPF**（extended Berkeley Packet Filter）是 Linux 内核的虚拟机，允许**安全地在内核态运行沙盒程序**。
-- 用途：网络监控、性能分析、安全策略、故障排查等（如 Kubernetes 的 Cilium、Facebook 的 Katran）。
+### **1. What is eBPF?**
+- **eBPF** (extended Berkeley Packet Filter) is a Linux kernel virtual machine that allows**safe execution of sandboxed programs in kernel space**.
+- Uses: Network monitoring, performance analysis, security policies, troubleshooting, etc. (like Kubernetes' Cilium, Facebook's Katran).
 
 ---
 
-### **2. 环境准备**
-- **内核要求**：Linux 4.15+（推荐 5.x+）
-- **安装依赖**（Ubuntu 示例）：
+### **2. Environment Preparation**
+- **Kernel Requirements**: Linux 4.15+ (recommended 5.x+)
+- **Install Dependencies** (Ubuntu example):
   ```bash
   sudo apt update
   sudo apt install -y build-essential clang llvm libelf-dev linux-tools-common linux-tools-generic
@@ -58,64 +58,64 @@ flowchart TD
 
 ---
 
-### **3. 极简 eBPF 程序**
-#### (1) 编写 eBPF 内核程序 (`hello_kern.c`)
+### **3. Minimal eBPF Program**
+#### (1) Write eBPF Kernel Program (`hello_kern.c`)
 ```c
 #include <linux/bpf.h>
 #include <bpf/bpf_helpers.h>
 
-// 定义许可证（必需）
+// Define license (required)
 char _license[] SEC("license") = "GPL";
 
-// eBPF 程序：每次调用 sys_execve 时触发
+// eBPF program: triggered each time sys_execve is called
 SEC("tracepoint/syscalls/sys_enter_execve")
 int hello(void *ctx) {
     char msg[] = "Hello, eBPF World!";
-    bpf_trace_printk(msg, sizeof(msg)); // 输出到 trace_pipe
+    bpf_trace_printk(msg, sizeof(msg)); // Output to trace_pipe
     return 0;
 }
 ```
 
-#### (2) 编译 eBPF 程序
+#### (2) Compile eBPF Program
 ```bash
 clang -O2 -target bpf -c hello_kern.c -o hello_kern.o
 ```
 
 ---
 
-### **4. 加载并运行**
-#### (1) 通过 `bpftool` 加载（推荐）：
+### **4. Load and Run**
+#### (1) Load via `bpftool` (recommended):
 ```bash
-# 加载到内核
+# Load into kernel
 sudo bpftool prog load hello_kern.o /sys/fs/bpf/hello
 
-# 查看已加载程序
+# View loaded programs
 sudo bpftool prog list
 
-# 绑定到事件（例如 execve 系统调用）
+# Attach to event (e.g., execve system call)
 sudo bpftool prog attach PROG_ID tracepoint syscalls:sys_enter_execve
 ```
 
-#### (2) 查看输出：
+#### (2) View Output:
 ```bash
 sudo cat /sys/kernel/debug/tracing/trace_pipe
 ```
-- 执行新命令（如 `ls`）时，将看到 `Hello, eBPF World!`。
+- When executing new commands (like `ls`), you will see `Hello, eBPF World!`.
 
 ---
 
-### **5. 使用 BCC 简化开发**
-**BCC**（BPF Compiler Collection）简化了开发流程：
-#### (1) 安装 BCC：
+### **5. Use BCC to Simplify Development**
+**BCC** (BPF Compiler Collection) simplifies the development process:
+#### (1) Install BCC:
 ```bash
 sudo apt install -y bpfcc-tools libbpfcc-dev
 ```
 
-#### (2) 编写 Python 程序 (`hello_bcc.py`)：
+#### (2) Write Python Program (`hello_bcc.py`):
 ```python
 from bcc import BPF
 
-# 内联编译并加载 eBPF 程序
+# Inline compile and load eBPF program
 b = BPF(text="""
 #include <linux/ptrace.h>
 int hello(struct pt_regs *ctx) {
@@ -124,51 +124,51 @@ int hello(struct pt_regs *ctx) {
 }
 """)
 
-# 绑定到 execve 系统调用
+# Attach to execve system call
 b.attach_kprobe(event="__x64_sys_execve", fn_name="hello")
 
-# 打印输出
+# Print output
 print("Attaching... Press Ctrl+C to exit.")
 b.trace_print()
 ```
 
-#### (3) 运行：
+#### (3) Run:
 ```bash
 sudo python3 hello_bcc.py
 ```
 
 ---
 
-### **6. 关键概念**
-- **Hook 点**：eBPF 可挂载到内核事件（如系统调用、网络包、函数入口）。
-- **Map**：eBPF 与用户空间共享数据的结构（如哈希表、数组）。
-- **验证器**：内核确保 eBPF 程序安全（无循环、内存安全）。
+### **6. Key Concepts**
+- **Hook Points**: eBPF can attach to kernel events (like system calls, network packets, function entries).
+- **Map**: eBPF shares data structures with user space (like hash tables, arrays).
+- **Verifier**: Kernel ensures eBPF program safety (no loops, memory safety).
 
 ---
 
-### **7. 下一步学习**
-1. **官方资源**：
+### **7. Next Steps for Learning**
+1. **Official Resources**:
     - [BPF and XDP Reference Guide](https://docs.cilium.io/en/stable/bpf/)
-    - [内核文档 Documentation/bpf/](https://www.kernel.org/doc/html/latest/bpf/)
-2. **工具链**：
-    - `bpftool`：管理 eBPF 程序和 Map。
-    - `libbpf`：C 库开发 eBPF。
-3. **示例仓库**：
+    - [Kernel Documentation Documentation/bpf/](https://www.kernel.org/doc/html/latest/bpf/)
+2. **Toolchain**:
+    - `bpftool`: Manage eBPF programs and Maps.
+    - `libbpf`: C library for eBPF development.
+3. **Example Repositories**:
     - [bcc/examples](https://github.com/iovisor/bcc/tree/master/examples)
     - [libbpf-bootstrap](https://github.com/libbpf/libbpf-bootstrap)
 
 ---
 
-### **总结**
+### **Summary**
 ```mermaid
 graph LR
-A[编写 eBPF C 代码] --> B[clang 编译]
-B --> C[加载到内核]
-C --> D[绑定到事件]
-D --> E[读取输出]
+A[Write eBPF C Code] --> B[clang Compile]
+B --> C[Load into Kernel]
+C --> D[Attach to Event]
+D --> E[Read Output]
 ```
 
-通过这个极简流程，你已运行了第一个 eBPF 程序！后续可探索 Map、XDP（网络加速）、CO-RE（跨内核版本兼容）等高级特性。
+Through this minimal process, you have run your first eBPF program! Next you can explore advanced features like Maps, XDP (network acceleration), CO-RE (cross-kernel version compatibility), etc.
 
 ---
 

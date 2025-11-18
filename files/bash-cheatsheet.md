@@ -1,82 +1,82 @@
-# Bash Shell 脚本速查表 (Cheatsheet)
+# Bash Shell Script Cheat Sheet
 
-## 基本语法
+## Basic Syntax
 
 ```bash
-#!/bin/bash           # Shebang，指定解释器
-# 这是注释            # 单行注释
+#!/bin/bash           # Shebang, specifies interpreter
+# This is a comment            # Single line comment
 : '
-多行注释
+Multi-line comment
 '
 ```
 
-## 变量
+## Variables
 
 ```bash
-var="value"           # 定义变量
-echo $var             # 使用变量
-echo "${var}"         # 推荐使用花括号
-readonly var          # 只读变量
-unset var             # 删除变量
+var="value"           # Define variable
+echo $var             # Use variable
+echo "${var}"         # Recommended to use curly braces
+readonly var          # Read-only variable
+unset var             # Delete variable
 ```
 
-## 特殊变量
+## Special Variables
 
 ```bash
-$0                   # 脚本名称
-$1, $2, ..., $9      # 脚本参数
-$#                   # 参数个数
-$*                   # 所有参数(作为一个字符串)
-$@                   # 所有参数(作为多个字符串)
-$?                   # 上一条命令的退出状态
-$$                   # 当前shell的PID
-$!                   # 最后一个后台进程的PID
+$0                   # Script name
+$1, $2, ..., $9      # Script parameters
+$#                   # Number of parameters
+$*                   # All parameters (as a single string)
+$@                   # All parameters (as multiple strings)
+$?                   # Exit status of last command
+$$                   # Current shell PID
+$!                   # PID of last background process
 ```
 
-## 字符串操作
+## String Operations
 
 ```bash
 str="Hello World"
-length=${#str}        # 字符串长度
-sub=${str:6:5}        # 子字符串(从索引6开始，取5个字符)
-new=${str/World/Bash} # 替换字符串
+length=${#str}        # String length
+sub=${str:6:5}        # Substring (start at index 6, take 5 characters)
+new=${str/World/Bash} # String replacement
 ```
 
-## 数组
+## Arrays
 
 ```bash
-arr=("a" "b" "c")     # 定义数组
-echo ${arr[1]}        # 访问元素(索引从0开始)
-echo ${arr[@]}        # 访问所有元素
-echo ${#arr[@]}       # 数组长度
-arr+=("d")            # 添加元素
+arr=("a" "b" "c")     # Define array
+echo ${arr[1]}        # Access element (index starts at 0)
+echo ${arr[@]}        # Access all elements
+echo ${#arr[@]}       # Array length
+arr+=("d")            # Add element
 ```
 
-## 运算符
+## Operators
 
 ```bash
-# 算术运算
-$((a + b))           # 加法
-$((a - b))           # 减法
-$((a * b))           # 乘法
-$((a / b))           # 除法
-$((a % b))           # 取模
-$((a++))             # 自增
-$((a--))             # 自减
+# Arithmetic operations
+$((a + b))           # Addition
+$((a - b))           # Subtraction
+$((a * b))           # Multiplication
+$((a / b))           # Division
+$((a % b))           # Modulo
+$((a++))             # Increment
+$((a--))             # Decrement
 
-# 关系运算(在条件表达式中)
-[ $a -eq $b ]        # 等于
-[ $a -ne $b ]        # 不等于
-[ $a -gt $b ]        # 大于
-[ $a -lt $b ]        # 小于
-[ $a -ge $b ]        # 大于等于
-[ $a -le $b ]        # 小于等于
+# Relational operations (in conditional expressions)
+[ $a -eq $b ]        # Equal
+[ $a -ne $b ]        # Not equal
+[ $a -gt $b ]        # Greater than
+[ $a -lt $b ]        # Less than
+[ $a -ge $b ]        # Greater than or equal
+[ $a -le $b ]        # Less than or equal
 ```
 
-## 条件判断
+## Conditional Statements
 
 ```bash
-# if语句
+# if statement
 if [ condition ]; then
     commands
 elif [ condition ]; then
@@ -85,7 +85,7 @@ else
     commands
 fi
 
-# case语句
+# case statement
 case $var in
     pattern1)
         commands
@@ -99,35 +99,35 @@ case $var in
 esac
 ```
 
-## 循环
+## Loops
 
 ```bash
-# for循环
+# for loop
 for var in list; do
     commands
 done
 
-# C风格for循环
+# C-style for loop
 for ((i=0; i<10; i++)); do
     commands
 done
 
-# while循环
+# while loop
 while [ condition ]; do
     commands
 done
 
-# until循环
+# until loop
 until [ condition ]; do
     commands
 done
 
-# 循环控制
-break                # 跳出循环
-continue             # 跳过当前迭代
+# Loop control
+break                # Break out of loop
+continue             # Skip current iteration
 ```
 
-## 函数
+## Functions
 
 ```bash
 function_name() {
@@ -135,93 +135,93 @@ function_name() {
     [return value]
 }
 
-# 调用函数
+# Call function
 function_name arg1 arg2
 
-# 函数参数
-$1, $2, ..., $9      # 函数内部访问参数
-$#                   # 参数个数
+# Function parameters
+$1, $2, ..., $9      # Access parameters inside function
+$#                   # Number of parameters
 ```
 
-## 输入/输出
+## Input/Output
 
 ```bash
-echo "text"           # 输出文本
-printf "format" args  # 格式化输出
-read var              # 读取用户输入
-read -p "Prompt: " var # 带提示的输入
-read -s var           # 静默输入(适合密码)
+echo "text"           # Output text
+printf "format" args  # Formatted output
+read var              # Read user input
+read -p "Prompt: " var # Prompted input
+read -s var           # Silent input (suitable for passwords)
 ```
 
-## 文件操作
+## File Operations
 
 ```bash
-# 文件测试
-[ -e file ]          # 文件/目录是否存在
-[ -f file ]          # 是普通文件
-[ -d file ]          # 是目录
-[ -r file ]          # 可读
-[ -w file ]          # 可写
-[ -x file ]          # 可执行
-[ -s file ]          # 文件大小>0
+# File testing
+[ -e file ]          # File/directory exists
+[ -f file ]          # Is a regular file
+[ -d file ]          # Is a directory
+[ -r file ]          # Readable
+[ -w file ]          # Writable
+[ -x file ]          # Executable
+[ -s file ]          # File size > 0
 
-# 重定向
-command > file       # 标准输出重定向到文件(覆盖)
-command >> file      # 标准输出重定向到文件(追加)
-command < file       # 从文件读取标准输入
-command 2> file      # 标准错误重定向到文件
-command &> file      # 标准输出和错误都重定向到文件
+# Redirection
+command > file       # Redirect standard output to file (overwrite)
+command >> file      # Redirect standard output to file (append)
+command < file       # Read standard input from file
+command 2> file      # Redirect standard error to file
+command &> file      # Redirect both standard output and error to file
 ```
 
-## 进程控制
+## Process Control
 
 ```bash
-command &            # 后台运行
-command1 | command2  # 管道
-command1 && command2 # 命令1成功则执行命令2
-command1 || command2 # 命令1失败则执行命令2
-sleep 5              # 暂停5秒
-wait                 # 等待所有后台进程完成
+command &            # Run in background
+command1 | command2  # Pipe
+command1 && command2 # Execute command2 only if command1 succeeds
+command1 || command2 # Execute command2 only if command1 fails
+sleep 5              # Pause for 5 seconds
+wait                 # Wait for all background processes to complete
 ```
 
-## 调试
+## Debugging
 
 ```bash
-bash -n script.sh    # 检查语法错误
-bash -x script.sh    # 跟踪执行过程
-set -x               # 在脚本中启用调试
-set +x               # 关闭调试
-trap 'commands' EXIT # 脚本退出时执行命令
+bash -n script.sh    # Check syntax errors
+bash -x script.sh    # Trace execution process
+set -x               # Enable debugging in script
+set +x               # Disable debugging
+trap 'commands' EXIT # Execute commands when script exits
 ```
 
-## 常用命令
+## Common Commands
 
 ```bash
-# 字符串处理
-grep pattern file    # 搜索文本
-sed 's/old/new/g'    # 流编辑器
-awk '{print $1}'     # 文本处理
+# String processing
+grep pattern file    # Search text
+sed 's/old/new/g'    # Stream editor
+awk '{print $1}'     # Text processing
 
-# 文件处理
-cat file             # 显示文件内容
-head -n 5 file       # 显示前5行
-tail -n 5 file       # 显示最后5行
-wc -l file           # 统计行数
+# File processing
+cat file             # Display file content
+head -n 5 file       # Display first 5 lines
+tail -n 5 file       # Display last 5 lines
+wc -l file           # Count lines
 
-# 系统信息
-date                 # 当前日期时间
-whoami               # 当前用户
-uname -a             # 系统信息
-df -h                # 磁盘使用情况
-free -h              # 内存使用情况
+# System information
+date                 # Current date and time
+whoami               # Current user
+uname -a             # System information
+df -h                # Disk usage
+free -h              # Memory usage
 ```
 
-## 示例脚本
+## Example Scripts
 
 ```bash
 #!/bin/bash
 
-# 带参数的脚本示例
+# Script example with parameters
 if [ $# -lt 1 ]; then
     echo "Usage: $0 <name>"
     exit 1
@@ -230,12 +230,12 @@ fi
 name=$1
 echo "Hello, $name!"
 
-# 循环示例
+# Loop example
 for i in {1..5}; do
     echo "Iteration $i"
 done
 
-# 函数示例
+# Function example
 greet() {
     local message="Welcome, $1!"
     echo "$message"
@@ -244,5 +244,4 @@ greet() {
 greet "$name"
 ```
 
-希望这个速查表对您有所帮助！根据需要可以进一步扩展或定制。
-
+Hope this cheat sheet is helpful to you! It can be further expanded or customized as needed.

@@ -1,38 +1,38 @@
-# 一个极简的 **Kubernetes Custom Resource Definition (CRD)** 教程
+# A Minimal **Kubernetes Custom Resource Definition (CRD)** Tutorial
 
-以下是一个极简的 **Kubernetes Custom Resource Definition (CRD)** 教程，指导你如何编写、部署和使用 CRD 到现有的 Kubernetes 集群中。教程使用中文，内容简洁，涵盖核心步骤，并包含必要的代码示例。
-
----
-
-### 什么是 CRD？
-CRD（Custom Resource Definition）允许你在 Kubernetes 中定义自定义资源，扩展 Kubernetes API，让你像使用内置资源（如 Pod、Deployment）一样管理自定义对象。CRD 常用于实现自定义控制器或扩展 Kubernetes 功能。
+Below is a minimal **Kubernetes Custom Resource Definition (CRD)** tutorial that guides you through how to write, deploy, and use CRDs in an existing Kubernetes cluster. The tutorial is in English, concise, covers core steps, and includes necessary code examples.
 
 ---
 
-### 教程目标
-我们将：
-1. 创建一个简单的 CRD，定义一个名为 `SimpleApp` 的自定义资源。
-2. 部署 CRD 到 Kubernetes 集群。
-3. 创建一个 `SimpleApp` 自定义资源实例。
-4. 验证部署结果。
+### What is CRD?
+CRD (Custom Resource Definition) allows you to define custom resources in Kubernetes, extending the Kubernetes API so you can manage custom objects just like built-in resources (such as Pods, Deployments). CRDs are commonly used to implement custom controllers or extend Kubernetes functionality.
 
 ---
 
-### 环境准备
-- 一个运行中的 Kubernetes 集群（可以用 Minikube、Kind 或云端集群）。
-- `kubectl` 已配置好并能访问集群。
-- 文本编辑器（如 VS Code）或直接在终端操作。
+### Tutorial Objectives
+We will:
+1. Create a simple CRD that defines a custom resource named `SimpleApp`.
+2. Deploy the CRD to a Kubernetes cluster.
+3. Create a `SimpleApp` custom resource instance.
+4. Verify the deployment results.
 
 ---
 
-### 步骤
+### Environment Preparation
+- A running Kubernetes cluster (can use Minikube, Kind, or cloud clusters).
+- `kubectl` is configured and can access the cluster.
+- Text editor (such as VS Code) or operate directly in terminal.
 
-#### 1. 编写 CRD 定义
-我们将定义一个简单的 CRD，名为 `SimpleApp`，它包含以下字段：
-- `appName`：应用的名称。
-- `replicas`：副本数。
+---
 
-创建文件 `simpleapp-crd.yaml`：
+### Steps
+
+#### 1. Write CRD Definition
+We will define a simple CRD named `SimpleApp` that contains the following fields:
+- `appName`: The name of the application.
+- `replicas`: The number of replicas.
+
+Create file `simpleapp-crd.yaml`:
 
 ```yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -68,40 +68,40 @@ spec:
 ```
 
 
-**说明**：
-- `group`：自定义资源的 API 组（`example.com`）。
-- `versions`：定义 CRD 的版本（这里是 `v1`）。
-- `schema`：定义资源结构，`appName` 是字符串，`replicas` 是 1 到 10 的整数。
-- `scope`：`Namespaced` 表示资源是命名空间级别的（而不是集群级别的）。
-- `names`：定义资源的名称、复数形式和缩写。
+**Explanation**:
+- `group`: The API group for the custom resource (`example.com`).
+- `versions`: Defines the version of the CRD (here it's `v1`).
+- `schema`: Defines the resource structure, `appName` is a string, `replicas` is an integer from 1 to 10.
+- `scope`: `Namespaced` indicates the resource is namespace-level (rather than cluster-level).
+- `names`: Defines the resource name, plural form, and short names.
 
 ---
 
-#### 2. 部署 CRD 到集群
+#### 2. Deploy CRD to Cluster
 
-使用 `kubectl` 应用 CRD 定义：
+Use `kubectl` to apply the CRD definition:
 
 ```bash
 kubectl apply -f simpleapp-crd.yaml
 ```
 
-验证 CRD 是否创建成功：
+Verify the CRD was created successfully:
 
 ```bash
 kubectl get crd
 ```
 
-输出应包含：
+Output should include:
 
 ```
 NAME                     CREATED AT
-simpleapps.example.com   <创建时间>
+simpleapps.example.com   <creation time>
 ```
 
 ---
 
-#### 3. 创建自定义资源实例
-现在我们创建一个 `SimpleApp` 资源实例。创建文件 `simpleapp-instance.yaml`：
+#### 3. Create Custom Resource Instance
+Now we create a `SimpleApp` resource instance. Create file `simpleapp-instance.yaml`:
 
 ```yaml
 apiVersion: example.com/v1
@@ -115,34 +115,34 @@ spec:
 ```
 
 
-**说明**：
-- `apiVersion`：使用 CRD 定义的 `group` 和 `version`（`example.com/v1`）。
-- `kind`：使用 CRD 定义的 `kind`（`SimpleApp`）。
-- `spec`：包含 `appName` 和 `replicas`，符合 CRD 的 schema。
+**Explanation**:
+- `apiVersion`: Uses the `group` and `version` defined in CRD (`example.com/v1`).
+- `kind`: Uses the `kind` defined in CRD (`SimpleApp`).
+- `spec`: Contains `appName` and `replicas`, matching the CRD schema.
 
-部署实例：
+Deploy the instance:
 ```bash
 kubectl apply -f simpleapp-instance.yaml
 ```
 
 ---
 
-#### 4. 验证自定义资源
-检查 `SimpleApp` 资源是否创建成功：
+#### 4. Verify Custom Resource
+Check if the `SimpleApp` resource was created successfully:
 ```bash
 kubectl get simpleapps
 ```
-输出：
+Output:
 ```
 NAME             AGE
-my-simple-app    <创建时间>
+my-simple-app    <creation time>
 ```
 
-查看资源详情：
+View resource details:
 ```bash
 kubectl describe simpleapp my-simple-app
 ```
-输出将显示资源的 `metadata` 和 `spec`，例如：
+Output will show the resource's `metadata` and `spec`, for example:
 ```
 Name:         my-simple-app
 Namespace:    default
@@ -153,88 +153,84 @@ Spec:
   Replicas:   3
 ```
 
-你也可以使用缩写：
+You can also use the short name:
 ```bash
 kubectl get sapp
 ```
 
 ---
 
-#### 5. （可选）清理资源
-如果需要删除创建的资源：
+#### 5. (Optional) Clean Up Resources
+If you need to delete the created resources:
 ```bash
 kubectl delete -f simpleapp-instance.yaml
 kubectl delete -f simpleapp-crd.yaml
 ```
 
-注意：删除 CRD 会同时删除所有相关的自定义资源实例。
+Note: Deleting the CRD will also delete all related custom resource instances.
 
 ---
 
-### 后续步骤
-- **添加控制器**：CRD 本身只定义了数据结构。要让 `SimpleApp` 资源实际触发行为（例如创建 Pod），需要编写一个自定义控制器（Operator）。你可以使用工具如 [Operator SDK](https://sdk.operatorframework.io/) 或 [Kubebuilder](https://book.kubebuilder.io/) 来实现。
-- **扩展 CRD**：可以添加更多字段（如 `image`、`port`）或支持多版本 API。
-- **权限控制**：为 CRD 配置 RBAC，确保只有授权用户可以操作。
+### Next Steps
+- **Add Controller**: CRD itself only defines data structure. To make `SimpleApp` resources actually trigger behaviors (like creating Pods), you need to write a custom controller (Operator). You can use tools like [Operator SDK](https://sdk.operatorframework.io/) or [Kubebuilder](https://book.kubebuilder.io/) to implement it.
+- **Extend CRD**: You can add more fields (like `image`, `port`) or support multi-version APIs.
+- **Access Control**: Configure RBAC for CRD to ensure only authorized users can operate it.
 
 ---
 
-### 常见问题
-1. **CRD 未出现在 `kubectl get crd`**？
-    - 检查 `simpleapp-crd.yaml` 是否正确应用：`kubectl apply -f simpleapp-crd.yaml`。
-    - 查看事件：`kubectl describe crd simpleapps.example.com`。
+### Common Issues
+1. **CRD not appearing in `kubectl get crd`**?
+    - Check if `simpleapp-crd.yaml` was applied correctly: `kubectl apply -f simpleapp-crd.yaml`.
+    - View events: `kubectl describe crd simpleapps.example.com`.
 
-2. **自定义资源创建失败**？
-    - 确保 `apiVersion` 和 `kind` 与 CRD 定义一致。
-    - 检查 schema 是否匹配：`kubectl describe simpleapp my-simple-app`。
+2. **Custom resource creation failed**?
+    - Ensure `apiVersion` and `kind` match the CRD definition.
+    - Check if schema matches: `kubectl describe simpleapp my-simple-app`.
 
-3. **如何测试控制器**？
-    - 本教程只创建 CRD，未实现控制器。如果需要控制器，推荐学习 Operator SDK 或 Kubebuilder。
+3. **How to test controller**?
+    - This tutorial only creates CRD, doesn't implement controller. If you need a controller, recommend learning Operator SDK or Kubebuilder.
 
 ---
 
-### 总结
-通过以上步骤，你已经：
-- 定义并部署了一个简单的 CRD（`SimpleApp`）。
-- 创建了一个自定义资源实例。
-- 验证了资源在集群中的状态。
+### Summary
+Through the above steps, you have:
+- Defined and deployed a simple CRD (`SimpleApp`).
+- Created a custom resource instance.
+- Verified the resource status in the cluster.
 
-这个 CRD 是一个基础示例，适合学习和扩展。如果你需要更复杂的 CRD（如多版本支持、复杂 schema）或实现自定义控制器，请告诉我，我可以提供更详细的教程！
+This CRD is a basic example, suitable for learning and extension. If you need more complex CRDs (like multi-version support, complex schema) or want to implement custom controllers, please let me know, I can provide more detailed tutorials!
 
 --- 
 
-如果有其他问题或需要进一步扩展（例如添加控制器代码），请随时告知！
+Great! We will extend the previous `SimpleApp` CRD by adding a simple feature: when creating or updating `SimpleApp` resources, print `Hello, World!` along with the resource's `appName` and `replicas` information in the Kubernetes cluster logs. For this, we need to write a simple **custom controller** (Custom Controller) to listen for `SimpleApp` resource changes and implement the log printing logic. The controller will be written using **Go** language and the **controller-runtime** library.
 
 ---
 
-好的！我们将扩展之前的 `SimpleApp` CRD，添加一个简单的功能：当创建或更新 `SimpleApp` 资源时，在 Kubernetes 集群的日志中打印 `Hello, World!` 以及资源的 `appName` 和 `replicas` 信息。为此，我们需要编写一个简单的 **自定义控制器**（Custom Controller）来监听 `SimpleApp` 资源的变更，并实现日志打印逻辑。控制器将使用 **Go** 语言和 **controller-runtime** 库编写。
+### Objectives
+1. Extend the existing `SimpleApp` CRD, keeping its structure (`appName` and `replicas`).
+2. Write a simple Go controller that listens for `SimpleApp` resource creation and update events, and prints `Hello, World!` along with resource information in the logs.
+3. Provide steps to deploy the controller, ensuring it runs in the Kubernetes cluster.
+4. Include all necessary code and configuration files, keeping it minimal.
 
 ---
 
-### 目标
-1. 扩展现有的 `SimpleApp` CRD，保持其结构（`appName` 和 `replicas`）。
-2. 编写一个简单的 Go 控制器，监听 `SimpleApp` 资源的创建和更新事件，并在日志中打印 `Hello, World!` 以及资源信息。
-3. 提供部署控制器的步骤，确保它运行在 Kubernetes 集群中。
-4. 包含所有必要的代码和配置文件，保持极简风格。
+### Environment Preparation
+- **Kubernetes Cluster**: Running and accessible via `kubectl`.
+- **Go Environment**: Go 1.20 or higher (recommended to use latest version).
+- **Tools**:
+    - `kubectl`: For applying CRD and deploying controller.
+    - `docker`: For building controller images.
+    - A container registry (such as Docker Hub) or local image support (such as Minikube).
+- **Code Dependencies**:
+    - `controller-runtime`: Kubernetes controller framework.
+    - `k8s.io/api` and `k8s.io/apimachinery`: Kubernetes API libraries.
 
 ---
 
-### 环境准备
-- **Kubernetes 集群**：已运行并可通过 `kubectl` 访问。
-- **Go 环境**：Go 1.20 或更高版本（推荐使用最新版）。
-- **工具**：
-    - `kubectl`：用于应用 CRD 和部署控制器。
-    - `docker`：用于构建控制器镜像。
-    - 一个容器注册表（如 Docker Hub）或本地镜像支持（如 Minikube）。
-- **代码依赖**：
-    - `controller-runtime`：Kubernetes 控制器框架。
-    - `k8s.io/api` 和 `k8s.io/apimachinery`：Kubernetes API 库。
+### Steps
 
----
-
-### 步骤
-
-#### 1. 复用并部署 CRD
-我们继续使用之前的 `SimpleApp` CRD，无需修改其定义。以下是 CRD 的配置文件（与之前一致）：
+#### 1. Reuse and Deploy CRD
+We continue using the previous `SimpleApp` CRD without modifying its definition. Here's the CRD configuration file (same as before):
 
 ```yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -269,24 +265,24 @@ spec:
       - sapp
 ```
 
-**部署 CRD**：
+**Deploy CRD**:
 ```bash
 kubectl apply -f simpleapp-crd.yaml
 ```
 
-验证：
+Verify:
 ```bash
 kubectl get crd simpleapps.example.com
 ```
 
 ---
 
-#### 2. 编写 Go 控制器代码
-我们将创建一个简单的 Go 项目，包含：
-- CRD 的 Go 类型定义（API）。
-- 控制器逻辑，用于监听 `SimpleApp` 资源并打印日志。
+#### 2. Write Go Controller Code
+We will create a simple Go project containing:
+- Go type definitions for CRD (API).
+- Controller logic to listen for `SimpleApp` resources and print logs.
 
-##### 项目结构
+##### Project Structure
 ```
 simpleapp-controller/
 ├── go.mod
@@ -299,23 +295,23 @@ simpleapp-controller/
 └── Dockerfile
 ```
 
-##### 步骤 1：初始化 Go 项目
-创建一个目录并初始化 Go 模块：
+##### Step 1: Initialize Go Project
+Create a directory and initialize Go module:
 ```bash
 mkdir simpleapp-controller
 cd simpleapp-controller
 go mod init simpleapp-controller
 ```
 
-添加依赖：
+Add dependencies:
 ```bash
 go get sigs.k8s.io/controller-runtime@v0.17.0
 go get k8s.io/api@v0.29.0
 go get k8s.io/apimachinery@v0.29.0
 ```
 
-##### 步骤 2：定义 CRD 类型
-创建 `api/v1/simpleapp_types.go`，定义 `SimpleApp` 的 Go 结构体，与 CRD 的 schema 保持一致：
+##### Step 2: Define CRD Types
+Create `api/v1/simpleapp_types.go`, defining `SimpleApp` Go structs consistent with CRD schema:
 
 ```go
 package v1
@@ -361,13 +357,13 @@ func init() {
 }
 ```
 
-**说明**：
-- `SimpleAppSpec`：定义 `appName` 和 `replicas`，与 CRD schema 匹配。
-- `SimpleAppStatus`：目前为空，可用于存储资源状态（本例不使用）。
-- `+kubebuilder` 注释：用于生成 Kubernetes 资源元数据（由 `controller-tools` 使用，但本例手动编写）。
+**Explanation**:
+- `SimpleAppSpec`: Defines `appName` and `replicas`, matching CRD schema.
+- `SimpleAppStatus`: Currently empty, can be used to store resource status (not used in this example).
+- `+kubebuilder` annotations: Used to generate Kubernetes resource metadata (used by `controller-tools`, but manually written in this example).
 
-##### 步骤 3：编写控制器逻辑
-创建 `controllers/simpleapp_controller.go`，实现监听 `SimpleApp` 资源的逻辑：
+##### Step 3: Write Controller Logic
+Create `controllers/simpleapp_controller.go`, implementing logic to listen for `SimpleApp` resources:
 
 ```go
 package controllers
@@ -419,14 +415,14 @@ func (r *SimpleAppReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 ```
 
-**说明**：
-- `Reconcile`：每次 `SimpleApp` 资源创建或更新时触发，打印 `Hello, World!` 以及 `appName` 和 `replicas`。
-- `logger.Info`：将日志写入 Kubernetes 控制器日志。
-- `fmt.Printf`：同时打印到控制器的标准输出（便于调试）。
-- RBAC 注释：定义控制器需要的权限（读取和更新 `SimpleApp` 资源）。
+**Explanation**:
+- `Reconcile`: Triggered every time `SimpleApp` resource is created or updated, prints `Hello, World!` along with `appName` and `replicas`.
+- `logger.Info`: Writes logs to Kubernetes controller logs.
+- `fmt.Printf`: Also prints to controller's standard output (for debugging).
+- RBAC annotations: Define permissions required by the controller (read and update `SimpleApp` resources).
 
-##### 步骤 4：编写主程序
-创建 `main.go`，初始化控制器并运行：
+##### Step 4: Write Main Program
+Create `main.go`, initialize controller and run:
 
 ```go
 package main
@@ -505,13 +501,13 @@ func main() {
 }
 ```
 
-**说明**：
-- 初始化 Kubernetes 客户端和 `controller-runtime` 管理器。
-- 注册 `SimpleApp` 的 schema。
-- 设置 `SimpleAppReconciler` 控制器。
+**Explanation**:
+- Initializes Kubernetes client and `controller-runtime` manager.
+- Registers `SimpleApp` schema.
+- Sets up `SimpleAppReconciler` controller.
 
-##### 步骤 5：创建 Dockerfile
-创建 `Dockerfile` 用于构建控制器镜像：
+##### Step 5: Create Dockerfile
+Create `Dockerfile` for building controller images:
 
 ```dockerfile
 FROM golang:1.20 AS builder
@@ -526,33 +522,33 @@ USER 65532:65532
 ENTRYPOINT ["/simpleapp-controller"]
 ```
 
-**说明**：
-- 使用多阶段构建：先编译 Go 程序，然后使用轻量级 `distroless` 镜像运行。
-- 非 root 用户运行，增强安全性。
+**Explanation**:
+- Uses multi-stage build: first compiles Go program, then uses lightweight `distroless` image to run.
+- Runs as non-root user for enhanced security.
 
 ---
 
-#### 3. 构建并推送控制器镜像
-1. 构建镜像（替换 `your-dockerhub-username` 为你的 Docker Hub 用户名，或使用其他容器注册表）：
+#### 3. Build and Push Controller Image
+1. Build image (replace `your-dockerhub-username` with your Docker Hub username, or use other container registry):
    ```bash
    docker build -t your-dockerhub-username/simpleapp-controller:latest .
    ```
 
-2. 推送镜像：
+2. Push image:
    ```bash
    docker push your-dockerhub-username/simpleapp-controller:latest
    ```
 
-**本地测试（例如 Minikube）**：
-如果使用 Minikube，可以直接加载镜像：
+**Local Testing (e.g., Minikube)**:
+If using Minikube, you can directly load image:
 ```bash
 minikube image load your-dockerhub-username/simpleapp-controller:latest
 ```
 
 ---
 
-#### 4. 部署控制器到 Kubernetes
-创建 `controller-deployment.yaml` 来部署控制器：
+#### 4. Deploy Controller to Kubernetes
+Create `controller-deployment.yaml` to deploy controller:
 
 ```yaml
 ---
@@ -609,21 +605,21 @@ spec:
         imagePullPolicy: Always
 ```
 
-**说明**：
-- `ServiceAccount`：为控制器提供身份。
-- `ClusterRole` 和 `ClusterRoleBinding`：授予控制器操作 `SimpleApp` 资源的权限。
-- `Deployment`：运行控制器镜像。
+**Explanation**:
+- `ServiceAccount`: Provides identity for the controller.
+- `ClusterRole` and `ClusterRoleBinding`: Grant controller permissions to operate `SimpleApp` resources.
+- `Deployment`: Runs controller image.
 
-**部署**：
+**Deploy**:
 ```bash
 kubectl apply -f controller-deployment.yaml
 ```
 
-验证控制器是否运行：
+Verify controller is running:
 ```bash
 kubectl get pods -n default
 ```
-输出应包含：
+Output should include:
 ```
 NAME                                  READY   STATUS    RESTARTS   AGE
 simpleapp-controller-<hash>           1/1     Running   0          <time>
@@ -631,8 +627,8 @@ simpleapp-controller-<hash>           1/1     Running   0          <time>
 
 ---
 
-#### 5. 创建 SimpleApp 资源并验证日志
-复用之前的 `SimpleApp` 实例：
+#### 5. Create SimpleApp Resource and Verify Logs
+Reuse the previous `SimpleApp` instance:
 
 ```yaml
 apiVersion: example.com/v1
@@ -645,28 +641,28 @@ spec:
   replicas: 3
 ```
 
-**部署实例**：
+**Deploy Instance**:
 ```bash
 kubectl apply -f simpleapp-instance.yaml
 ```
 
-**检查控制器日志**：
+**Check Controller Logs**:
 ```bash
 kubectl logs -l app=simpleapp-controller -n default
 ```
 
-**预期输出**（日志中应包含类似内容）：
+**Expected Output** (logs should contain similar content):
 ```
 2025-04-28T12:34:56Z    INFO    Hello, World!   {"AppName": "my-app", "Replicas": 3}
 Hello, World! AppName: my-app, Replicas: 3
 ```
 
-每次创建或更新 `SimpleApp` 资源（例如修改 `replicas`），控制器都会触发 `Reconcile` 并打印日志。
+Every time `SimpleApp` resource is created or updated (such as modifying `replicas`), the controller will trigger `Reconcile` and print logs.
 
 ---
 
-#### 6. 清理资源
-清理测试资源：
+#### 6. Clean Up Resources
+Clean up test resources:
 ```bash
 kubectl delete -f simpleapp-instance.yaml
 kubectl delete -f controller-deployment.yaml
@@ -675,37 +671,34 @@ kubectl delete -f simpleapp-crd.yaml
 
 ---
 
-### 代码和部署总结
-- **CRD**：定义了 `SimpleApp` 资源，包含禁止使用 `kubectl apply` 部署。
-- **控制器**：使用 Go 和 `controller-runtime` 编写的简单控制器，监听 `SimpleApp` 资源并打印日志。
-- **功能**：当 `SimpleApp` 资源创建或更新时，打印 `Hello, World!` 和资源信息。
-- **部署**：通过 Docker 镜像和 Kubernetes Deployment 运行控制器。
+### Code and Deployment Summary
+- **CRD**: Defines `SimpleApp` resource, deployed using `kubectl apply`.
+- **Controller**: Simple controller written using Go and `controller-runtime`, listens for `SimpleApp` resources and prints logs.
+- **Functionality**: When `SimpleApp` resource is created or updated, prints `Hello, World!` and resource information.
+- **Deployment**: Runs controller through Docker image and Kubernetes Deployment.
 
 ---
 
-### 常见问题
-1. **控制器日志没有输出？**
-    - 检查控制器 Pod 是否运行：`kubectl get pods -n default`。
-    - 查看 Pod 日志：`kubectl logs -l app=simpleapp-controller -n default`。
-    - 确保 CRD 和 `SimpleApp` 实例已正确应用。
+### Common Issues
+1. **No controller log output?**
+    - Check if controller Pod is running: `kubectl get pods -n default`.
+    - View Pod logs: `kubectl logs -l app=simpleapp-controller -n default`.
+    - Ensure CRD and `SimpleApp` instances are correctly applied.
 
-2. **权限错误？**
-    - 确保 `ClusterRole` 和 `ClusterRoleBinding` 已正确应用。
-    - 检查控制器是否使用正确的 `ServiceAccount`。
+2. **Permission errors?**
+    - Ensure `ClusterRole` and `ClusterRoleBinding` are correctly applied.
+    - Check if controller is using correct `ServiceAccount`.
 
-3. **镜像拉取失败？**
-    - 确保镜像已推送到注册表或加载到本地（如 Minikube）。
-    - 检查 `imagePullPolicy` 和镜像名称。
-
----
-
-### 扩展建议
-- **添加状态**：在 `SimpleAppStatus` 中记录控制器处理状态（例如 `LastProcessedTime`）。
-- **实际操作**：让控制器根据 `SimpleApp` 创建 Pod 或 Deployment（例如部署 NGINX）。
-- **事件记录**：使用 `r.Recorder` 记录 Kubernetes 事件（`kubectl get events`）。
-- **工具支持**：使用 Kubebuilder 或 Operator SDK 生成更完整的控制器框架。
-
-如果你需要进一步扩展（例如让控制器创建 Pod 或添加更复杂逻辑），请告诉我，我可以提供更详细的代码和指导！
+3. **Image pull failed?**
+    - Ensure image is pushed to registry or loaded locally (such as Minikube).
+    - Check `imagePullPolicy` and image name.
 
 ---
 
+### Extension Suggestions
+- **Add Status**: Record controller processing status in `SimpleAppStatus` (such as `LastProcessedTime`).
+- **Actual Operations**: Let controller create Pods or Deployments based on `SimpleApp` (such as deploying NGINX).
+- **Event Recording**: Use `r.Recorder` to record Kubernetes events (`kubectl get events`).
+- **Tool Support**: Use Kubebuilder or Operator SDK to generate more complete controller frameworks.
+
+If you need further extensions (such as having the controller create Pods or add more complex logic), please let me know, I can provide more detailed code and guidance!
