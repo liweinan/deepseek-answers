@@ -1,11 +1,11 @@
-# 高铁订票系统核心算法解析
+# High-Speed Rail Ticketing System Core Algorithms Analysis
 
-高铁订票系统是一个复杂的实时交易系统，涉及多个关键算法和数据结构。以下是实现高铁订票系统所需的主要算法及其作用：
+High-speed rail ticketing system is a complex real-time trading system involving multiple key algorithms and data structures. Below are the main algorithms required to implement a high-speed rail ticketing system and their functions:
 
 ## 1. Train Scheduling and Route Planning Algorithms
 
 ### Dijkstra or A* Algorithm
-- **用途**：计算高铁列车的最优行驶路径
+- **Purpose**: Calculate optimal travel routes for high-speed rail trains
 - **实现**：
   ```python
   def dijkstra(graph, start):
@@ -24,22 +24,22 @@
       return distances
   ```
 
-### 列车时刻表生成算法
-- 考虑车站等级、客流预测、运行时间等因素
-- 使用约束满足问题(CSP)算法解决排班冲突
+### Train Schedule Generation Algorithm
+- Considers station grade, passenger flow prediction, travel time and other factors
+- Uses Constraint Satisfaction Problem (CSP) algorithm to resolve scheduling conflicts
 
-## 2. 座位分配算法
+## 2. Seat Allocation Algorithms
 
-### 贪心算法(Greedy Algorithm)
-- **用途**：高效分配座位资源
-- **实现逻辑**：
-    1. 按购票顺序处理请求
-    2. 优先分配连续座位
-    3. 尽量保持车厢座位利用率均衡
+### Greedy Algorithm
+- **Purpose**: Efficiently allocate seat resources
+- **Implementation Logic**:
+    1. Process requests in ticket purchase order
+    2. Prioritize allocation of consecutive seats
+    3. Try to maintain balanced seat utilization across carriages
 
-### 回溯算法(Backtracking)
-- 处理复杂座位需求(如多人连座)
-- 示例：
+### Backtracking Algorithm
+- Handles complex seat requirements (like multiple consecutive seats)
+- Example:
   ```python
   def find_seats(available_seats, required_seats):
       if required_seats == 0:
@@ -53,12 +53,12 @@
       return False
   ```
 
-## 3. 余票查询与库存管理
+## 3. Remaining Ticket Query and Inventory Management
 
-### 线段树(Segment Tree)或二叉索引树(Fenwick Tree)
-- **用途**：高效查询区间余票
-- **复杂度**：O(log n)的查询和更新
-- 线段树实现示例：
+### Segment Tree or Fenwick Tree
+- **Purpose**: Efficiently query remaining tickets in intervals
+- **Complexity**: O(log n) for queries and updates
+- Segment tree implementation example:
   ```python
   class SegmentTree:
       def __init__(self, data):
@@ -73,31 +73,31 @@
               self.tree[i] = self.tree[2 * i] + self.tree[2 * i + 1]
   ```
 
-## 4. 票价计算算法
+## 4. Ticket Price Calculation Algorithms
 
-### 动态定价算法
-- 基于需求预测、时间、季节等因素
-- 常用方法：
-    - 线性回归模型
-    - 时间序列分析(ARIMA)
-    - 机器学习预测模型
+### Dynamic Pricing Algorithm
+- Based on demand prediction, time, season and other factors
+- Common methods:
+    - Linear regression model
+    - Time series analysis (ARIMA)
+    - Machine learning prediction models
 
-### 最短路径费用计算
-- 使用改进的Dijkstra算法计算最低票价路径
+### Shortest Path Fare Calculation
+- Uses improved Dijkstra algorithm to calculate minimum fare path
 
-## 5. 并发控制与锁机制
+## 5. Concurrency Control and Locking Mechanisms
 
-### 乐观锁与悲观锁
-- **乐观锁实现**：
+### Optimistic Locking and Pessimistic Locking
+- **Optimistic Lock Implementation**:
   ```java
-  // 伪代码示例
+  // Pseudo-code example
   public boolean bookTicket(Ticket ticket) {
       int currentVersion = ticket.getVersion();
-      // 检查余票
+      // Check remaining tickets
       if (ticket.getInventory() <= 0) {
           return false;
       }
-      // 乐观锁更新
+      // Optimistic lock update
       int affectedRows = updateTicketInventory(
           ticket.getId(), 
           currentVersion, 
@@ -106,28 +106,28 @@
   }
   ```
 
-### 分布式锁(Redis实现)
-- 防止超卖问题
-- 使用RedLock算法等分布式锁方案
+### Distributed Locking (Redis Implementation)
+- Prevents overselling issues
+- Uses distributed lock solutions like RedLock algorithm
 
-## 6. 路径搜索与中转方案
+## 6. Route Search and Transfer Solutions
 
-### K最短路径算法(Yen's Algorithm)
-- 为用户提供多种中转方案
-- 实现复杂度O(kn(m + n log n))
+### K-Shortest Path Algorithm (Yen's Algorithm)
+- Provides multiple transfer options for users
+- Implementation complexity O(kn(m + n log n))
 
-### 多标准决策算法
-- 平衡时间、价格、舒适度等因素
-- 常用方法：
-    - 加权求和
-    - TOPSIS算法
-    - 模糊逻辑
+### Multi-Criteria Decision Algorithm
+- Balances time, price, comfort and other factors
+- Common methods:
+    - Weighted summation
+    - TOPSIS algorithm
+    - Fuzzy logic
 
-## 7. 负载均衡与流量控制
+## 7. Load Balancing and Traffic Control
 
-### 令牌桶算法(Token Bucket)
-- 控制订票请求速率
-- 实现示例：
+### Token Bucket Algorithm
+- Controls ticket booking request rate
+- Implementation example:
   ```python
   class TokenBucket:
       def __init__(self, capacity, fill_rate):
@@ -144,42 +144,42 @@
           return False
   ```
 
-## 8. 数据存储与索引
+## 8. Data Storage and Indexing
 
-### B+树索引
-- 高效查询车次、用户订单
-- 适合数据库索引实现
+### B+ Tree Index
+- Efficiently query train schedules, user orders
+- Suitable for database index implementation
 
-### 倒排索引
-- 快速查找特定条件的车次
-- 用于高级搜索功能
+### Inverted Index
+- Quickly find trains matching specific conditions
+- Used for advanced search functionality
 
-## 9. 排队与削峰算法
+## 9. Queuing and Peak Shaving Algorithms
 
-### 消息队列(MQ)算法
-- 使用Kafka、RabbitMQ等处理高峰流量
-- 实现异步处理订单
+### Message Queue (MQ) Algorithms
+- Uses Kafka, RabbitMQ etc. to handle peak traffic
+- Implements asynchronous order processing
 
-### 虚拟排队算法
-- 在系统繁忙时提供排队位置
-- 估算等待时间
+### Virtual Queuing Algorithm
+- Provides queue position when system is busy
+- Estimates waiting time
 
-## 10. 容错与恢复算法
+## 10. Fault Tolerance and Recovery Algorithms
 
-### Paxos或Raft共识算法
-- 保证分布式系统数据一致性
-- 实现高可用性
+### Paxos or Raft Consensus Algorithm
+- Ensures distributed system data consistency
+- Implements high availability
 
-### 检查点(Checkpoint)算法
-- 定期保存系统状态
-- 故障时快速恢复
+### Checkpoint Algorithm
+- Periodically saves system state
+- Enables fast recovery from failures
 
-## 实际系统考虑因素
+## Real System Considerations
 
-1. **实时性要求**：必须在毫秒级响应
-2. **高并发处理**：春运期间每秒上万请求
-3. **数据一致性**：避免同一座位被重复售出
-4. **容灾能力**：多地多活数据中心部署
-5. **安全性**：防止恶意刷票和黄牛行为
+1. **Real-time Requirements**: Must respond within milliseconds
+2. **High Concurrency Handling**: Tens of thousands of requests per second during Spring Festival
+3. **Data Consistency**: Prevent same seat from being sold multiple times
+4. **Disaster Recovery**: Multi-site active-active data center deployment
+5. **Security**: Prevent malicious ticket scalping and scalper behavior
 
-这些算法共同构成了高铁订票系统的核心技术骨架，实际实现中还需要根据具体业务需求进行优化和调整。
+These algorithms together form the core technical framework of high-speed rail ticketing systems, and actual implementations need optimization and adjustment based on specific business requirements.

@@ -44,10 +44,10 @@
     - `net/bpf/test_run.c` (1769 lines) - Test run framework
     - `net/bpf/bpf_dummy_struct_ops.c` (323 lines) - Virtual struct operations
 
-#### 网络协议栈集成
-- **`net/core/`** - 核心网络功能中的eBPF集成
-- **`net/socket.c`** - 套接字层eBPF支持
-- **`net/filter/`** - 网络过滤器eBPF支持
+#### Network Protocol Stack Integration
+- **`net/core/`** - eBPF integration in core network functions
+- **`net/socket.c`** - eBPF support at socket layer
+- **`net/filter/`** - eBPF support for network filters
 
 ### 3. File System eBPF Support
 
@@ -127,17 +127,17 @@ This eBPF implementation is one of the most complex and feature-rich subsystems 
 
 ---
 
-## eBPF工作原理
+## eBPF Working Principle
 
-### 1. 基本流程
+### 1. Basic Process
 
 ```
-用户程序 → eBPF字节码 → 验证器检查 → JIT编译 → 内核执行
+User Program → eBPF Bytecode → Verifier Check → JIT Compilation → Kernel Execution
 ```
 
-### 2. 核心代码片段分析
+### 2. Core Code Snippet Analysis
 
-#### 系统调用入口
+#### System Call Entry
 ```c
 // kernel/bpf/syscall.c
 static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr, u32 uattr_size)
@@ -147,28 +147,28 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr, u32 uattr_size)
     struct btf *attach_btf = NULL;
     struct bpf_token *token = NULL;
     
-    // 1. 验证程序类型
+    // 1. Verify program type
     if (type >= ARRAY_SIZE(bpf_prog_types) || !bpf_prog_types[type])
         return -EINVAL;
     
-    // 2. 分配程序结构
+    // 2. Allocate program structure
     prog = bpf_prog_alloc(bpf_prog_size(attr->insn_cnt), 0);
     if (IS_ERR(prog))
         return PTR_ERR(prog);
     
-    // 3. 复制指令
+    // 3. Copy instructions
     if (copy_from_bpfptr(prog->insns, u64_to_bpfptr(attr->insns),
                          bpf_prog_insn_size(prog)) != 0) {
         err = -EFAULT;
         goto free_prog;
     }
     
-    // 4. 验证程序
+    // 4. Verify program
     err = bpf_check(&prog, &attr, uattr, uattr_size);
     if (err < 0)
         goto free_prog;
     
-    // 5. 创建文件描述符
+    // 5. Create file descriptor
     err = bpf_prog_new_fd(prog);
     if (err < 0)
         goto free_prog;
@@ -177,7 +177,7 @@ static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr, u32 uattr_size)
 }
 ```
 
-#### 验证器核心逻辑
+#### Verifier Core Logic
 ```c
 // kernel/bpf/verifier.c
 static int do_check(struct bpf_verifier_env *env)
@@ -191,18 +191,18 @@ static int do_check(struct bpf_verifier_env *env)
     for (i = 0; i < insn_cnt; i++) {
         struct bpf_insn *insn = &insns[i];
         
-        // 检查指令边界
+        // Check instruction boundary
         if (i >= insn_cnt) {
             verbose(env, "invalid insn idx %d insn_cnt %d\n", i, insn_cnt);
             return -EINVAL;
         }
         
-        // 验证指令
+        // Verify instruction
         err = check_insn(env, i);
         if (err)
             return err;
         
-        // 模拟执行
+        // Simulate execution
         err = do_simulate(env, insn);
         if (err)
             return err;
@@ -212,9 +212,9 @@ static int do_check(struct bpf_verifier_env *env)
 }
 ```
 
-#### 映射操作示例
+#### Map Operation Example
 ```c
-// kernel/bpf/hashtab.c - 哈希表映射实现
+// kernel/bpf/hashtab.c - Hash table map implementation
 static long htab_map_update_elem(struct bpf_map *map, void *key, void *value, u64 flags)
 {
     struct bpf_htab *htab = container_of(map, struct bpf_htab, map);
@@ -235,19 +235,19 @@ static long htab_map_update_elem(struct bpf_map *map, void *key, void *value, u6
     b = __select_bucket(htab, hash);
     head = &b->head;
     
-    // 查找现有元素
+    // Find existing element
     l_old = lookup_elem_raw(head, hash, key, key_size);
     
     ret = check_flags(htab, l_old, map_flags);
     if (ret)
         return ret;
     
-    // 分配新元素
+    // Allocate new element
     l_new = alloc_htab_elem(htab, key, value, key_size, hash, false, false);
     if (IS_ERR(l_new))
         return PTR_ERR(l_new);
     
-    // 更新哈希表
+    // Update hash table
     hlist_nulls_add_head_rcu(&l_new->hash_node, head);
     if (l_old) {
         hlist_nulls_del_rcu(&l_old->hash_node);
@@ -258,9 +258,9 @@ static long htab_map_update_elem(struct bpf_map *map, void *key, void *value, u6
 }
 ```
 
-#### 辅助函数示例
+#### Helper Function Example
 ```c
-// kernel/bpf/helpers.c - 获取当前任务ID
+// kernel/bpf/helpers.c - Get current task ID
 BPF_CALL_2(bpf_get_current_pid_tgid, u64, r1, u64, r2)
 {
     struct task_struct *task = current;
@@ -271,7 +271,7 @@ BPF_CALL_2(bpf_get_current_pid_tgid, u64, r1, u64, r2)
     return ((u64) task->tgid << 32) | task->pid;
 }
 
-// 获取当前用户ID
+// Get current user ID
 BPF_CALL_2(bpf_get_current_uid_gid, u64, r1, u64, r2)
 {
     struct task_struct *task = current;
@@ -287,102 +287,102 @@ BPF_CALL_2(bpf_get_current_uid_gid, u64, r1, u64, r2)
 }
 ```
 
-### 3. 程序类型和映射类型
+### 3. Program Types and Map Types
 
-#### 程序类型定义
+#### Program Type Definition
 ```c
 // include/uapi/linux/bpf.h
 enum bpf_prog_type {
     BPF_PROG_TYPE_UNSPEC,
-    BPF_PROG_TYPE_SOCKET_FILTER,    // 套接字过滤器
+    BPF_PROG_TYPE_SOCKET_FILTER,    // Socket filter
     BPF_PROG_TYPE_KPROBE,           // Kprobe
-    BPF_PROG_TYPE_SCHED_CLS,        // 流量控制
-    BPF_PROG_TYPE_SCHED_ACT,        // 流量动作
-    BPF_PROG_TYPE_TRACEPOINT,       // 跟踪点
+    BPF_PROG_TYPE_SCHED_CLS,        // Traffic control
+    BPF_PROG_TYPE_SCHED_ACT,        // Traffic action
+    BPF_PROG_TYPE_TRACEPOINT,       // Tracepoint
     BPF_PROG_TYPE_XDP,              // XDP
-    BPF_PROG_TYPE_PERF_EVENT,       // 性能事件
-    BPF_PROG_TYPE_CGROUP_SKB,       // Cgroup套接字
-    BPF_PROG_TYPE_CGROUP_SOCK,      // Cgroup套接字
-    BPF_PROG_TYPE_LWT_IN,           // LWT输入
-    BPF_PROG_TYPE_LWT_OUT,          // LWT输出
-    BPF_PROG_TYPE_LWT_XMIT,         // LWT传输
+    BPF_PROG_TYPE_PERF_EVENT,       // Performance event
+    BPF_PROG_TYPE_CGROUP_SKB,       // Cgroup socket
+    BPF_PROG_TYPE_CGROUP_SOCK,      // Cgroup socket
+    BPF_PROG_TYPE_LWT_IN,           // LWT input
+    BPF_PROG_TYPE_LWT_OUT,          // LWT output
+    BPF_PROG_TYPE_LWT_XMIT,         // LWT transmit
     BPF_PROG_TYPE_SOCK_OPS,         // 套接字操作
-    BPF_PROG_TYPE_SK_SKB,           // 套接字SKB
-    BPF_PROG_TYPE_CGROUP_DEVICE,    // Cgroup设备
-    BPF_PROG_TYPE_SK_MSG,           // 套接字消息
-    BPF_PROG_TYPE_RAW_TRACEPOINT,   // 原始跟踪点
-    BPF_PROG_TYPE_CGROUP_SOCK_ADDR, // Cgroup套接字地址
+    BPF_PROG_TYPE_SK_SKB,           // Socket SKB
+    BPF_PROG_TYPE_CGROUP_DEVICE,    // Cgroup device
+    BPF_PROG_TYPE_SK_MSG,           // Socket message
+    BPF_PROG_TYPE_RAW_TRACEPOINT,   // Raw tracepoint
+    BPF_PROG_TYPE_CGROUP_SOCK_ADDR, // Cgroup socket address
     BPF_PROG_TYPE_LWT_SEG6LOCAL,    // LWT SEG6本地
-    BPF_PROG_TYPE_LIRC_MODE2,       // LIRC模式2
-    BPF_PROG_TYPE_SK_REUSEPORT,     // 套接字重用端口
-    BPF_PROG_TYPE_FLOW_DISSECTOR,   // 流解析器
-    BPF_PROG_TYPE_CGROUP_SYSCTL,    // Cgroup系统控制
-    BPF_PROG_TYPE_RAW_TRACEPOINT_WRITABLE, // 可写原始跟踪点
-    BPF_PROG_TYPE_CGROUP_SOCKOPT,   // Cgroup套接字选项
-    BPF_PROG_TYPE_TRACING,          // 跟踪
-    BPF_PROG_TYPE_STRUCT_OPS,       // 结构体操作
-    BPF_PROG_TYPE_EXT,              // 扩展
+    BPF_PROG_TYPE_LIRC_MODE2,       // LIRC mode 2
+    BPF_PROG_TYPE_SK_REUSEPORT,     // Socket reuse port
+    BPF_PROG_TYPE_FLOW_DISSECTOR,   // Flow dissector
+    BPF_PROG_TYPE_CGROUP_SYSCTL,    // Cgroup system control
+    BPF_PROG_TYPE_RAW_TRACEPOINT_WRITABLE, // Writable raw tracepoint
+    BPF_PROG_TYPE_CGROUP_SOCKOPT,   // Cgroup socket option
+    BPF_PROG_TYPE_TRACING,          // Tracing
+    BPF_PROG_TYPE_STRUCT_OPS,       // Struct operations
+    BPF_PROG_TYPE_EXT,              // Extension
     BPF_PROG_TYPE_LSM,              // LSM
-    BPF_PROG_TYPE_SK_LOOKUP,        // 套接字查找
-    BPF_PROG_TYPE_SYSCALL,          // 系统调用
+    BPF_PROG_TYPE_SK_LOOKUP,        // Socket lookup
+    BPF_PROG_TYPE_SYSCALL,          // System call
 };
 ```
 
-#### 映射类型定义
+#### Map Type Definition
 ```c
 enum bpf_map_type {
     BPF_MAP_TYPE_UNSPEC,
-    BPF_MAP_TYPE_HASH,              // 哈希表
-    BPF_MAP_TYPE_ARRAY,             // 数组
-    BPF_MAP_TYPE_PROG_ARRAY,        // 程序数组
-    BPF_MAP_TYPE_PERF_EVENT_ARRAY,  // 性能事件数组
-    BPF_MAP_TYPE_PERCPU_HASH,       // 每CPU哈希表
-    BPF_MAP_TYPE_PERCPU_ARRAY,      // 每CPU数组
-    BPF_MAP_TYPE_STACK_TRACE,       // 栈跟踪
-    BPF_MAP_TYPE_CGROUP_ARRAY,      // Cgroup数组
-    BPF_MAP_TYPE_LRU_HASH,          // LRU哈希表
-    BPF_MAP_TYPE_LRU_PERCPU_HASH,   // LRU每CPU哈希表
+    BPF_MAP_TYPE_HASH,              // Hash table
+    BPF_MAP_TYPE_ARRAY,             // Array
+    BPF_MAP_TYPE_PROG_ARRAY,        // Program array
+    BPF_MAP_TYPE_PERF_EVENT_ARRAY,  // Performance event array
+    BPF_MAP_TYPE_PERCPU_HASH,       // Per-CPU hash table
+    BPF_MAP_TYPE_PERCPU_ARRAY,      // Per-CPU array
+    BPF_MAP_TYPE_STACK_TRACE,       // Stack trace
+    BPF_MAP_TYPE_CGROUP_ARRAY,      // Cgroup array
+    BPF_MAP_TYPE_LRU_HASH,          // LRU hash table
+    BPF_MAP_TYPE_LRU_PERCPU_HASH,   // LRU per-CPU hash table
     BPF_MAP_TYPE_LPM_TRIE,          // LPM Trie
-    BPF_MAP_TYPE_ARRAY_OF_MAPS,     // 映射数组
-    BPF_MAP_TYPE_HASH_OF_MAPS,      // 映射哈希表
-    BPF_MAP_TYPE_DEVMAP,            // 设备映射
-    BPF_MAP_TYPE_SOCKMAP,           // 套接字映射
-    BPF_MAP_TYPE_CPUMAP,            // CPU映射
-    BPF_MAP_TYPE_XSKMAP,            // XSK映射
-    BPF_MAP_TYPE_SOCKHASH,          // 套接字哈希表
-    BPF_MAP_TYPE_CGROUP_STORAGE,    // Cgroup存储
-    BPF_MAP_TYPE_REUSEPORT_SOCKARRAY, // 重用端口套接字数组
-    BPF_MAP_TYPE_PERCPU_CGROUP_STORAGE, // 每CPU Cgroup存储
-    BPF_MAP_TYPE_QUEUE,             // 队列
-    BPF_MAP_TYPE_STACK,             // 栈
-    BPF_MAP_TYPE_SK_STORAGE,        // 套接字存储
-    BPF_MAP_TYPE_DEVMAP_HASH,       // 设备映射哈希表
-    BPF_MAP_TYPE_STRUCT_OPS,        // 结构体操作
-    BPF_MAP_TYPE_RINGBUF,           // 环形缓冲区
-    BPF_MAP_TYPE_INODE_STORAGE,     // 索引节点存储
-    BPF_MAP_TYPE_TASK_STORAGE,      // 任务存储
-    BPF_MAP_TYPE_BLOOM_FILTER,      // 布隆过滤器
-    BPF_MAP_TYPE_USER_RINGBUF,      // 用户环形缓冲区
-    BPF_MAP_TYPE_CGRP_STORAGE,      // Cgroup存储
+    BPF_MAP_TYPE_ARRAY_OF_MAPS,     // Array of maps
+    BPF_MAP_TYPE_HASH_OF_MAPS,      // Hash of maps
+    BPF_MAP_TYPE_DEVMAP,            // Device map
+    BPF_MAP_TYPE_SOCKMAP,           // Socket map
+    BPF_MAP_TYPE_CPUMAP,            // CPU map
+    BPF_MAP_TYPE_XSKMAP,            // XSK map
+    BPF_MAP_TYPE_SOCKHASH,          // Socket hash table
+    BPF_MAP_TYPE_CGROUP_STORAGE,    // Cgroup storage
+    BPF_MAP_TYPE_REUSEPORT_SOCKARRAY, // Reuse port socket array
+    BPF_MAP_TYPE_PERCPU_CGROUP_STORAGE, // Per-CPU Cgroup storage
+    BPF_MAP_TYPE_QUEUE,             // Queue
+    BPF_MAP_TYPE_STACK,             // Stack
+    BPF_MAP_TYPE_SK_STORAGE,        // Socket storage
+    BPF_MAP_TYPE_DEVMAP_HASH,       // Device map hash table
+    BPF_MAP_TYPE_STRUCT_OPS,        // Struct operations
+    BPF_MAP_TYPE_RINGBUF,           // Ring buffer
+    BPF_MAP_TYPE_INODE_STORAGE,     // Inode storage
+    BPF_MAP_TYPE_TASK_STORAGE,      // Task storage
+    BPF_MAP_TYPE_BLOOM_FILTER,      // Bloom filter
+    BPF_MAP_TYPE_USER_RINGBUF,      // User ring buffer
+    BPF_MAP_TYPE_CGRP_STORAGE,      // Cgroup storage
 };
 ```
 
-### 4. 关键特性
+### 4. Key Features
 
-1. **安全性**: 严格的验证器确保程序安全
-2. **性能**: JIT编译为本地机器码
-3. **可扩展性**: 支持多种程序类型和映射类型
-4. **内核集成**: 深度集成到Linux内核子系统
+1. **Security**: Strict verifier ensures program safety
+2. **Performance**: JIT compilation to native machine code
+3. **Extensibility**: Supports multiple program types and map types
+4. **Kernel Integration**: Deep integration into Linux kernel subsystems
 
-这个架构使得eBPF成为Linux内核中最强大的可编程接口之一，广泛应用于网络、安全、性能分析等领域。
+This architecture makes eBPF one of the most powerful programmable interfaces in the Linux kernel, widely used in networking, security, performance analysis and other fields.
 
 ---
 
-你说得对，让我补充eBPF程序执行阶段的内核代码详细说明：
+You're right, let me supplement detailed kernel code explanation for eBPF program execution stages:
 
-## eBPF程序执行阶段的内核代码分析
+## eBPF Program Execution Stage Kernel Code Analysis
 
-### 1. 程序执行入口 - 跳板机制
+### 1. Program Execution Entry - Trampoline Mechanism
 
 ```c
 // kernel/bpf/trampoline.c - 跳板执行机制

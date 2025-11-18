@@ -13,14 +13,14 @@ DTO (Data Transfer Object) class is a design pattern used for simple objects tha
 - **Serializable**: Typically implements serialization interfaces (such as Java's `Serializable`) for network transmission (such as JSON or XML formats).
 - **Independence**: Decoupled from database models or other internal objects, focused on data transmission.
 
-### 示例（以 Java 为例）
+### Example (Using Java)
 ```java
 public class UserDTO {
     private Long id;
     private String username;
     private String email;
 
-    // 构造函数
+    // Constructor
     public UserDTO() {}
     
     public UserDTO(Long id, String username, String email) {
@@ -29,7 +29,7 @@ public class UserDTO {
         this.email = email;
     }
 
-    // Getter 和 Setter
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -103,8 +103,8 @@ Hibernate's **Entity classes** and **DTO classes** are not the same concept, the
 | **Typical Annotations** | `@Entity`, `@Id`, `@Column`, `@ManyToOne`, etc. | No specific annotations, may have serialization-related annotations (such as Jackson's `@JsonProperty`) |
 | **Data Content**    | Usually reflects all or most fields of database table | Only contains fields needed for specific scenarios, may aggregate or simplify data |
 
-### 3. **代码示例**
-#### Entity 类（Hibernate）
+### 3. **Code Examples**
+#### Entity Class (Hibernate)
 ```java
 import jakarta.persistence.*;
 
@@ -124,7 +124,7 @@ public class UserEntity {
     @Column(name = "password_hash")
     private String passwordHash;
 
-    // Getter 和 Setter
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getUsername() { return username; }
@@ -135,16 +135,16 @@ public class UserEntity {
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 }
 ```
-- **特点**：映射到数据库的 `users` 表，包含所有字段（如 `passwordHash`），使用 Hibernate 注解。
+- **Characteristics**: Maps to database `users` table, contains all fields (like `passwordHash`), uses Hibernate annotations.
 
-#### DTO 类
+#### DTO Class
 ```java
 public class UserDTO {
     private Long id;
     private String username;
     private String email;
 
-    // 构造函数
+    // Constructor
     public UserDTO() {}
     public UserDTO(Long id, String username, String email) {
         this.id = id;
@@ -152,7 +152,7 @@ public class UserDTO {
         this.email = email;
     }
 
-    // Getter 和 Setter
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getUsername() { return username; }
@@ -161,47 +161,47 @@ public class UserDTO {
     public void setEmail(String email) { this.email = email; }
 }
 ```
-- **特点**：仅包含前端需要的字段（没有 `passwordHash`），无 Hibernate 注解，适合序列化为 JSON。
+- **Characteristics**: Contains only fields needed by frontend (no `passwordHash`), no Hibernate annotations, suitable for JSON serialization.
 
-### 4. **为什么 Entity 类不适合直接作为 DTO**
-直接将 Hibernate 的 Entity 类用作 DTO 可能会导致以下问题：
-1. **暴露敏感数据**：
-    - Entity 类通常包含所有数据库字段（如 `passwordHash`），直接传输可能泄露敏感信息。
-    - DTO 可以选择性地传输所需字段（如 `username` 和 `email`），提高安全性。
+### 4. **Why Entity Classes Are Not Suitable as DTOs**
+Using Hibernate Entity classes directly as DTOs may cause the following problems:
+1. **Exposing Sensitive Data**:
+    - Entity classes usually contain all database fields (like `passwordHash`), direct transmission may leak sensitive information.
+    - DTOs can selectively transmit required fields (like `username` and `email`), improving security.
 
-2. **性能问题**：
-    - Entity 类可能包含复杂的关系（如 `@OneToMany` 或 `@ManyToOne`），在序列化（如 JSON）时可能触发懒加载，导致额外查询或序列化异常。
-    - DTO 是简单的 POJO，序列化开销小，适合网络传输。
+2. **Performance Issues**:
+    - Entity classes may contain complex relationships (like `@OneToMany` or `@ManyToOne`), which may trigger lazy loading during serialization (like JSON), causing additional queries or serialization exceptions.
+    - DTOs are simple POJOs with low serialization overhead, suitable for network transmission.
 
-3. **耦合性**：
-    - Entity 类与数据库结构紧密耦合，数据库表结构变化会直接影响 API 响应。
-    - DTO 解耦了数据库和传输层，允许更灵活地调整 API 结构。
+3. **Coupling**:
+    - Entity classes are tightly coupled with database structure, database table structure changes will directly affect API responses.
+    - DTOs decouple database and transport layers, allowing more flexible API structure adjustments.
 
-4. **序列化问题**：
-    - Hibernate Entity 可能包含代理对象或循环引用（如双向关联），导致 JSON 序列化失败（如 Jackson 的 `StackOverflowError`）。
-    - DTO 设计为可序列化，结构简单，避免这些问题。
+4. **Serialization Issues**:
+    - Hibernate Entities may contain proxy objects or circular references (like bidirectional associations), causing JSON serialization failures (like Jackson's `StackOverflowError`).
+    - DTOs are designed to be serializable with simple structure, avoiding these problems.
 
-### 5. **典型使用场景**
-- **Entity 类**：
-    - 用于 Hibernate 与数据库交互（如保存、查询、更新）。
-    - 常出现在数据访问层（Repository 或 DAO）中。
-    - 示例：从数据库查询用户记录并更新其信息。
+### 5. **Typical Use Cases**
+- **Entity Classes**:
+    - Used for Hibernate database interactions (like save, query, update).
+    - Commonly appear in data access layers (Repository or DAO).
+    - Example: Query user records from database and update their information.
 
-- **DTO 类**：
-    - 用于控制器（Controller）与客户端（如前端、移动端）之间的数据交换。
-    - 常用于 REST API 的请求和响应。
-    - 示例：向前端返回用户的公开信息（不包含密码等敏感字段）。
+- **DTO Classes**:
+    - Used for data exchange between controllers and clients (like frontend, mobile).
+    - Commonly used for REST API requests and responses.
+    - Example: Return user's public information to frontend (excluding sensitive fields like passwords).
 
-### 6. **如何在 Entity 和 DTO 之间转换**
-为了在 Entity 和 DTO 之间转换，通常需要手动映射或使用映射工具：
-- **手动映射**：
+### 6. **How to Convert Between Entity and DTO**
+To convert between Entity and DTO, manual mapping or mapping tools are typically used:
+- **Manual Mapping**:
   ```java
   UserEntity entity = userRepository.findById(id).orElseThrow();
   UserDTO dto = new UserDTO(entity.getId(), entity.getUsername(), entity.getEmail());
   ```
-- **映射工具**：
-    - 使用工具如 **MapStruct** 或 **ModelMapper** 自动完成 Entity 和 DTO 之间的映射。
-    - 示例（MapStruct）：
+- **Mapping Tools**:
+    - Use tools like **MapStruct** or **ModelMapper** to automatically complete mapping between Entity and DTO.
+    - Example (MapStruct):
       ```java
       @Mapper
       public interface UserMapper {
@@ -210,12 +210,12 @@ public class UserDTO {
       }
       ```
 
-### 7. **是否可以将 Entity 类当作 DTO 使用？**
-虽然技术上可以将 Entity 类直接作为 DTO（例如直接返回 Entity 给客户端），但不推荐这样做，除非：
-- 项目非常简单，Entity 和 DTO 的字段完全一致。
-- 你能确保不会暴露敏感数据或触发性能问题。
+### 7. **Can Entity Classes Be Used as DTOs?**
+Although technically Entity classes can be used directly as DTOs (e.g. returning Entity directly to client), this is not recommended unless:
+- The project is very simple and Entity and DTO fields are completely identical.
+- You can ensure no sensitive data exposure or performance issues will occur.
 
-在实际开发中，建议始终使用 DTO 来与客户端交互，以保持代码的可维护性、安全性和灵活性。
+In actual development, it is recommended to always use DTOs for client interaction to maintain code maintainability, security, and flexibility.
 
 ### 8. **Summary**
 - **Hibernate Entity classes** are designed for database persistence, mapping to database tables, containing ORM annotations, suitable for data storage and operations.

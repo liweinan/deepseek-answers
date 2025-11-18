@@ -159,57 +159,57 @@ After mastering these methods, you can quickly verify the correctness of bit ope
 
 ---
 
-好的！我将逐行详细解释前面提到的 **GDB调试整数值和二进制表示** 的示例，确保每个步骤和命令的含义都清晰明了。
+Great! I will explain line by line the previously mentioned **GDB debugging integer values and binary representation** example, ensuring each step and command meaning is clear.
 
 ---
 
-### **示例代码**
-假设我们有以下C代码（`test.c`）：
+### **Example Code**
+Assume we have the following C code (`test.c`):
 ```c
 #include <stdio.h>
 int main() {
-    unsigned int a = 0x0F0F;  // 十六进制赋值
-    int b = -42;              // 十进制负数
+    unsigned int a = 0x0F0F;  // Hexadecimal assignment
+    int b = -42;              // Decimal negative number
     return 0;
 }
 ```
 
 ---
 
-### **1. 编译并启动GDB**
-#### **命令解释**
+### **1. Compile and Start GDB**
+#### **Command Explanation**
 ```bash
-gcc -g test.c -o test   # 编译时添加调试信息（-g）
-gdb ./test              # 启动GDB调试程序
+gcc -g test.c -o test   # Add debugging information during compilation (-g)
+gdb ./test              # Start GDB debugging program
 ```
-- **`-g`**：在编译时生成调试信息（如变量名、行号等），GDB需要这些信息才能正确调试。
-- **`./test`**：指定要调试的可执行文件。
+- **`-g`**: Generates debugging information (like variable names, line numbers) during compilation, GDB needs this information for proper debugging.
+- **`./test`**: Specifies the executable file to debug.
 
 ---
 
-### **2. 设置断点并运行程序**
-#### **命令解释**
+### **2. Set Breakpoint and Run Program**
+#### **Command Explanation**
 ```bash
-(gdb) break main        # 在main函数入口处设置断点
-(gdb) run               # 运行程序，停在断点处
+(gdb) break main        # Set breakpoint at main function entry
+(gdb) run               # Run program, stop at breakpoint
 ```
-- **`break main`**：在`main`函数的第一行代码处设置断点，程序运行时会在此暂停。
-- **`run`**：启动程序，执行到断点处停止。
+- **`break main`**: Sets breakpoint at the first line of `main` function, program will pause here during execution.
+- **`run`**: Starts program, stops at breakpoint.
 
 ---
 
-### **3. 查看变量`a`的值和二进制表示**
-#### **命令解释**
+### **3. View Variable `a` Value and Binary Representation**
+#### **Command Explanation**
 ```bash
-(gdb) print a           # 打印变量a的十进制值
-(gdb) print/x a         # 打印变量a的十六进制值
-(gdb) print/t a         # 打印变量a的二进制值
+(gdb) print a           # Print variable a's decimal value
+(gdb) print/x a         # Print variable a's hexadecimal value
+(gdb) print/t a         # Print variable a's binary value
 ```
-- **`print a`**：以默认十进制格式输出`a`的值（`0x0F0F`的十进制是`3855`）。
-- **`print/x a`**：以十六进制格式输出（显示为`0xf0f`，注意GDB省略前导零）。
-- **`print/t a`**：以二进制格式输出（显示为`111100001111`，共16位，因为`0x0F0F`是16位宽）。
+- **`print a`**: Outputs `a`'s value in default decimal format (`0x0F0F` in decimal is `3855`).
+- **`print/x a`**: Outputs in hexadecimal format (displays as `0xf0f`, note GDB omits leading zeros).
+- **`print/t a`**: Outputs in binary format (displays as `111100001111`, 16 bits total, because `0x0F0F` is 16-bit wide).
 
-#### **输出分析**
+#### **Output Analysis**
 ```
 $1 = 3855       # 0x0F0F的十进制
 $2 = 0xf0f      # 十六进制（省略前导零）
@@ -218,187 +218,187 @@ $3 = 111100001111 # 二进制（16位）
 
 ---
 
-### **4. 查看变量`b`（负数）的值和二进制表示**
-#### **命令解释**
+### **4. View Variable `b` (Negative Number) Value and Binary Representation**
+#### **Command Explanation**
 ```bash
-(gdb) print b           # 打印变量b的十进制值
-(gdb) print/t b         # 打印变量b的二进制（补码形式）
+(gdb) print b           # Print variable b's decimal value
+(gdb) print/t b         # Print variable b's binary (two's complement form)
 ```
-- **`print b`**：输出`b`的十进制值（`-42`）。
-- **`print/t b`**：输出`b`的二进制补码表示（`int`通常是32位）。
+- **`print b`**: Outputs `b`'s decimal value (`-42`).
+- **`print/t b`**: Outputs `b`'s binary two's complement representation (`int` is usually 32-bit).
 
-#### **输出分析**
+#### **Output Analysis**
 ```
 $4 = -42
 $5 = 11111111111111111111111111010110  # -42的32位补码
 ```
-- **补码计算**：
-    - `42`的二进制：`00000000 00000000 00000000 00101010`
-    - 取反：`11111111 11111111 11111111 11010101`
-    - 加1：`11111111 11111111 11111111 11010110`（即GDB显示的结果）
+- **Two's Complement Calculation**:
+    - `42` in binary: `00000000 00000000 00000000 00101010`
+    - Bitwise NOT: `11111111 11111111 11111111 11010101`
+    - Add 1: `11111111 11111111 11111111 11010110` (i.e., GDB displayed result)
 
 ---
 
-### **5. 使用`x`命令查看内存中的二进制布局**
-#### **命令解释**
+### **5. Use `x` Command to View Binary Layout in Memory**
+#### **Command Explanation**
 ```bash
-(gdb) x/4tb &a         # 查看变量a的内存（4字节，二进制格式）
-(gdb) x/4tb &b         # 查看变量b的内存（4字节，二进制格式）
+(gdb) x/4tb &a         # View variable a's memory (4 bytes, binary format)
+(gdb) x/4tb &b         # View variable b's memory (4 bytes, binary format)
 ```
-- **`x`**：查看内存的命令。
-- **`/4tb`**：
-    - `4`：显示4个单元。
-    - `t`：以二进制形式显示。
-    - `b`：每个单元1字节（Byte）。
-- **`&a`**：变量`a`的内存地址。
+- **`x`**: Command to view memory.
+- **`/4tb`**:
+    - `4`: Display 4 units.
+    - `t`: Display in binary form.
+    - `b`: Each unit is 1 byte (Byte).
+- **`&a`**: Memory address of variable `a`.
 
-#### **输出分析**
-##### **变量`a`（小端序）**
+#### **Output Analysis**
+##### **Variable `a` (Little Endian)**
 ```
 0x7fffffffde3c: 00001111    00001111    00000000    00000000
 ```
-- **小端序**：低位字节在前（`0x0F`在低地址，`0x00`在高地址）。
-- 实际内存布局：`0F 0F 00 00`（对应`0x00000F0F`）。
+- **Little Endian**: Low byte first (`0x0F` at low address, `0x00` at high address).
+- Actual memory layout: `0F 0F 00 00` (corresponds to `0x00000F0F`).
 
-##### **变量`b`（小端序）**
+##### **Variable `b` (Little Endian)**
 ```
 0x7fffffffde38: 11010110    11111111    11111111    11111111
 ```
-- **小端序**：最低字节是`11010110`（`0xD6`），即`-42`补码的最后8位。
-- 实际内存布局：`D6 FF FF FF`（对应`0xFFFFFFD6`，即`-42`的补码）。
+- **Little Endian**: Lowest byte is `11010110` (`0xD6`), i.e., last 8 bits of `-42`'s two's complement.
+- Actual memory layout: `D6 FF FF FF` (corresponds to `0xFFFFFFD6`, i.e., `-42`'s two's complement).
 
 ---
 
-### **6. 位操作调试示例**
-#### **检查变量`a`的第3位是否为1**
+### **6. Bit Operation Debugging Examples**
+#### **Check if Variable `a`'s 3rd Bit is 1**
 ```bash
 (gdb) print (a & (1 << 3)) != 0
 ```
-- **`1 << 3`**：生成掩码`0b1000`（第3位为1）。
-- **`a & (1 << 3)`**：提取`a`的第3位。
-- 若结果不为0，则第3位是1。
+- **`1 << 3`**: Generates mask `0b1000` (3rd bit is 1).
+- **`a & (1 << 3)`**: Extracts `a`'s 3rd bit.
+- If result is not 0, then 3rd bit is 1.
 
-#### **将变量`a`的第2位置1**
+#### **Set Variable `a`'s 2nd Bit to 1**
 ```bash
 (gdb) set a = a | (1 << 2)
 ```
-- **`1 << 2`**：生成掩码`0b0100`。
-- **`a | ...`**：将第2位强制设为1，其他位不变。
+- **`1 << 2`**: Generates mask `0b0100`.
+- **`a | ...`**: Forces 2nd bit to 1, other bits unchanged.
 
 ---
 
-### **7. 自定义`bin`函数详解**
-#### **代码功能**
+### **7. Custom `bin` Function Detailed Explanation**
+#### **Code Functionality**
 ```python
 define bin
   printf "0b"
   set $val = $arg0
-  set $i = sizeof($val) * 8 - 1  # 从最高位开始
+  set $i = sizeof($val) * 8 - 1  # Start from highest bit
   while $i >= 0
-    printf "%d", ($val >> $i) & 1  # 逐位提取
+    printf "%d", ($val >> $i) & 1  # Extract bit by bit
     if $i % 8 == 0 && $i != 0
-      printf " "                   # 每8位加空格分隔
+      printf " "                   # Add space separator every 8 bits
     end
     set $i = $i - 1
   end
   printf "\n"
 end
 ```
-- **`sizeof($val) * 8`**：计算变量位数（如`int`为32位）。
-- **`($val >> $i) & 1`**：右移`$i`位后取最低位。
+- **`sizeof($val) * 8`**: Calculates variable bit count (e.g., `int` is 32 bits).
+- **`($val >> $i) & 1`**: Right shifts `$i` bits then takes lowest bit.
 - **示例输出**：
   ```bash
   (gdb) bin a
-  0b00000000 00000000 00001111 00001111  # 32位完整表示
+  0b00000000 00000000 00001111 00001111  # 32-bit complete representation
   ```
 
 ---
 
-### **关键点总结**
-1. **`print`格式化**：
-    - `/x`：十六进制，`/t`：二进制，`/d`：十进制（默认）。
-2. **`x`命令**：
-    - 直接查看内存，注意小端序（低字节在前）。
-3. **负数表示**：
-    - GDB的`print/t`会显示补码形式。
-4. **位操作**：
-    - 用`&`、`|`、`<<`等直接在GDB中测试位运算逻辑。
+### **Key Points Summary**
+1. **`print` Formatting**:
+    - `/x`: Hexadecimal, `/t`: Binary, `/d`: Decimal (default).
+2. **`x` Command**:
+    - Directly view memory, note little-endian (low byte first).
+3. **Negative Number Representation**:
+    - GDB's `print/t` displays two's complement form.
+4. **Bit Operations**:
+    - Use `&`, `|`, `<<` etc. to directly test bit operation logic in GDB.
 
-通过以上步骤，你可以在调试时直观地验证整数的二进制表示和位操作行为！
-
----
-
-### **补码（Two's Complement）Cheatsheet**
-补码是计算机中表示**有符号整数**的标准方式，其核心是通过二进制位的巧妙设计，统一处理正负数和算术运算（如加减法）。
+Through the above steps, you can intuitively verify integer binary representation and bit operation behavior during debugging!
 
 ---
 
-#### **1. 补码的核心规则**
-| 操作                | 方法                                                                 |
+### **Two's Complement Cheatsheet**
+Two's complement is the standard way computers represent **signed integers**, its core is through clever design of binary bits to uniformly handle positive/negative numbers and arithmetic operations (like addition/subtraction).
+
+---
+
+#### **1. Two's Complement Core Rules**
+| Operation                | Method                                                                 |
 |---------------------|----------------------------------------------------------------------|
-| **正数的补码**       | 直接等于其二进制原码（最高位为0）。                                   |
-| **负数的补码**       | 1. 取绝对值的二进制形式（原码）。<br>2. 按位取反（反码）。<br>3. 加1。 |
-| **补码转十进制**     | 若最高位为1，则为负数：<br>1. 减1。<br>2. 按位取反。<br>3. 添加负号。 |
+| **Positive Number's Two's Complement**       | Directly equals its binary original code (highest bit is 0).                                   |
+| **Negative Number's Two's Complement**       | 1. Take absolute value's binary form (original code).<br>2. Bitwise NOT (one's complement).<br>3. Add 1. |
+| **Two's Complement to Decimal**     | If highest bit is 1, it's negative:<br>1. Subtract 1.<br>2. Bitwise NOT.<br>3. Add negative sign. |
 
 ---
 
-#### **2. 补码的数学本质**
-- **模运算思想**：补码的本质是“用正数表示负数”。对于`n`位二进制，补码表示的负数`-x`等价于`2^n - x`。
-    - 例如，8位系统中：`-42`的补码 = `256 - 42 = 214`（即`0xD6`）。
+#### **2. Two's Complement Mathematical Nature**
+- **Modular Arithmetic Concept**: Two's complement essence is "representing negative numbers with positive numbers". For `n`-bit binary, negative number `-x` in two's complement equals `2^n - x`.
+    - For example, in 8-bit system: `-42`'s two's complement = `256 - 42 = 214` (i.e., `0xD6`).
 
 ---
 
-#### **3. 补码的快速转换示例**
-##### **示例1：-42的8位补码**
-1. 绝对值`42`的二进制：`00101010`
-2. 按位取反：`11010101`
-3. 加1：`11010110` → **`0xD6`**
+#### **3. Two's Complement Quick Conversion Examples**
+##### **Example 1: -42's 8-bit Two's Complement**
+1. Absolute value `42` in binary: `00101010`
+2. Bitwise NOT: `11010101`
+3. Add 1: `11010110` → **`0xD6`**
 
-##### **示例2：补码`0xD6`转十进制**
-1. 二进制：`11010110`（最高位为1，说明是负数）
-2. 减1：`11010101`
-3. 取反：`00101010`（即`42`）
-4. 结果：`-42`
+##### **Example 2: Two's Complement `0xD6` to Decimal**
+1. Binary: `11010110` (highest bit is 1, indicates negative number)
+2. Subtract 1: `11010101`
+3. NOT: `00101010` (i.e., `42`)
+4. Result: `-42`
 
 ---
 
-#### **4. 补码的特性**
-| 特性                | 说明                                                                 |
+#### **4. Two's Complement Characteristics**
+| Characteristic                | Description                                                                 |
 |---------------------|----------------------------------------------------------------------|
-| **唯一零表示**       | `0`的补码只有一种形式（全`0`），解决了原码中`+0`和`-0`的问题。       |
-| **符号位**           | 最高位为`0`表示正数，为`1`表示负数。                                 |
-| **加减法统一**       | 加法电路可直接处理有符号数，无需额外逻辑。                           |
-| **范围不对称**       | `n`位补码的范围：`[-2^(n-1), 2^(n-1)-1]`（如8位：`-128`到`127`）。   |
+| **Unique Zero Representation**       | `0`'s two's complement has only one form (all `0`s), solves the `+0` and `-0` problem in original code.       |
+| **Sign Bit**           | Highest bit `0` indicates positive, `1` indicates negative.                                 |
+| **Unified Addition/Subtraction**       | Addition circuits can directly handle signed numbers, no additional logic needed.                           |
+| **Asymmetric Range**       | `n`-bit two's complement range: `[-2^(n-1), 2^(n-1)-1]` (e.g., 8-bit: `-128` to `127`).   |
 
 ---
 
-#### **5. 常见位宽的补码范围**
-| 位数（n） | 最小值（十进制） | 最大值（十进制） | 十六进制范围       |
+#### **5. Common Bit Width Two's Complement Ranges**
+| Bit Width (n) | Minimum (Decimal) | Maximum (Decimal) | Hex Range       |
 |-----------|------------------|------------------|--------------------|
-| 8位       | -128             | 127              | `0x80` ~ `0x7F`    |
-| 16位      | -32768           | 32767            | `0x8000` ~ `0x7FFF`|
-| 32位      | -2^31            | 2^31-1           | `0x80000000` ~ `0x7FFFFFFF` |
+| 8-bit       | -128             | 127              | `0x80` ~ `0x7F`    |
+| 16-bit      | -32768           | 32767            | `0x8000` ~ `0x7FFF`|
+| 32-bit      | -2^31            | 2^31-1           | `0x80000000` ~ `0x7FFFFFFF` |
 
 ---
 
-#### **6. 补码的运算技巧**
-| 运算       | 方法                                                                 |
+#### **6. Two's Complement Operation Techniques**
+| Operation       | Method                                                                 |
 |------------|----------------------------------------------------------------------|
-| **取负数**  | 按位取反后加1（即补码定义）。                                        |
-| **减法**    | `A - B` = `A + (-B)`（用补码表示`-B`后直接相加）。                   |
-| **溢出判断**| 若两个正数相加结果为负，或两个负数相加结果为正，则溢出。             |
+| **Negation**  | Bitwise NOT then add 1 (i.e., two's complement definition).                                        |
+| **Subtraction**    | `A - B` = `A + (-B)` (represent `-B` with two's complement then add directly).                   |
+| **Overflow Detection**| If two positive numbers add to negative, or two negative numbers add to positive, then overflow.             |
 
 ---
 
-#### **7. 补码的常见用途**
-1. **CPU算术运算**：所有现代CPU用补码处理有符号整数。
-2. **哈希函数**：负数通过补码转为正数后再计算。
-3. **位操作优化**：如快速计算绝对值（`(x ^ mask) - mask`，其中`mask = x >> 31`）。
+#### **7. Common Two's Complement Uses**
+1. **CPU Arithmetic Operations**: All modern CPUs use two's complement to handle signed integers.
+2. **Hash Functions**: Negative numbers are converted to positive through two's complement before calculation.
+3. **Bit Operation Optimization**: Like fast absolute value calculation (`(x ^ mask) - mask`, where `mask = x >> 31`).
 
 ---
 
-#### **8. 快速参考表（8位补码）**
-| 十进制 | 二进制补码  | 十六进制 |
+#### **8. Quick Reference Table (8-bit Two's Complement)**
+| Decimal | Binary Two's Complement  | Hexadecimal |
 |--------|-------------|----------|
 | 127    | `01111111`  | `0x7F`   |
 | 42     | `00101010`  | `0x2A`   |
@@ -409,9 +409,9 @@ end
 
 ---
 
-### **为什么补码如此重要？**
-1. **硬件简化**：加减乘除只需一套电路。
-2. **零的唯一性**：避免`+0`和`-0`的歧义。
-3. **自然溢出**：溢出结果仍符合数学模运算（如`127 + 1 = -128`在8位系统中）。
+### **Why is Two's Complement So Important?**
+1. **Hardware Simplification**: Addition, subtraction, multiplication, division only need one set of circuits.
+2. **Zero Uniqueness**: Avoids ambiguity between `+0` and `-0`.
+3. **Natural Overflow**: Overflow results still conform to mathematical modular arithmetic (e.g., `127 + 1 = -128` in 8-bit system).
 
-掌握补码后，你将彻底理解计算机如何处理有符号数！
+After mastering two's complement, you will thoroughly understand how computers handle signed numbers!

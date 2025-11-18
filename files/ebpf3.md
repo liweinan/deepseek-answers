@@ -43,10 +43,10 @@ struct bpf_trampoline *bpf_trampoline_lookup(u64 key)
     struct bpf_trampoline *tr;
     struct hlist_head *head;
     
-    // 计算哈希值
+    // Calculate hash value
     head = &trampoline_table[hash_64(key, TRAMPOLINE_HASH_BITS)];
     
-    // 查找现有跳板
+    // Find existing trampoline
     hlist_for_each_entry_rcu(tr, head, hlist) {
         if (tr->key == key)
             return tr;
@@ -55,7 +55,7 @@ struct bpf_trampoline *bpf_trampoline_lookup(u64 key)
     return NULL;
 }
 
-// 创建新的跳板
+// Create new trampoline
 struct bpf_trampoline *bpf_trampoline_alloc(u64 key, int size)
 {
     struct bpf_trampoline *tr;
@@ -79,7 +79,7 @@ struct bpf_trampoline *bpf_trampoline_alloc(u64 key, int size)
 }
 ```
 
-## 3. 跳板代码生成
+## 3. Trampoline Code Generation
 
 ```c
 // kernel/bpf/trampoline.c
@@ -89,86 +89,86 @@ static int bpf_trampoline_update(struct bpf_trampoline *tr)
     u32 flags = tr->flags;
     int err;
     
-    // 生成跳板代码
+    // Generate trampoline code
     err = bpf_arch_text_poke(image, BPF_MOD_JUMP, NULL, 
                              (void *)bpf_trampoline_enter);
     if (err)
         return err;
     
-    // 设置ftrace操作
+    // Set ftrace operations
     tr->fops.func = bpf_trampoline_enter;
     tr->fops.flags = FTRACE_OPS_FL_SAVE_REGS | FTRACE_OPS_FL_IPMODIFY;
     
     return 0;
 }
 
-// 架构特定的代码生成
+// Architecture-specific code generation
 static int bpf_trampoline_enter(void *data)
 {
     struct bpf_tramp_run_ctx *run_ctx = data;
     struct bpf_prog *prog = run_ctx->prog;
     
-    // 保存寄存器状态
+    // Save register state
     __bpf_prog_enter();
     
-    // 执行eBPF程序
+    // Execute eBPF program
     run_ctx->ret = bpf_prog_run(prog, run_ctx->args);
     
-    // 恢复寄存器状态
+    // Restore register state
     __bpf_prog_exit(prog, run_ctx);
     
     return 0;
 }
 ```
 
-## 4. 跳板执行流程
+## 4. Trampoline Execution Process
 
 ```c
 // kernel/bpf/trampoline.c
 static void __bpf_prog_enter(void)
 {
-    // 禁用抢占，确保原子性执行
+    // Disable preemption, ensure atomic execution
     preempt_disable();
     
-    // 启用RCU读取锁
+    // Enable RCU read lock
     rcu_read_lock();
     
-    // 禁用迁移，确保在同一CPU上执行
+    // Disable migration, ensure execution on same CPU
     migrate_disable();
 }
 
 static void __bpf_prog_exit(struct bpf_prog *prog, struct bpf_tramp_run_ctx *run_ctx)
 {
-    // 启用迁移
+    // Enable migration
     migrate_enable();
     
-    // 释放RCU读取锁
+    // Release RCU read lock
     rcu_read_unlock();
     
-    // 启用抢占
+    // Enable preemption
     preempt_enable();
 }
 
-// 跳板入口函数
+// Trampoline entry function
 static void bpf_trampoline_enter(void *data)
 {
     struct bpf_tramp_run_ctx *run_ctx = data;
     struct bpf_prog *prog = run_ctx->prog;
     u64 start_time;
     
-    // 记录开始时间
+    // Record start time
     start_time = ktime_get_ns();
     
-    // 进入程序执行环境
+    // Enter program execution environment
     __bpf_prog_enter();
     
-    // 执行eBPF程序
+    // Execute eBPF program
     run_ctx->ret = bpf_prog_run(prog, run_ctx->args);
     
-    // 退出程序执行环境
+    // Exit program execution environment
     __bpf_prog_exit(prog, run_ctx);
     
-    // 更新统计信息
+    // Update statistics
     if (prog->aux->stats) {
         struct bpf_prog_stats *stats = this_cpu_ptr(prog->aux->stats);
         u64 end_time = ktime_get_ns();
@@ -181,9 +181,9 @@ static void bpf_trampoline_enter(void *data)
 }
 ```
 
-## 5. 不同类型程序的跳板机制
+## 5. Different Program Type Trampoline Mechanisms
 
-### Kprobe跳板
+### Kprobe Trampoline
 ```c
 // kernel/trace/bpf_trace.c
 static void bpf_kprobe_callback(struct kprobe *p, struct pt_regs *regs)
@@ -192,16 +192,16 @@ static void bpf_kprobe_callback(struct kprobe *p, struct pt_regs *regs)
     struct bpf_prog *prog = bpf_kp->prog;
     struct bpf_tramp_run_ctx run_ctx = {};
     
-    // 准备执行上下文
+    // Prepare execution context
     run_ctx.prog = prog;
-    run_ctx.args[0] = (u64)regs;  // 传递寄存器状态
+    run_ctx.args[0] = (u64)regs;  // Pass register state
     
-    // 通过跳板执行程序
+    // Execute program through trampoline
     bpf_trampoline_enter(&run_ctx);
 }
 ```
 
-### Tracepoint跳板
+### Tracepoint Trampoline
 ```c
 // kernel/trace/bpf_trace.c
 static void bpf_trace_tp_callback(void *data, struct trace_event_raw_sys_enter *rec)
@@ -209,16 +209,16 @@ static void bpf_trace_tp_callback(void *data, struct trace_event_raw_sys_enter *
     struct bpf_prog *prog = data;
     struct bpf_tramp_run_ctx run_ctx = {};
     
-    // 准备执行上下文
+    // Prepare execution context
     run_ctx.prog = prog;
     run_ctx.args[0] = (u64)rec;  // 传递tracepoint数据
     
-    // 通过跳板执行程序
+    // Execute program through trampoline
     bpf_trampoline_enter(&run_ctx);
 }
 ```
 
-### XDP跳板
+### XDP Trampoline
 ```c
 // net/core/filter.c
 static u32 bpf_prog_run_xdp(const struct bpf_prog *prog, struct xdp_buff *xdp)
@@ -226,13 +226,13 @@ static u32 bpf_prog_run_xdp(const struct bpf_prog *prog, struct xdp_buff *xdp)
     struct bpf_prog_stats *stats;
     u32 ret;
     
-    // 获取统计信息
+    // Get statistics
     stats = this_cpu_ptr(prog->stats);
     
-    // 直接执行XDP程序（XDP有特殊的执行路径）
+    // Directly execute XDP program (XDP has special execution path)
     ret = bpf_prog_run(prog, xdp);
     
-    // 更新统计信息
+    // Update statistics
     if (ret == XDP_PASS) {
         stats->nsecs += bpf_prog_run_xdp_time(prog);
         stats->cnt++;
@@ -244,7 +244,7 @@ static u32 bpf_prog_run_xdp(const struct bpf_prog *prog, struct xdp_buff *xdp)
 }
 ```
 
-## 6. 跳板的内存管理
+## 6. Trampoline Memory Management
 
 ```c
 // kernel/bpf/trampoline.c
@@ -253,15 +253,15 @@ static void bpf_trampoline_free(struct bpf_trampoline *tr)
     if (!tr)
         return;
     
-    // 释放跳板代码镜像
+    // Free trampoline code image
     if (tr->image)
         bpf_jit_free_exec(tr->image);
     
-    // 释放链接结构
+    // Free link structure
     if (tr->tlinks)
         kfree(tr->tlinks);
     
-    // 释放跳板结构
+    // Free trampoline structure
     kfree(tr);
 }
 
@@ -276,25 +276,25 @@ static void bpf_trampoline_put(struct bpf_trampoline *tr)
 }
 ```
 
-## 7. 跳板机制的优势
+## 7. Trampoline Mechanism Advantages
 
-### 安全性
+### Security
 ```c
 // 跳板确保程序执行的安全性
 static void __bpf_prog_enter(void)
 {
-    // 禁用抢占，防止并发问题
+    // Disable preemption, prevent concurrency issues
     preempt_disable();
     
-    // RCU保护，确保内存访问安全
+    // RCU protection, ensure memory access safety
     rcu_read_lock();
     
-    // 禁用迁移，确保执行环境稳定
+    // Disable migration, ensure stable execution environment
     migrate_disable();
 }
 ```
 
-### 性能优化
+### Performance Optimization
 ```c
 // 跳板代码直接编译为机器码
 static int bpf_trampoline_update(struct bpf_trampoline *tr)
@@ -305,7 +305,7 @@ static int bpf_trampoline_update(struct bpf_trampoline *tr)
 }
 ```
 
-### 灵活性
+### Flexibility
 ```c
 // 支持多种程序类型
 struct bpf_tramp_links {
@@ -314,7 +314,7 @@ struct bpf_tramp_links {
 };
 ```
 
-## 8. 跳板机制的工作流程
+## 8. Trampoline Mechanism Workflow
 
 ```mermaid
 graph TD
@@ -332,89 +332,89 @@ graph TD
     K --> L[返回结果]
 ```
 
-## 关键特点总结：
+## Key Features Summary:
 
-1. **安全性**：通过禁用抢占、RCU保护等机制确保执行安全
-2. **性能**：JIT编译生成高效机器码，最小化开销
-3. **灵活性**：支持多种程序类型和事件源
-4. **可扩展性**：模块化设计支持新的程序类型
-5. **监控性**：内置统计和性能监控功能
+1. **Security**: Ensures execution safety through disabling preemption, RCU protection and other mechanisms
+2. **Performance**: JIT compilation generates efficient machine code, minimizes overhead
+3. **Flexibility**: Supports multiple program types and event sources
+4. **Extensibility**: Modular design supports new program types
+5. **Monitorability**: Built-in statistics and performance monitoring functions
 
-跳板机制是eBPF系统的核心基础设施，它确保了eBPF程序能够安全、高效地在内核中执行，是整个eBPF生态系统的关键组件。
+The trampoline mechanism is the core infrastructure of the eBPF system, it ensures eBPF programs can execute safely and efficiently in the kernel, and is a key component of the entire eBPF ecosystem.
 
 ---
 
-让我用更清晰的方式解释eBPF代码加载、跳板和执行之间的联系：
+Let me explain the connection between eBPF code loading, trampoline, and execution more clearly:
 
-## eBPF程序生命周期完整流程
+## eBPF Program Lifecycle Complete Process
 
-### 1. 代码加载阶段
+### 1. Code Loading Stage
 
 ```c
-// 用户空间：加载eBPF字节码
+// Userspace: Load eBPF bytecode
 // tools/lib/bpf/libbpf.c
 int bpf_prog_load(const char *file, enum bpf_prog_type type, struct bpf_object **pobj, int *prog_fd)
 {
     struct bpf_object *obj;
     struct bpf_program *prog;
     
-    // 1. 解析ELF文件，提取eBPF字节码
+    // 1. Parse ELF file, extract eBPF bytecode
     obj = bpf_object__open(file);
     
-    // 2. 加载程序到内核
+    // 2. Load program to kernel
     bpf_object__load(obj);
     
-    // 3. 获取程序文件描述符
+    // 3. Get program file descriptor
     *prog_fd = bpf_program__fd(prog);
     *pobj = obj;
     
     return 0;
 }
 
-// 内核空间：接收并验证程序
+// Kernel space: Receive and verify program
 // kernel/bpf/syscall.c
 static int bpf_prog_load(union bpf_attr *attr, bpfptr_t uattr, u32 uattr_size)
 {
     struct bpf_prog *prog;
     
-    // 1. 分配程序结构
+    // 1. Allocate program structure
     prog = bpf_prog_alloc(bpf_prog_size(attr->insn_cnt), 0);
     
-    // 2. 复制字节码指令
+    // 2. Copy bytecode instructions
     copy_from_bpfptr(prog->insns, u64_to_bpfptr(attr->insns), 
                      bpf_prog_insn_size(prog));
     
-    // 3. 验证程序安全性
+    // 3. Verify program safety
     err = bpf_check(&prog, &attr, uattr, uattr_size);
     
-    // 4. JIT编译为机器码
+    // 4. JIT compile to machine code
     if (prog->jited == 0)
         bpf_int_jit_compile(prog);
     
-    // 5. 创建文件描述符
+    // 5. Create file descriptor
     return bpf_prog_new_fd(prog);
 }
 ```
 
-### 2. 跳板创建阶段
+### 2. Trampoline Creation Stage
 
 ```c
-// 当程序需要附加到事件时，创建跳板
+// When program needs to attach to event, create trampoline
 // kernel/bpf/trampoline.c
 struct bpf_trampoline *bpf_trampoline_get(u64 key, struct bpf_prog *prog)
 {
     struct bpf_trampoline *tr;
     
-    // 1. 查找或创建跳板
+    // 1. Find or create trampoline
     tr = bpf_trampoline_lookup(key);
     if (!tr) {
         tr = bpf_trampoline_alloc(key, PAGE_SIZE);
     }
     
-    // 2. 生成跳板代码
+    // 2. Generate trampoline code
     bpf_trampoline_update(tr);
     
-    // 3. 关联程序到跳板
+    // 3. Associate program with trampoline
     bpf_trampoline_link_prog(tr, prog);
     
     return tr;
@@ -425,12 +425,12 @@ static int bpf_trampoline_update(struct bpf_trampoline *tr)
 {
     void *image = tr->image;
     
-    // 生成跳板汇编代码
-    // 跳板代码的作用：
-    // 1. 保存寄存器状态
-    // 2. 调用eBPF程序
-    // 3. 恢复寄存器状态
-    // 4. 返回原函数
+    // Generate trampoline assembly code
+    // Trampoline code functions:
+    // 1. Save register state
+    // 2. Call eBPF program
+    // 3. Restore register state
+    // 4. Return to original function
     
     // 示例跳板代码结构：
     // push %rbp          ; 保存栈帧
@@ -447,155 +447,155 @@ static int bpf_trampoline_update(struct bpf_trampoline *tr)
 }
 ```
 
-### 3. 事件注册阶段
+### 3. Event Registration Stage
 
 ```c
-// 将跳板注册到具体的事件点
-// kernel/trace/bpf_trace.c (Kprobe示例)
+// Register trampoline to specific event point
+// kernel/trace/bpf_trace.c (Kprobe example)
 static int bpf_kprobe_register(struct bpf_prog *prog, const char *func_name)
 {
     struct bpf_kprobe *bpf_kp;
     struct kprobe *kp;
     
-    // 1. 创建kprobe结构
+    // 1. Create kprobe structure
     bpf_kp = kzalloc(sizeof(*bpf_kp), GFP_KERNEL);
     kp = &bpf_kp->kp;
     
-    // 2. 设置kprobe参数
+    // 2. Set kprobe parameters
     kp->symbol_name = func_name;
     kp->pre_handler = bpf_kprobe_callback;  // 设置回调函数
     
-    // 3. 注册kprobe到内核
+    // 3. Register kprobe to kernel
     register_kprobe(kp);
     
-    // 4. 关联eBPF程序
+    // 4. Associate eBPF program
     bpf_kp->prog = prog;
     
     return 0;
 }
 
-// 回调函数：当kprobe触发时调用
+// Callback function: called when kprobe triggers
 static void bpf_kprobe_callback(struct kprobe *p, struct pt_regs *regs)
 {
     struct bpf_kprobe *bpf_kp = container_of(p, struct bpf_kprobe, kp);
     struct bpf_prog *prog = bpf_kp->prog;
     
-    // 通过跳板执行eBPF程序
+    // Execute eBPF program through trampoline
     bpf_trampoline_enter(prog, regs);
 }
 ```
 
-### 4. 执行阶段
+### 4. Execution Stage
 
 ```c
-// 当事件发生时，执行流程如下：
+// When event occurs, execution flow is as follows:
 
-// 1. 事件触发（例如：系统调用）
+// 1. Event triggers (e.g.: system call)
 // kernel/entry/common.c
 ENTRY(entry_SYSCALL_64)
     // 系统调用入口
     call do_syscall_64
     ret
 
-// 2. Kprobe钩子被触发
+// 2. Kprobe hook is triggered
 // kernel/trace/bpf_trace.c
 static void bpf_kprobe_callback(struct kprobe *p, struct pt_regs *regs)
 {
     struct bpf_kprobe *bpf_kp = container_of(p, struct bpf_kprobe, kp);
     struct bpf_prog *prog = bpf_kp->prog;
     
-    // 3. 调用跳板
+    // 3. Call trampoline
     bpf_trampoline_enter(prog, regs);
 }
 
-// 4. 跳板执行
+// 4. Trampoline execution
 // kernel/bpf/trampoline.c
 static void bpf_trampoline_enter(struct bpf_prog *prog, void *ctx)
 {
     struct bpf_tramp_run_ctx run_ctx = {};
     
-    // 5. 准备执行环境
+    // 5. Prepare execution environment
     __bpf_prog_enter();
     
-    // 6. 执行eBPF程序
+    // 6. Execute eBPF program
     run_ctx.prog = prog;
     run_ctx.args[0] = (u64)ctx;
     run_ctx.ret = bpf_prog_run(prog, &run_ctx);
     
-    // 7. 恢复执行环境
+    // 7. Restore execution environment
     __bpf_prog_exit(prog, &run_ctx);
 }
 
-// 8. 实际执行eBPF程序
+// 8. Actually execute eBPF program
 // kernel/bpf/core.c
 static u64 bpf_prog_run(const struct bpf_prog *prog, const void *ctx)
 {
-    // 如果程序已JIT编译，直接执行机器码
+    // If program is JIT compiled, directly execute machine code
     if (prog->jited)
         return prog->bpf_func(prog, ctx);
     
-    // 否则解释执行字节码
+    // Otherwise interpret execute bytecode
     return ___bpf_prog_run(prog->insnsi, ctx);
 }
 ```
 
-## 完整的数据流图
+## Complete Data Flow Diagram
 
 ```mermaid
 graph TD
-    subgraph "用户空间"
-        A[用户程序] --> B[libbpf库]
-        B --> C[BPF系统调用]
+    subgraph "Userspace"
+        A[User Program] --> B[libbpf Library]
+        B --> C[BPF System Call]
     end
     
-    subgraph "内核空间"
+    subgraph "Kernel Space"
         C --> D[bpf_prog_load]
-        D --> E[程序验证器]
-        E --> F[JIT编译器]
-        F --> G[程序注册]
+        D --> E[Program Verifier]
+        E --> F[JIT Compiler]
+        F --> G[Program Registration]
         
-        G --> H[跳板创建]
-        H --> I[事件注册]
+        G --> H[Trampoline Creation]
+        H --> I[Event Registration]
         
-        I --> J[事件触发]
-        J --> K[跳板执行]
-        K --> L[eBPF程序执行]
-        L --> M[返回结果]
+        I --> J[Event Trigger]
+        J --> K[Trampoline Execution]
+        K --> L[eBPF Program Execution]
+        L --> M[Return Result]
     end
     
-    subgraph "执行环境"
-        N[禁用抢占] --> O[RCU保护]
-        O --> P[执行程序]
-        P --> Q[恢复环境]
+    subgraph "Execution Environment"
+        N[Disable Preemption] --> O[RCU Protection]
+        O --> P[Execute Program]
+        P --> Q[Restore Environment]
     end
 ```
 
-## 关键联系点
+## Key Connection Points
 
-### 1. 加载 → 跳板
+### 1. Loading → Trampoline
 ```c
-// 程序加载后，需要创建跳板才能执行
+// After program loading, need to create trampoline to execute
 struct bpf_trampoline *tr = bpf_trampoline_get(key, prog);
-// 跳板包含了指向已加载程序的指针
+// Trampoline contains pointer to loaded program
 tr->prog = prog;
 ```
 
-### 2. 跳板 → 执行
+### 2. Trampoline → Execution
 ```c
-// 跳板代码调用eBPF程序
+// Trampoline code calls eBPF program
 static void bpf_trampoline_enter(void *data)
 {
     struct bpf_tramp_run_ctx *run_ctx = data;
-    struct bpf_prog *prog = run_ctx->prog;  // 从跳板获取程序
+    struct bpf_prog *prog = run_ctx->prog;  // Get program from trampoline
     
-    // 执行程序
+    // Execute program
     run_ctx->ret = bpf_prog_run(prog, run_ctx->args);
 }
 ```
 
-### 3. 事件 → 跳板
+### 3. Event → Trampoline
 ```c
-// 事件回调函数调用跳板
+// Event callback function calls trampoline
 static void bpf_kprobe_callback(struct kprobe *p, struct pt_regs *regs)
 {
     struct bpf_kprobe *bpf_kp = container_of(p, struct bpf_kprobe, kp);
@@ -606,96 +606,96 @@ static void bpf_kprobe_callback(struct kprobe *p, struct pt_regs *regs)
 }
 ```
 
-## 总结
+## Summary
 
-1. **加载阶段**：将eBPF字节码加载到内核，验证并JIT编译
-2. **跳板阶段**：创建跳板代码，作为事件和程序之间的桥梁
-3. **注册阶段**：将跳板注册到具体的事件点（如kprobe、tracepoint等）
-4. **执行阶段**：事件触发 → 跳板调用 → 程序执行 → 返回结果
+1. **Loading Stage**: Load eBPF bytecode into kernel, verify and JIT compile
+2. **Trampoline Stage**: Create trampoline code as bridge between events and programs
+3. **Registration Stage**: Register trampoline to specific event points (like kprobe, tracepoint, etc.)
+4. **Execution Stage**: Event trigger → Trampoline call → Program execution → Return result
 
-跳板机制的核心作用是：
-- **安全性**：提供受控的执行环境
-- **性能**：最小化事件处理的开销
-- **灵活性**：支持多种事件类型和程序类型
-- **隔离性**：确保eBPF程序不会影响内核稳定性
+The core functions of trampoline mechanism are:
+- **Security**: Provides controlled execution environment
+- **Performance**: Minimizes event processing overhead
+- **Flexibility**: Supports multiple event types and program types
+- **Isolation**: Ensures eBPF programs won't affect kernel stability
 
 ---
 
-很好的问题！让我详细回答这两个关键问题：
+Great questions! Let me answer these two key questions in detail:
 
-## 1. eBPF代码运行必须通过跳板机制吗？
+## 1. Must eBPF Code Execution Go Through Trampoline Mechanism?
 
-**答案：不是必须的，取决于程序类型**
+**Answer: Not required, depends on program type**
 
-### 必须通过跳板的程序类型：
+### Program Types That Must Use Trampoline:
 ```c
-// Kprobe/Kretprobe - 必须通过跳板
+// Kprobe/Kretprobe - Must use trampoline
 static void bpf_kprobe_callback(struct kprobe *p, struct pt_regs *regs)
 {
     struct bpf_kprobe *bpf_kp = container_of(p, struct bpf_kprobe, kp);
     struct bpf_prog *prog = bpf_kp->prog;
     
-    // 必须通过跳板执行
+    // Must execute through trampoline
     bpf_trampoline_enter(prog, regs);
 }
 
-// Tracepoint - 必须通过跳板
+// Tracepoint - Must use trampoline
 static void bpf_trace_tp_callback(void *data, struct trace_event_raw_sys_enter *rec)
 {
     struct bpf_prog *prog = data;
     
-    // 必须通过跳板执行
+    // Must execute through trampoline
     bpf_trampoline_enter(prog, rec);
 }
 ```
 
-### 可以直接执行的程序类型：
+### Program Types That Can Execute Directly:
 ```c
-// XDP程序 - 直接执行，无需跳板
+// XDP Program - Direct execution，无需跳板
 static u32 bpf_prog_run_xdp(const struct bpf_prog *prog, struct xdp_buff *xdp)
 {
-    // 直接调用，无需跳板
+    // Direct call, no trampoline needed
     return bpf_prog_run(prog, xdp);
 }
 
-// Socket Filter - 直接执行
+// Socket Filter - Direct execution
 int sk_filter(struct sock *sk, struct sk_buff *skb)
 {
     struct bpf_prog *prog = rcu_dereference(sk->sk_filter);
     
-    // 直接执行，无需跳板
+    // Direct execution, no trampoline needed
     return bpf_prog_run_save_cb(prog, skb);
 }
 
-// TC (Traffic Control) - 直接执行
+// TC (Traffic Control) - Direct execution
 static int cls_bpf_classify(struct sk_buff *skb, const struct tcf_proto *tp,
                            struct tcf_result *res)
 {
     struct cls_bpf *prog = rtc_to_cls_bpf(tp);
     
-    // 直接执行，无需跳板
+    // Direct execution, no trampoline needed
     return bpf_prog_run(prog->filter, skb);
 }
 ```
 
-## 2. 跳板代码是动态生成的吗？有性能问题吗？
+## 2. Is Trampoline Code Dynamically Generated? Are There Performance Issues?
 
-**答案：是的，但性能问题已经优化**
+**Answer: Yes, but performance issues have been optimized**
 
-### 跳板代码生成过程：
+### Trampoline Code Generation Process:
 ```c
 // kernel/bpf/trampoline.c
 struct bpf_trampoline *bpf_trampoline_alloc(u64 key, int size)
 {
     struct bpf_trampoline *tr;
     
-    // 1. 分配跳板结构
+    // 1. Allocate trampoline structure
     tr = kzalloc(sizeof(*tr), GFP_KERNEL);
     
-    // 2. 分配可执行内存
+    // 2. Allocate executable memory
     tr->image = bpf_jit_alloc_exec(size);  // 分配可执行内存页
     
-    // 3. 生成跳板代码
+    // 3. Generate trampoline code
     bpf_trampoline_update(tr);
     
     return tr;
@@ -726,9 +726,9 @@ static int bpf_trampoline_update(struct bpf_trampoline *tr)
 }
 ```
 
-### 性能优化措施：
+### Performance Optimization Measures:
 
-#### 1. 跳板缓存机制
+#### 1. Trampoline Cache Mechanism
 ```c
 // kernel/bpf/trampoline.c
 static DEFINE_HASHTABLE(trampoline_table, TRAMPOLINE_HASH_BITS);
@@ -738,7 +738,7 @@ struct bpf_trampoline *bpf_trampoline_lookup(u64 key)
     struct bpf_trampoline *tr;
     struct hlist_head *head;
     
-    // 使用哈希表快速查找现有跳板
+    // Use hash table to quickly find existing trampoline
     head = &trampoline_table[hash_64(key, TRAMPOLINE_HASH_BITS)];
     hlist_for_each_entry_rcu(tr, head, hlist) {
         if (tr->key == key)
@@ -749,12 +749,12 @@ struct bpf_trampoline *bpf_trampoline_lookup(u64 key)
 }
 ```
 
-#### 2. JIT编译优化
+#### 2. JIT Compilation Optimization
 ```c
 // kernel/bpf/core.c
 static u64 bpf_prog_run(const struct bpf_prog *prog, const void *ctx)
 {
-    // 如果程序已JIT编译，直接执行机器码
+    // If program is JIT compiled, directly execute machine code
     if (prog->jited)
         return prog->bpf_func(prog, ctx);  // 直接调用编译后的函数
     
@@ -763,14 +763,14 @@ static u64 bpf_prog_run(const struct bpf_prog *prog, const void *ctx)
 }
 ```
 
-#### 3. 跳板代码复用
+#### 3. Trampoline Code Reuse
 ```c
 // kernel/bpf/trampoline.c
 static int bpf_trampoline_link_prog(struct bpf_trampoline *tr, struct bpf_prog *prog)
 {
     struct bpf_tramp_links *tlinks;
     
-    // 一个跳板可以关联多个程序
+    // One trampoline can associate with multiple programs
     tlinks = tr->tlinks;
     if (!tlinks) {
         tlinks = kzalloc(sizeof(*tlinks), GFP_KERNEL);
@@ -784,7 +784,7 @@ static int bpf_trampoline_link_prog(struct bpf_trampoline *tr, struct bpf_prog *
 }
 ```
 
-#### 4. 内存管理优化
+#### 4. Memory Management Optimization
 ```c
 // kernel/bpf/trampoline.c
 static void bpf_trampoline_free(struct bpf_trampoline *tr)
@@ -792,7 +792,7 @@ static void bpf_trampoline_free(struct bpf_trampoline *tr)
     if (!tr)
         return;
     
-    // 使用引用计数，避免频繁分配/释放
+    // Use reference counting, avoid frequent allocation/deallocation
     if (refcount_dec_and_test(&tr->refcnt)) {
         if (tr->image)
             bpf_jit_free_exec(tr->image);
@@ -801,72 +801,72 @@ static void bpf_trampoline_free(struct bpf_trampoline *tr)
 }
 ```
 
-### 性能测试数据：
+### Performance Test Data:
 
 ```c
-// 跳板执行开销（典型值）
-// 跳板调用开销：~50-100纳秒
-// 直接函数调用：~10-20纳秒
-// 跳板额外开销：~40-80纳秒
+// Trampoline execution overhead (typical values)
+// Trampoline call overhead: ~50-100 nanoseconds
+// Direct function call: ~10-20 nanoseconds
+// Trampoline additional overhead: ~40-80 nanoseconds
 
-// 优化后的性能表现：
-// 1. 跳板缓存命中率：>95%
-// 2. JIT编译程序执行：接近原生性能
-// 3. 跳板创建开销：仅在首次附加时发生
+// Optimized performance performance:
+// 1. Trampoline cache hit rate: >95%
+// 2. JIT compiled program execution: Near native performance
+// 3. Trampoline creation overhead: Only occurs on first attachment
 ```
 
-### 性能优化总结：
+### Performance Optimization Summary:
 
-1. **缓存机制**：跳板被缓存和复用，避免重复创建
-2. **JIT编译**：eBPF程序编译为机器码，执行效率高
-3. **内存池**：使用内存池管理跳板内存分配
-4. **引用计数**：避免不必要的内存释放和重新分配
-5. **架构优化**：针对不同架构生成优化的跳板代码
+1. **Cache Mechanism**: Trampolines are cached and reused, avoiding repeated creation
+2. **JIT Compilation**: eBPF programs compiled to machine code, high execution efficiency
+3. **Memory Pool**: Uses memory pool to manage trampoline memory allocation
+4. **Reference Counting**: Avoids unnecessary memory deallocation and reallocation
+5. **Architecture Optimization**: Generates optimized trampoline code for different architectures
 
-### 实际性能影响：
+### Actual Performance Impact:
 
 ```c
-// 典型场景下的性能开销
-// 高频事件（如网络包处理）：
-// - 跳板开销：<1% 的总处理时间
-// - 程序执行：>99% 的总处理时间
+// Performance overhead in typical scenarios
+// High-frequency events (like network packet processing):
+// - Trampoline overhead: <1% of total processing time
+// - Program execution: >99% of total processing time
 
-// 低频事件（如系统调用跟踪）：
-// - 跳板开销：可忽略不计
-// - 程序执行：主要开销
+// Low-frequency events (like system call tracing):
+// - Trampoline overhead: Negligible
+// - Program execution: Main overhead
 ```
 
-**结论**：
-1. 不是所有eBPF程序都需要跳板，只有需要事件回调的程序才需要
-2. 跳板代码是动态生成的，但通过缓存、JIT编译等优化，性能开销已经最小化
-3. 在实际应用中，跳板开销相对于程序执行开销来说是可以忽略的
+**Conclusion**:
+1. Not all eBPF programs need trampolines, only those requiring event callbacks need them
+2. Trampoline code is dynamically generated, but through optimizations like caching, JIT compilation, performance overhead has been minimized
+3. In practical applications, trampoline overhead is negligible compared to program execution overhead
 
 ---
 
-很好的问题！让我详细解释为什么只有callback类型的程序需要跳板代码：
+Great question! Let me explain in detail why only callback-type programs need trampoline code:
 
-## 1. 程序执行方式的根本区别
+## 1. Fundamental Differences in Program Execution Methods
 
-### 直接调用的程序类型
+### Program Types with Direct Calls
 ```c
-// XDP程序 - 直接调用
+// XDP Program - Direct call
 static u32 bpf_prog_run_xdp(const struct bpf_prog *prog, struct xdp_buff *xdp)
 {
-    // 直接调用eBPF程序，无需跳板
+    // Directly call eBPF program, no trampoline needed
     return bpf_prog_run(prog, xdp);
 }
 
-// Socket Filter - 直接调用
+// Socket Filter - Direct call
 int sk_filter(struct sock *sk, struct sk_buff *skb)
 {
     struct bpf_prog *prog = rcu_dereference(sk->sk_filter);
     
-    // 直接调用，无需跳板
+    // Direct call, no trampoline needed
     return bpf_prog_run_save_cb(prog, skb);
 }
 ```
 
-### 回调类型的程序
+### Callback Type Programs
 ```c
 // Kprobe - 需要跳板
 static void bpf_kprobe_callback(struct kprobe *p, struct pt_regs *regs)
@@ -874,34 +874,34 @@ static void bpf_kprobe_callback(struct kprobe *p, struct pt_regs *regs)
     struct bpf_kprobe *bpf_kp = container_of(p, struct bpf_kprobe, kp);
     struct bpf_prog *prog = bpf_kp->prog;
     
-    // 必须通过跳板执行
+    // Must execute through trampoline
     bpf_trampoline_enter(prog, regs);
 }
 ```
 
-## 2. 为什么callback需要跳板？
+## 2. Why Do Callbacks Need Trampolines?
 
-### 问题1：上下文切换
+### Problem 1: Context Switching
 ```c
-// 直接调用：在同一个调用栈中
+// Direct call: In the same call stack
 do_syscall_64() {
     // 系统调用处理
     sys_call_table[nr]();  // 调用系统调用函数
     // 继续处理...
 }
 
-// 回调调用：需要切换到eBPF执行环境
+// Callback call: Need to switch to eBPF execution environment
 do_syscall_64() {
     // 系统调用处理
     sys_call_table[nr]();  // 调用系统调用函数
-    // 此时需要执行eBPF程序，但调用栈已经改变
-    // 需要跳板来管理执行环境
+    // Now need to execute eBPF program, but call stack has changed
+    // Need trampoline to manage execution environment
 }
 ```
 
-### 问题2：寄存器状态管理
+### Problem 2: Register State Management
 ```c
-// 直接调用：寄存器状态由调用者管理
+// Direct call: Register state managed by caller
 static u32 bpf_prog_run_xdp(const struct bpf_prog *prog, struct xdp_buff *xdp)
 {
     // 调用者已经设置了正确的寄存器状态
@@ -909,30 +909,30 @@ static u32 bpf_prog_run_xdp(const struct bpf_prog *prog, struct xdp_buff *xdp)
     return bpf_prog_run(prog, xdp);
 }
 
-// 回调调用：需要保存和恢复寄存器状态
+// Callback call: Need to save and restore register state
 static void bpf_trampoline_enter(void *data)
 {
     struct bpf_tramp_run_ctx *run_ctx = data;
     
-    // 保存当前寄存器状态
+    // Save current register state
     __bpf_prog_enter();
     
-    // 设置eBPF程序需要的寄存器状态
-    // R1 = 上下文指针
-    // R2-R5 = 参数
-    // R0 = 返回值
+    // Set register state needed by eBPF program
+    // R1 = context pointer
+    // R2-R5 = parameters
+    // R0 = return value
     
     // 执行eBPF程序
     run_ctx->ret = bpf_prog_run(run_ctx->prog, run_ctx->args);
     
-    // 恢复原始寄存器状态
+    // Restore original register state
     __bpf_prog_exit(run_ctx->prog, run_ctx);
 }
 ```
 
-### 问题3：执行环境隔离
+### Problem 3: Execution Environment Isolation
 ```c
-// 直接调用：在受控的内核环境中
+// Direct call: In controlled kernel environment
 static int cls_bpf_classify(struct sk_buff *skb, const struct tcf_proto *tp,
                            struct tcf_result *res)
 {
@@ -953,49 +953,49 @@ static void __bpf_prog_enter(void)
     // 禁用迁移，确保在同一CPU上执行
     migrate_disable();
     
-    // 设置错误处理
-    // 设置资源限制
-    // 设置执行时间限制
+    // Set up error handling
+    // Set resource limits
+    // Set execution time limits
 }
 ```
 
-## 3. 具体的技术原因
+## 3. Specific Technical Reasons
 
-### 原因1：调用约定不匹配
+### Reason 1: Calling Convention Mismatch
 ```c
-// 内核函数的调用约定
+// Kernel function calling convention
 void kernel_function(struct pt_regs *regs) {
-    // 使用内核的调用约定
-    // 寄存器使用方式不同
-    // 栈布局不同
+    // Use kernel's calling convention
+    // Different register usage patterns
+    // Different stack layout
 }
 
-// eBPF程序的调用约定
+// eBPF program calling convention
 static u64 bpf_prog_run(const struct bpf_prog *prog, const void *ctx)
 {
-    // eBPF有自己的调用约定
-    // R1 = 上下文
-    // R2-R5 = 参数
-    // R0 = 返回值
-    // 需要跳板来转换调用约定
+    // eBPF has its own calling convention
+    // R1 = context
+    // R2-R5 = parameters
+    // R0 = return value
+    // Need trampoline to convert calling convention
 }
 ```
 
-### 原因2：错误处理机制
+### Reason 2: Error Handling Mechanism
 ```c
-// 直接调用：错误由调用者处理
+// Direct call: Errors handled by caller
 static u32 bpf_prog_run_xdp(const struct bpf_prog *prog, struct xdp_buff *xdp)
 {
     u32 ret = bpf_prog_run(prog, xdp);
     
-    // 调用者处理错误
+    // Caller handles errors
     if (ret == XDP_ABORTED) {
         // 处理错误
     }
     return ret;
 }
 
-// 回调调用：需要跳板处理错误
+// Callback call: Need trampoline to handle errors
 static void bpf_trampoline_enter(void *data)
 {
     struct bpf_tramp_run_ctx *run_ctx = data;
@@ -1024,7 +1024,7 @@ static int sk_filter(struct sock *sk, struct sk_buff *skb)
 // 回调调用：跳板负责资源管理
 static void __bpf_prog_enter(void)
 {
-    // 管理内存分配
+    // Manage memory allocation
     // 管理锁状态
     // 管理引用计数
     // 管理执行时间
@@ -1084,7 +1084,7 @@ bpf_trampoline_enter:
     ret                         ; 返回
 ```
 
-## 5. 总结
+## 5. Summary
 
 **为什么只有callback需要跳板？**
 
