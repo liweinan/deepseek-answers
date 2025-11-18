@@ -119,733 +119,733 @@ Rust closures are anonymous functions that can capture variables from their defi
 
 ---
 
-## **1. 闭包基础**
+## **1. Closure Basics**
 
-闭包是Rust中可以捕获环境的匿名函数，语法如下：
+Closures are anonymous functions in Rust that can capture their environment, with the following syntax:
 
 ```rust
 let closure_name = |parameters| -> ReturnType { body };
 ```
 
-- **参数**：在`|`之间定义，类似函数参数。
-- **返回值**：可显式指定（如`-> i32`），通常由Rust自动推导。
-- **主体**：闭包逻辑，单行表达式可省略`{}`。
+- **Parameters**: Defined between `|`, similar to function parameters.
+- **Return value**: Can be explicitly specified (e.g., `-> i32`), but usually inferred by Rust.
+- **Body**: Closure logic, single-line expressions can omit `{}`.
 
-闭包可以捕获环境变量，捕获方式包括：
-- **不可变借用**（`&T`）：读取变量。
-- **可变借用**（`&mut T`）：修改变量。
-- **所有权转移**（`T`）：拥有变量。
+Closures can capture environment variables in the following ways:
+- **Immutable borrow** (`&T`): Read variables.
+- **Mutable borrow** (`&mut T`): Modify variables.
+- **Ownership transfer** (`T`): Own variables.
 
-`move`关键字可以强制闭包捕获变量的所有权，而不是借用。捕获行为因变量类型（`Copy`或非`Copy`）而异。
+The `move` keyword can force closures to capture variable ownership rather than borrowing. Capture behavior varies depending on variable type (`Copy` or non-`Copy`).
 
 ---
 
-## **2. `Copy`类型与闭包**
+## **2. `Copy` Types and Closures**
 
-`Copy`类型（如`i32`、`f64`、布尔值等）在Rust中具有复制语义。当闭包捕获`Copy`类型变量时，`move`会导致值的副本被捕获，而不是移动原始值。这是因为`Copy`类型的转移本质上是复制。
+`Copy` types (like `i32`, `f64`, booleans, etc.) have copy semantics in Rust. When closures capture `Copy` type variables, `move` causes a copy of the value to be captured rather than moving the original value. This is because transferring `Copy` types is essentially copying.
 
-### **2.1 非`move`闭包：借用`Copy`类型**
+### **2.1 Non-`move` Closures: Borrowing `Copy` Types**
 
-#### **示例1：不可变借用**
+#### **Example 1: Immutable Borrow**
 ```rust
 fn main() {
-    let x = 10; // i32 是 Copy 类型
-    let closure = || println!("x is {}", x); // 不可变借用 &x
-    closure(); // 输出：x is 10
-    println!("x outside is {}", x); // 输出：x outside is 10
+    let x = 10; // i32 is Copy type
+    let closure = || println!("x is {}", x); // Immutable borrow &x
+    closure(); // Output: x is 10
+    println!("x outside is {}", x); // Output: x outside is 10
 }
 ```
 
-- **行为**：闭包以不可变借用（`&i32`）捕获`x`，不影响原始`x`。
-- **trait**：实现`Fn`（只读取环境）。
+- **Behavior**: Closure captures `x` as immutable borrow (`&i32`), doesn't affect original `x`.
+- **Trait**: Implements `Fn` (only reads environment).
 
-#### **示例2：可变借用**
+#### **Example 2: Mutable Borrow**
 ```rust
 fn main() {
-    let mut x = 10; // i32 是 Copy 类型
-    let mut closure = || x += 1; // 可变借用 &mut x
+    let mut x = 10; // i32 is Copy type
+    let mut closure = || x += 1; // Mutable borrow &mut x
     closure();
-    println!("x is {}", x); // 输出：x is 11
-    println!("x outside is {}", x); // 输出：x outside is 11
+    println!("x is {}", x); // Output: x is 11
+    println!("x outside is {}", x); // Output: x outside is 11
 }
 ```
 
-- **行为**：闭包以可变借用（`&mut i32`）捕获`x`，修改直接影响原始`x`。
-- **trait**：实现`FnMut`（修改环境）。
+- **Behavior**: Closure captures `x` as mutable borrow (`&mut i32`), modifications directly affect original `x`.
+- **Trait**: Implements `FnMut` (modifies environment).
 
-### **2.2 `move`闭包：捕获`Copy`类型**
+### **2.2 `move` Closures: Capturing `Copy` Types**
 
-#### **示例3：非引用（副本）**
+#### **Example 3: Non-Reference (Copy)**
 ```rust
 fn main() {
-    let mut x = 10; // i32 是 Copy 类型
+    let mut x = 10; // i32 is Copy type
     let mut closure = move || {
         x += 1;
         println!("x in closure is {}", x);
     };
-    closure(); // 输出：x in closure is 11
-    println!("x outside is {}", x); // 输出：x outside is 10
+    closure(); // Output: x in closure is 11
+    println!("x outside is {}", x); // Output: x outside is 10
 }
 ```
 
-- **行为**：`move`捕获`x`的副本（因为`i32`是`Copy`类型），闭包修改副本，不影响原始`x`。
-- **trait**：实现`FnMut`（修改捕获的副本）。
+- **Behavior**: `move` captures a copy of `x` (because `i32` is `Copy` type), closure modifies the copy, doesn't affect original `x`.
+- **Trait**: Implements `FnMut` (modifies captured copy).
 
-#### **示例4：引用**
+#### **Example 4: Reference**
 ```rust
 fn main() {
-    let x = 10; // i32 是 Copy 类型
+    let x = 10; // i32 is Copy type
     let closure = move || {
-        let x_ref = &x; // 在闭包内使用引用
+        let x_ref = &x; // Use reference inside closure
         println!("x ref in closure is {}", x_ref);
     };
-    closure(); // 输出：x ref in closure is 10
-    println!("x outside is {}", x); // 输出：x outside is 10
+    closure(); // Output: x ref in closure is 10
+    println!("x outside is {}", x); // Output: x outside is 10
 }
 ```
 
-- **行为**：`move`捕获`x`的副本，闭包内部通过引用操作副本，原始`x`不受影响。
-- **trait**：实现`Fn`（只读取副本）。
+- **Behavior**: `move` captures a copy of `x`, closure operates on copy through reference, original `x` unaffected.
+- **Trait**: Implements `Fn` (only reads copy).
 
 ---
 
-## **3. 非`Copy`类型与闭包**
+## **3. Non-`Copy` Types and Closures**
 
-非`Copy`类型（如`String`、`Vec<T>`）具有移动语义。`move`闭包会转移变量的所有权，导致原始变量在主作用域不可用。非`move`闭包则以借用方式捕获。
+Non-`Copy` types (like `String`, `Vec<T>`) have move semantics. `move` closures transfer variable ownership, making the original variable unavailable in the main scope. Non-`move` closures capture through borrowing.
 
-### **3.1 非`move`闭包：借用非`Copy`类型**
+### **3.1 Non-`move` Closures: Borrowing Non-`Copy` Types**
 
-#### **示例5：不可变借用**
+#### **Example 5: Immutable Borrow**
 ```rust
 fn main() {
-    let s = String::from("hello"); // String 是非 Copy 类型
-    let closure = || println!("s is {}", s); // 不可变借用 &s
-    closure(); // 输出：s is hello
-    println!("s outside is {}", s); // 输出：s outside is hello
+    let s = String::from("hello"); // String is non-Copy type
+    let closure = || println!("s is {}", s); // Immutable borrow &s
+    closure(); // Output: s is hello
+    println!("s outside is {}", s); // Output: s outside is hello
 }
 ```
 
-- **行为**：闭包以不可变借用（`&String`）捕获`s`，原始`s`仍可用。
-- **trait**：实现`Fn`。
+- **Behavior**: Closure captures `s` as immutable borrow (`&String`), original `s` remains available.
+- **Trait**: Implements `Fn`.
 
-#### **示例6：可变借用**
+#### **Example 6: Mutable Borrow**
 ```rust
 fn main() {
-    let mut s = String::from("hello"); // String 是非 Copy 类型
-    let mut closure = || s.push_str(" world"); // 可变借用 &mut s
+    let mut s = String::from("hello"); // String is non-Copy type
+    let mut closure = || s.push_str(" world"); // Mutable borrow &mut s
     closure();
-    println!("s is {}", s); // 输出：s is hello world
-    println!("s outside is {}", s); // 输出：s outside is hello world
+    println!("s is {}", s); // Output: s is hello world
+    println!("s outside is {}", s); // Output: s outside is hello world
 }
 ```
 
-- **行为**：闭包以可变借用（`&mut String`）捕获`s`，修改直接影响原始`s`。
-- **trait**：实现`FnMut`。
+- **Behavior**: Closure captures `s` as mutable borrow (`&mut String`), modifications directly affect original `s`.
+- **Trait**: Implements `FnMut`.
 
-### **3.2 `move`闭包：捕获非`Copy`类型**
+### **3.2 `move` Closures: Capturing Non-`Copy` Types**
 
-#### **示例7：非引用（所有权转移）**
+#### **Example 7: Non-Reference (Ownership Transfer)**
 ```rust
 fn main() {
-    let s = String::from("hello"); // String 是非 Copy 类型
+    let s = String::from("hello"); // String is non-Copy type
     let closure = move || {
         println!("s in closure is {}", s);
     };
-    closure(); // 输出：s in closure is hello
-    // println!("s outside is {}", s); // 错误：s 已被移动
+    closure(); // Output: s in closure is hello
+    // println!("s outside is {}", s); // Error: s has been moved
 }
 ```
 
-- **行为**：`move`将`s`的所有权转移到闭包，原始`s`不可用。
-- **trait**：实现`Fn`。
+- **Behavior**: `move` transfers ownership of `s` to the closure, original `s` unavailable.
+- **Trait**: Implements `Fn`.
 
-#### **示例8：引用**
+#### **Example 8: Reference**
 ```rust
 fn main() {
-    let s = String::from("hello"); // String 是非 Copy 类型
+    let s = String::from("hello"); // String is non-Copy type
     let closure = move || {
-        let s_ref = &s; // 在闭包内使用引用
+        let s_ref = &s; // Use reference inside closure
         println!("s ref in closure is {}", s_ref);
     };
-    closure(); // 输出：s ref in closure is hello
-    // println!("s outside is {}", s); // 错误：s 已被移动
+    closure(); // Output: s ref in closure is hello
+    // println!("s outside is {}", s); // Error: s has been moved
 }
 ```
 
-- **行为**：`move`转移`s`的所有权到闭包，闭包内部通过引用操作转移的`s`，原始`s`不可用。
-- **trait**：实现`Fn`。
+- **Behavior**: `move` transfers ownership of `s` to the closure, closure operates on transferred `s` through reference, original `s` unavailable.
+- **Trait**: Implements `Fn`.
 
-#### **示例9：消耗所有权**
+#### **Example 9: Consuming Ownership**
 ```rust
 fn main() {
-    let s = String::from("hello"); // String 是非 Copy 类型
-    let closure = move || drop(s); // 消耗 s
+    let s = String::from("hello"); // String is non-Copy type
+    let closure = move || drop(s); // Consume s
     closure();
-    // println!("s outside is {}", s); // 错误：s 已被移动
+    // println!("s outside is {}", s); // Error: s has been moved
 }
 ```
 
-- **行为**：`move`转移`s`的所有权，闭包通过`drop`消耗`s`，只能调用一次。
-- **trait**：实现`FnOnce`。
+- **Behavior**: `move` transfers ownership of `s`, closure consumes `s` through `drop`, can only be called once.
+- **Trait**: Implements `FnOnce`.
 
 ---
 
-## **4. `move`与线程场景**
+## **4. `move` and Threading Scenarios**
 
-`move`关键字在多线程场景中尤为重要，因为线程需要拥有数据的独立副本。以下示例展示`Copy`和非`Copy`类型在线程中的行为。
+The `move` keyword is particularly important in multi-threading scenarios because threads need independent copies of data. The following examples demonstrate behavior of `Copy` and non-`Copy` types in threads.
 
-#### **示例10：`Copy`类型在线程中**
+#### **Example 10: `Copy` Types in Threads**
 ```rust
 use std::thread;
 
 fn main() {
-    let x = 10; // i32 是 Copy 类型
+    let x = 10; // i32 is Copy type
     let handle = thread::spawn(move || {
         println!("x in thread is {}", x);
     });
     handle.join().unwrap();
-    println!("x outside is {}", x); // 输出：x outside is 10
+    println!("x outside is {}", x); // Output: x outside is 10
 }
 ```
 
-- **行为**：`move`捕获`x`的副本，线程使用副本，原始`x`仍可用。
+- **Behavior**: `move` captures a copy of `x`, thread uses the copy, original `x` remains available.
 
-#### **示例11：非`Copy`类型在线程中**
+#### **Example 11: Non-`Copy` Types in Threads**
 ```rust
 use std::thread;
 
 fn main() {
-    let s = String::from("hello"); // String 是非 Copy 类型
+    let s = String::from("hello"); // String is non-Copy type
     let handle = thread::spawn(move || {
         println!("s in thread is {}", s);
     });
     handle.join().unwrap();
-    // println!("s outside is {}", s); // 错误：s 已被移动
+    // println!("s outside is {}", s); // Error: s has been moved
 }
 ```
 
-- **行为**：`move`转移`s`的所有权到线程，原始`s`不可用。
+- **Behavior**: `move` transfers ownership of `s` to the thread, original `s` unavailable.
 
 ---
 
-## **5. 闭包的trait约束**
+## **5. Closure Trait Constraints**
 
-闭包根据捕获和调用方式实现以下trait：
-- **`Fn`**：以`&self`调用，适合只读取环境的闭包（多次调用）。
-- **`FnMut`**：以`&mut self`调用，适合修改环境的闭包（多次调用）。
-- **`FnOnce`**：以`self`调用，适合消耗捕获变量的闭包（只能调用一次）。
+Closures implement the following traits based on capture and invocation methods:
+- **`Fn`**: Called with `&self`, suitable for closures that only read the environment (multiple calls).
+- **`FnMut`**: Called with `&mut self`, suitable for closures that modify the environment (multiple calls).
+- **`FnOnce`**: Called with `self`, suitable for closures that consume captured variables (single call only).
 
-**选择trait的场景**：
-- `Fn`：不可变借用或读取`Copy`类型副本。
-- `FnMut`：可变借用或修改`Copy`类型副本。
-- `FnOnce`：消耗非`Copy`类型或调用`drop`。
-
----
-
-## **6. 总结与注意事项**
-
-- **`Copy`类型**：
-   - 非`move`：以借用方式捕获（`&T`或`&mut T`），修改影响原始变量。
-   - `move`：捕获副本，修改不影响原始变量，原始变量仍可用。
-   - 引用：可以在闭包内显式使用引用操作副本。
-
-- **非`Copy`类型**：
-   - 非`move`：以借用方式捕获，修改影响原始变量，原始变量仍可用。
-   - `move`：转移所有权，原始变量不可用。
-   - 引用：可以在闭包内使用引用操作转移的变量。
-
-- **性能考虑**：
-   - `Copy`类型的复制是廉价的（如`i32`），但非`Copy`类型的移动可能涉及堆内存分配（如`String`）。
-   - 优先使用借用（非`move`）以减少拷贝或移动开销。
-
-- **线程安全**：
-   - 多线程场景通常需要`move`以确保数据独立性。
-   - 非`Copy`类型在`move`后无法在主线程使用，需谨慎设计。
-
-通过以上示例，读者可以清晰理解Rust闭包在不同类型和场景下的行为。建议通过修改示例代码并运行，进一步体会`Copy`与非`Copy`类型的区别。
+**Trait Selection Scenarios**:
+- `Fn`: Immutable borrow or reading `Copy` type copies.
+- `FnMut`: Mutable borrow or modifying `Copy` type copies.
+- `FnOnce`: Consuming non-`Copy` types or calling `drop`.
 
 ---
 
-以下是一份Rust闭包（Closures）的速查表（Cheat Sheet），简洁总结了闭包的核心概念、捕获方式、`Copy`类型与非`Copy`类型的行为，以及`move`和非`move`场景的差异。内容通过表格和示例代码组织，方便快速参考。
+## **6. Summary and Notes**
+
+- **`Copy` Types**:
+   - Non-`move`: Captured through borrowing (`&T` or `&mut T`), modifications affect original variables.
+   - `move`: Captures a copy, modifications don't affect original variables, original variables remain available.
+   - References: Can explicitly use references to operate on copies within closures.
+
+- **Non-`Copy` Types**:
+   - Non-`move`: Captured through borrowing, modifications affect original variables, original variables remain available.
+   - `move`: Transfers ownership, original variables unavailable.
+   - References: Can use references within closures to operate on transferred variables.
+
+- **Performance Considerations**:
+   - Copying `Copy` types is cheap (like `i32`), but moving non-`Copy` types may involve heap memory allocation (like `String`).
+   - Prefer borrowing (non-`move`) to reduce copy or move overhead.
+
+- **Thread Safety**:
+   - Multi-threading scenarios typically require `move` to ensure data independence.
+   - Non-`Copy` types cannot be used in the main thread after `move`, requires careful design.
+
+Through the above examples, readers can clearly understand Rust closure behavior under different types and scenarios. It's recommended to modify example code and run it to further experience the differences between `Copy` and non-`Copy` types.
+
+---
+
+Below is a quick reference sheet (Cheat Sheet) for Rust closures, concisely summarizing core concepts of closures, capture methods, behavior of `Copy` types vs non-`Copy` types, and differences between `move` and non-`move` scenarios. Content is organized through tables and example code for quick reference.
 
 
 
 # Rust Closures Cheat Sheet
 
-## **1. 闭包基础**
-- **定义**：匿名函数，可捕获环境变量。
-- **语法**：`|params| -> ReturnType { body }`（返回值类型通常省略）。
-- **捕获方式**：
-   - 不可变借用（`&T`）：只读。
-   - 可变借用（`&mut T`）：读写。
-   - 所有权转移（`T`）：拥有变量。
-- **`move`关键字**：强制捕获所有权（`move || { body }`）。
-- **Traits**：
-   - `Fn`: 多次调用，`&self`（只读）。
-   - `FnMut`: 多次调用，`&mut self`（读写）。
-   - `FnOnce`: 一次调用，`self`（消耗）。
+## **1. Closure Basics**
+- **Definition**: Anonymous functions that can capture environment variables.
+- **Syntax**: `|params| -> ReturnType { body }` (return type usually omitted).
+- **Capture Methods**:
+   - Immutable borrow (`&T`): Read-only.
+   - Mutable borrow (`&mut T`): Read-write.
+   - Ownership transfer (`T`): Own variables.
+- **`move` keyword**: Forces capture of ownership (`move || { body }`).
+- **Traits**:
+   - `Fn`: Multiple calls, `&self` (read-only).
+   - `FnMut`: Multiple calls, `&mut self` (read-write).
+   - `FnOnce`: Single call, `self` (consuming).
 
-## **2. 捕获行为速查表**
+## **2. Capture Behavior Quick Reference**
 
-| **类型**         | **场景**           | **捕获方式**       | **行为**                                   | **原始变量可用性** | **Trait** |
-|-------------------|--------------------|--------------------|--------------------------------------------|---------------------|-----------|
-| **Copy** (如`i32`) | 非`move`, 非引用   | 不可变借用 (`&T`)  | 闭包读取原始变量                           | 可用                | `Fn`      |
-| **Copy**          | 非`move`, 非引用   | 可变借用 (`&mut T`)| 闭包修改原始变量                           | 可用                | `FnMut`   |
-| **Copy**          | `move`, 非引用     | 副本 (`T`)         | 闭包修改副本，原始变量不变                 | 可用                | `FnMut`   |
-| **Copy**          | `move`, 引用       | 副本 (`T`)         | 闭包通过引用读取副本，原始变量不变         | 可用                | `Fn`      |
-| **非Copy** (如`String`) | 非`move`, 非引用   | 不可变借用 (`&T`)  | 闭包读取原始变量                           | 可用                | `Fn`      |
-| **非Copy**        | 非`move`, 非引用   | 可变借用 (`&mut T`)| 闭包修改原始变量                           | 可用                | `FnMut`   |
-| **非Copy**        | `move`, 非引用     | 所有权转移 (`T`)   | 闭包拥有变量，原始变量不可用               | 不可用              | `Fn`/`FnOnce` |
-| **非Copy**        | `move`, 引用       | 所有权转移 (`T`)   | 闭包通过引用读取转移的变量，原始变量不可用 | 不可用              | `Fn`      |
+| **Type**         | **Scenario**           | **Capture Method**       | **Behavior**                                   | **Original Variable Availability** | **Trait** |
+|-------------------|------------------------|--------------------------|------------------------------------------------|-----------------------------------|-----------|
+| **Copy** (e.g., `i32`) | Non-`move`, non-reference   | Immutable borrow (`&T`)  | Closure reads original variable                | Available                         | `Fn`      |
+| **Copy**          | Non-`move`, non-reference   | Mutable borrow (`&mut T`)| Closure modifies original variable             | Available                         | `FnMut`   |
+| **Copy**          | `move`, non-reference       | Copy (`T`)               | Closure modifies copy, original unchanged      | Available                         | `FnMut`   |
+| **Copy**          | `move`, reference           | Copy (`T`)               | Closure reads copy via reference, original unchanged | Available                         | `Fn`      |
+| **Non-Copy** (e.g., `String`) | Non-`move`, non-reference   | Immutable borrow (`&T`)  | Closure reads original variable                | Available                         | `Fn`      |
+| **Non-Copy**      | Non-`move`, non-reference   | Mutable borrow (`&mut T`)| Closure modifies original variable             | Available                         | `FnMut`   |
+| **Non-Copy**      | `move`, non-reference       | Ownership transfer (`T`) | Closure owns variable, original unavailable    | Unavailable                       | `Fn`/`FnOnce` |
+| **Non-Copy**      | `move`, reference           | Ownership transfer (`T`) | Closure reads transferred variable via reference, original unavailable | Unavailable                       | `Fn`      |
 
-## **3. 示例代码**
+## **3. Example Code**
 
-### **3.1 Copy 类型 (`i32`)**
+### **3.1 Copy Types (`i32`)**
 ```rust
 fn main() {
     let mut x = 10;
 
-    // 非 move, 不可变借用
+    // Non-move, immutable borrow
     let c1 = || println!("x: {}", x); // &x
     c1(); // x: 10
     println!("x outside: {}", x); // x outside: 10
 
-    // 非 move, 可变借用
+    // Non-move, mutable borrow
     let mut c2 = || x += 1; // &mut x
     c2();
     println!("x outside: {}", x); // x outside: 11
 
-    // move, 非引用
+    // move, non-reference
     let mut c3 = move || {
         x += 1;
         println!("x in closure: {}", x);
-    }; // 副本
+    }; // copy
     c3(); // x in closure: 12
     println!("x outside: {}", x); // x outside: 11
 
-    // move, 引用
-    let c4 = move || println!("x ref: {}", &x); // 副本
+    // move, reference
+    let c4 = move || println!("x ref: {}", &x); // copy
     c4(); // x ref: 11
     println!("x outside: {}", x); // x outside: 11
 }
 ```
 
-### **3.2 非Copy 类型 (`String`)**
+### **3.2 Non-Copy Types (`String`)**
 ```rust
 fn main() {
     let mut s = String::from("hello");
 
-    // 非 move, 不可变借用
+    // Non-move, immutable borrow
     let c1 = || println!("s: {}", s); // &s
     c1(); // s: hello
     println!("s outside: {}", s); // s outside: hello
 
-    // 非 move, 可变借用
+    // Non-move, mutable borrow
     let mut c2 = || s.push_str(" world"); // &mut s
     c2();
     println!("s outside: {}", s); // s outside: hello world
 
-    // move, 非引用
-    let c3 = move || println!("s in closure: {}", s); // 转移 s
+    // move, non-reference
+    let c3 = move || println!("s in closure: {}", s); // transfer s
     c3(); // s in closure: hello world
-    // println!("s outside: {}", s); // 错误: s 已移动
+    // println!("s outside: {}", s); // Error: s has been moved
 
-    // move, 引用 (需新变量)
+    // move, reference (need new variable)
     let s = String::from("hello");
-    let c4 = move || println!("s ref: {}", &s); // 转移 s
+    let c4 = move || println!("s ref: {}", &s); // transfer s
     c4(); // s ref: hello
-    // println!("s outside: {}", s); // 错误: s 已移动
+    // println!("s outside: {}", s); // Error: s has been moved
 }
 ```
 
-### **3.3 线程场景**
+### **3.3 Threading Scenarios**
 ```rust
 use std::thread;
 
 fn main() {
-    // Copy 类型
+    // Copy type
     let x = 10;
-    thread::spawn(move || println!("x: {}", x)).join().unwrap(); // 副本
+    thread::spawn(move || println!("x: {}", x)).join().unwrap(); // copy
     println!("x outside: {}", x); // x outside: 10
 
-    // 非 Copy 类型
+    // Non-Copy type
     let s = String::from("hello");
-    thread::spawn(move || println!("s: {}", s)).join().unwrap(); // 转移 s
-    // println!("s outside: {}", s); // 错误: s 已移动
+    thread::spawn(move || println!("s: {}", s)).join().unwrap(); // transfer s
+    // println!("s outside: {}", s); // Error: s has been moved
 }
 ```
 
-## **4. 快速提示**
-- **Copy 类型**：`move`创建副本，原始变量可用；非`move`借用，修改影响原始变量。
-- **非Copy 类型**：`move`转移所有权，原始变量不可用；非`move`借用，修改影响原始变量。
-- **引用**：闭包内显式使用`&`或`&mut`可控制访问方式。
-- **线程**：通常需要`move`以确保数据独立性。
-- **性能**：优先非`move`借用，减少拷贝/移动开销。
+## **4. Quick Tips**
+- **Copy types**: `move` creates a copy, original variable available; non-`move` borrows, modifications affect original variable.
+- **Non-Copy types**: `move` transfers ownership, original variable unavailable; non-`move` borrows, modifications affect original variable.
+- **References**: Explicit use of `&` or `&mut` in closures controls access method.
+- **Threads**: Usually require `move` to ensure data independence.
+- **Performance**: Prefer non-`move` borrowing to reduce copy/move overhead.
 
 ---
 
-感谢你的反馈！你在之前的评论中提到教程中缺少关于Rust闭包**传参**的示例，这是一个很重要的补充点。为了解决这个问题，我将生成一份新的中文文档，专注于Rust闭包的传参场景，结合`Copy`类型和非`Copy`类型、`move`和非`move`、引用和非引用参数的各种情况。文档将包含清晰的示例代码，并与捕获行为进行对比，确保内容全面且易于理解。
+Thank you for your feedback! You mentioned in previous comments that the tutorial was missing examples of Rust closures with **parameters**, which is an important addition. To address this, I will generate a new Chinese document focused on parameter-passing scenarios for Rust closures, combining various cases of `Copy` and non-`Copy` types, `move` and non-`move`, reference and non-reference parameters. The document will include clear example code and compare with capture behavior to ensure comprehensive and easy-to-understand content.
 
-以下文档是对《Rust闭包指南》的扩展，专注于带参数的闭包，嵌入在`xaiArtifact`标签中，保持与先前内容一致的格式。
+The following document is an extension of the "Rust Closures Guide", focusing on closures that accept parameters, embedded in `xaiArtifact` tags, maintaining consistent formatting with previous content.
 
 
 
-# Rust闭包带参数指南
+# Rust Closures with Parameters Guide
 
-本指南扩展了《Rust闭包指南》，专注于Rust中接受参数的闭包，与环境捕获行为进行对比。内容涵盖`Copy`类型和非`Copy`类型、`move`和非`move`场景，以及引用与非引用参数的处理方式。通过示例说明参数如何与捕获的变量交互，以及对闭包trait（`Fn`、`FnMut`、`FnOnce`）的影响。
-
----
-
-## **1. 概述：闭包与参数**
-
-- **闭包**：Rust中的匿名函数，可捕获环境变量或接受参数。
-- **语法**：`|参数| -> 返回类型 { 主体 }`
-   - `参数`：调用时显式传递，例如`|x: i32|`。
-   - 捕获变量：从周围作用域访问，不通过参数传递。
-- **参数 vs. 捕获**：
-   - **参数**：在调用闭包时显式传入（例如`closure(5)`）。
-   - **捕获变量**：通过借用（`&T`、`&mut T`）或移动（`move`后的`T`）从环境中获取。
-- **Trait**：
-   - `Fn`：只读，多次调用（`&self`）。
-   - `FnMut`：读写，多次调用（`&mut self`）。
-   - `FnOnce`：消耗，仅调用一次（`self`）。
-
-本指南专注于带参数的闭包，展示其在`Copy`和非`Copy`类型中的行为，以及`move`如何影响捕获变量。
+This guide extends the "Rust Closures Guide", focusing on Rust closures that accept parameters and comparing them with environment capture behavior. Content covers `Copy` and non-`Copy` types, `move` and non-`move` scenarios, and handling of reference vs non-reference parameters. Examples illustrate how parameters interact with captured variables and their impact on closure traits (`Fn`, `FnMut`, `FnOnce`).
 
 ---
 
-## **2. 带参数的闭包：`Copy`类型**
+## **1. Overview: Closures and Parameters**
 
-`Copy`类型（如`i32`、`f64`）在移动时会复制，原始变量仍然可用。以下是带参数的闭包示例，结合`move`和非`move`捕获。
+- **Closures**: Anonymous functions in Rust that can capture environment variables or accept parameters.
+- **Syntax**: `|parameters| -> return type { body }`
+   - `parameters`: Explicitly passed when called, e.g., `|x: i32|`.
+   - Captured variables: Accessed from surrounding scope, not passed as parameters.
+- **Parameters vs. Capture**:
+   - **Parameters**: Explicitly passed when calling the closure (e.g., `closure(5)`).
+   - **Captured variables**: Obtained from environment through borrowing (`&T`, `&mut T`) or moving (`T` after `move`).
+- **Traits**:
+   - `Fn`: Read-only, multiple calls (`&self`).
+   - `FnMut`: Read-write, multiple calls (`&mut self`).
+   - `FnOnce`: Consumes, single call (`self`).
 
-### **2.1 非`move`闭包带参数**
+This guide focuses on closures with parameters, demonstrating their behavior in `Copy` and non-`Copy` types and how `move` affects captured variables.
 
-#### **示例1：仅参数（无捕获）**
+---
+
+## **2. Closures with Parameters: `Copy` Types**
+
+`Copy` types (like `i32`, `f64`) are copied when moved, original variables remain available. Below are examples of closures with parameters, combined with `move` and non-`move` captures.
+
+### **2.1 Non-`move` Closures with Parameters**
+
+#### **Example 1: Parameters Only (No Capture)**
 ```rust
 fn main() {
-    let closure = |x: i32| println!("参数 x: {}", x); // 无捕获
-    closure(5); // 输出：参数 x: 5
-    closure(10); // 输出：参数 x: 10
+    let closure = |x: i32| println!("Parameter x: {}", x); // No capture
+    closure(5); // Output: Parameter x: 5
+    closure(10); // Output: Parameter x: 10
 }
 ```
 
-- **行为**：闭包接受`i32`参数，不捕获任何环境变量。
-- **Trait**：`Fn`（对参数只读操作）。
-- **说明**：等价于普通函数，无环境依赖。
+- **Behavior**: Closure accepts `i32` parameter, doesn't capture any environment variables.
+- **Trait**: `Fn` (read-only operation on parameter).
+- **Note**: Equivalent to regular function, no environment dependency.
 
-#### **示例2：参数 + 非`move`捕获（不可变借用）**
+#### **Example 2: Parameters + Non-`move` Capture (Immutable Borrow)**
 ```rust
 fn main() {
-    let y = 10; // i32，Copy 类型
-    let closure = |x: i32| println!("参数 x: {}, 捕获的 y: {}", x, y); // 不可变借用 &y
-    closure(5); // 输出：参数 x: 5, 捕获的 y: 10
-    println!("外部 y: {}", y); // 输出：外部 y: 10
+    let y = 10; // i32, Copy type
+    let closure = |x: i32| println!("Parameter x: {}, Captured y: {}", x, y); // Immutable borrow &y
+    closure(5); // Output: Parameter x: 5, Captured y: 10
+    println!("External y: {}", y); // Output: External y: 10
 }
 ```
 
-- **行为**：以不可变借用（`&i32`）捕获`y`，使用参数`x`。
-- **Trait**：`Fn`（读取参数和借用的`y`）。
-- **说明**：`y`在外部仍可用，仅被借用。
+- **Behavior**: Captures `y` as immutable borrow (`&i32`), uses parameter `x`.
+- **Trait**: `Fn` (reads both parameter and borrowed `y`).
+- **Note**: `y` remains available externally, only borrowed.
 
-#### **示例3：参数 + 非`move`捕获（可变借用）**
+#### **Example 3: Parameters + Non-`move` Capture (Mutable Borrow)**
 ```rust
 fn main() {
-    let mut y = 10; // i32，Copy 类型
+    let mut y = 10; // i32, Copy type
     let mut closure = |x: i32| {
-        y += x; // 修改 y
-        println!("参数 x: {}, 捕获的 y: {}", x, y);
-    }; // 可变借用 &mut y
-    closure(5); // 输出：参数 x: 5, 捕获的 y: 15
-    println!("外部 y: {}", y); // 输出：外部 y: 15
+        y += x; // Modify y
+        println!("Parameter x: {}, Captured y: {}", x, y);
+    }; // Mutable borrow &mut y
+    closure(5); // Output: Parameter x: 5, Captured y: 15
+    println!("External y: {}", y); // Output: External y: 15
 }
 ```
 
-- **行为**：以可变借用（`&mut i32`）捕获`y`，通过参数`x`修改`y`。
-- **Trait**：`FnMut`（修改捕获的`y`）。
-- **说明**：对`y`的修改在外部可见。
+- **Behavior**: Captures `y` as mutable borrow (`&mut i32`), modifies `y` through parameter `x`.
+- **Trait**: `FnMut` (modifies captured `y`).
+- **Note**: Modifications to `y` are visible externally.
 
-### **2.2 `move`闭包带参数**
+### **2.2 `move` Closures with Parameters**
 
-#### **示例4：参数 + `move`捕获（非引用）**
+#### **Example 4: Parameters + `move` Capture (Non-Reference)**
 ```rust
 fn main() {
-    let mut y = 10; // i32，Copy 类型
+    let mut y = 10; // i32, Copy type
     let mut closure = move |x: i32| {
-        y += x; // 修改 y 的副本
-        println!("参数 x: {}, 捕获的 y: {}", x, y);
-    }; // 捕获 y 的副本
-    closure(5); // 输出：参数 x: 5, 捕获的 y: 15
-    println!("外部 y: {}", y); // 输出：外部 y: 10
+        y += x; // Modify copy of y
+        println!("Parameter x: {}, Captured y: {}", x, y);
+    }; // Captures copy of y
+    closure(5); // Output: Parameter x: 5, Captured y: 15
+    println!("External y: {}", y); // Output: External y: 10
 }
 ```
 
-- **行为**：`move`捕获`y`的副本（因`i32`是`Copy`类型），闭包修改副本，不影响原始`y`。
-- **Trait**：`FnMut`（修改捕获的副本）。
-- **说明**：原始`y`保持不变。
+- **Behavior**: `move` captures a copy of `y` (because `i32` is `Copy` type), closure modifies the copy, doesn't affect original `y`.
+- **Trait**: `FnMut` (modifies captured copy).
+- **Note**: Original `y` remains unchanged.
 
-#### **示例5：参数 + `move`捕获（引用）**
+#### **Example 5: Parameters + `move` Capture (Reference)**
 ```rust
 fn main() {
-    let y = 10; // i32，Copy 类型
+    let y = 10; // i32, Copy type
     let closure = move |x: i32| {
-        let y_ref = &y; // 引用捕获的副本
-        println!("参数 x: {}, 捕获的 y 引用: {}", x, y_ref);
-    }; // 捕获 y 的副本
-    closure(5); // 输出：参数 x: 5, 捕获的 y 引用: 10
-    println!("外部 y: {}", y); // 输出：外部 y: 10
+        let y_ref = &y; // Reference to captured copy
+        println!("Parameter x: {}, Captured y reference: {}", x, y_ref);
+    }; // Captures copy of y
+    closure(5); // Output: Parameter x: 5, Captured y reference: 10
+    println!("External y: {}", y); // Output: External y: 10
 }
 ```
 
-- **行为**：`move`捕获`y`的副本，闭包通过引用访问副本。
-- **Trait**：`Fn`（只读访问捕获的副本）。
-- **说明**：原始`y`不受影响。
+- **Behavior**: `move` captures a copy of `y`, closure accesses copy through reference.
+- **Trait**: `Fn` (read-only access to captured copy).
+- **Note**: Original `y` unaffected.
 
 ---
 
-## **3. 带参数的闭包：非`Copy`类型**
+## **3. Closures with Parameters: Non-`Copy` Types**
 
-非`Copy`类型（如`String`、`Vec<T>`）在移动时转移所有权，原始变量不可用。以下是带参数的示例。
+Non-`Copy` types (like `String`, `Vec<T>`) transfer ownership when moved, original variables become unavailable. Below are examples with parameters.
 
-### **3.1 非`move`闭包带参数**
+### **3.1 Non-`move` Closures with Parameters**
 
-#### **示例6：仅参数（无捕获）**
+#### **Example 6: Parameters Only (No Capture)**
 ```rust
 fn main() {
-    let closure = |s: &str| println!("参数 s: {}", s); // 无捕获
-    closure("hello"); // 输出：参数 s: hello
-    closure("world"); // 输出：参数 s: world
+    let closure = |s: &str| println!("Parameter s: {}", s); // No capture
+    closure("hello"); // Output: Parameter s: hello
+    closure("world"); // Output: Parameter s: world
 }
 ```
 
-- **行为**：闭包接受`&str`参数，不捕获环境变量。
-- **Trait**：`Fn`（对参数只读）。
-- **说明**：适合简单场景，无所有权问题。
+- **Behavior**: Closure accepts `&str` parameter, doesn't capture environment variables.
+- **Trait**: `Fn` (read-only on parameter).
+- **Note**: Suitable for simple scenarios, no ownership issues.
 
-#### **示例7：参数 + 非`move`捕获（不可变借用）**
+#### **Example 7: Parameters + Non-`move` Capture (Immutable Borrow)**
 ```rust
 fn main() {
-    let s = String::from("hello"); // String，非 Copy 类型
-    let closure = |x: i32| println!("参数 x: {}, 捕获的 s: {}", x, s); // 不可变借用 &s
-    closure(5); // 输出：参数 x: 5, 捕获的 s: hello
-    println!("外部 s: {}", s); // 输出：外部 s: hello
+    let s = String::from("hello"); // String, non-Copy type
+    let closure = |x: i32| println!("Parameter x: {}, Captured s: {}", x, s); // Immutable borrow &s
+    closure(5); // Output: Parameter x: 5, Captured s: hello
+    println!("External s: {}", s); // Output: External s: hello
 }
 ```
 
-- **行为**：以不可变借用（`&String`）捕获`s`，使用参数`x`。
-- **Trait**：`Fn`（只读）。
-- **说明**：`s`在外部仍可用。
+- **Behavior**: Captures `s` as immutable borrow (`&String`), uses parameter `x`.
+- **Trait**: `Fn` (read-only).
+- **Note**: `s` remains available externally.
 
-#### **示例8：参数 + 非`move`捕获（可变借用）**
+#### **Example 8: Parameters + Non-`move` Capture (Mutable Borrow)**
 ```rust
 fn main() {
-    let mut s = String::from("hello"); // String，非 Copy 类型
+    let mut s = String::from("hello"); // String, non-Copy type
     let mut closure = |x: &str| {
-        s.push_str(x); // 修改 s
-        println!("参数 x: {}, 捕获的 s: {}", x, s);
-    }; // 可变借用 &mut s
-    closure(" world"); // 输出：参数 x: world, 捕获的 s: hello world
-    println!("外部 s: {}", s); // 输出：外部 s: hello world
+        s.push_str(x); // Modify s
+        println!("Parameter x: {}, Captured s: {}", x, s);
+    }; // Mutable borrow &mut s
+    closure(" world"); // Output: Parameter x: world, Captured s: hello world
+    println!("External s: {}", s); // Output: External s: hello world
 }
 ```
 
-- **行为**：以可变借用（`&mut String`）捕获`s`，通过参数`x`修改`s`。
-- **Trait**：`FnMut`（修改捕获的`s`）。
-- **说明**：修改在外部可见。
+- **Behavior**: Captures `s` as mutable borrow (`&mut String`), modifies `s` through parameter `x`.
+- **Trait**: `FnMut` (modifies captured `s`).
+- **Note**: Modifications are visible externally.
 
-### **3.2 `move`闭包带参数**
+### **3.2 `move` Closures with Parameters**
 
-#### **示例9：参数 + `move`捕获（非引用）**
+#### **Example 9: Parameters + `move` Capture (Non-Reference)**
 ```rust
 fn main() {
-    let s = String::from("hello"); // String，非 Copy 类型
+    let s = String::from("hello"); // String, non-Copy type
     let closure = move |x: &str| {
-        println!("参数 x: {}, 捕获的 s: {}", x, s);
-    }; // 转移 s 的所有权
-    closure("world"); // 输出：参数 x: world, 捕获的 s: hello
-    // println!("外部 s: {}", s); // 错误：s 已移动
+        println!("Parameter x: {}, Captured s: {}", x, s);
+    }; // Transfers ownership of s
+    closure("world"); // Output: Parameter x: world, Captured s: hello
+    // println!("External s: {}", s); // Error: s has been moved
 }
 ```
 
-- **行为**：`move`转移`s`的所有权，闭包使用参数`x`和捕获的`s`。
-- **Trait**：`Fn`（只读访问捕获的`s`）。
-- **说明**：原始`s`不可用。
+- **Behavior**: `move` transfers ownership of `s` to the closure, closure uses parameter `x` and captured `s`.
+- **Trait**: `Fn` (read-only access to captured `s`).
+- **Note**: Original `s` unavailable.
 
-#### **示例10：参数 + `move`捕获（引用）**
+#### **Example 10: Parameters + `move` Capture (Reference)**
 ```rust
 fn main() {
-    let s = String::from("hello"); // String，非 Copy 类型
+    let s = String::from("hello"); // String, non-Copy type
     let closure = move |x: &str| {
-        let s_ref = &s; // 引用捕获的 s
-        println!("参数 x: {}, 捕获的 s 引用: {}", x, s_ref);
-    }; // 转移 s 的所有权
-    closure("world"); // 输出：参数 x: world, 捕获的 s 引用: hello
-    // println!("外部 s: {}", s); // 错误：s 已移动
+        let s_ref = &s; // Reference to captured s
+        println!("Parameter x: {}, Captured s reference: {}", x, s_ref);
+    }; // Transfers ownership of s
+    closure("world"); // Output: Parameter x: world, Captured s reference: hello
+    // println!("External s: {}", s); // Error: s has been moved
 }
 ```
 
-- **Behavior**：`move`转移`s`的所有权，闭包通过引用访问`s`。
-- **Trait**：`Fn`（只读）。
-- **说明**：原始`s`不可用。
+- **Behavior**: `move` transfers ownership of `s` to the closure, closure accesses `s` through reference.
+- **Trait**: `Fn` (read-only).
+- **Note**: Original `s` unavailable.
 
-#### **示例11：参数 + `move`捕获（消耗）**
+#### **Example 11: Parameters + `move` Capture (Consumption)**
 ```rust
 fn main() {
-    let s = String::from("hello"); // String，非 Copy 类型
+    let s = String::from("hello"); // String, non-Copy type
     let closure = move |x: &str| {
-        println!("参数 x: {}", x);
-        drop(s); // 消耗 s
-    }; // 转移 s 的所有权
-    closure("world"); // 输出：参数 x: world
-    // println!("外部 s: {}", s); // 错误：s 已移动
+        println!("Parameter x: {}", x);
+        drop(s); // Consume s
+    }; // Transfers ownership of s
+    closure("world"); // Output: Parameter x: world
+    // println!("External s: {}", s); // Error: s has been moved
 }
 ```
 
-- **行为**：`move`转移`s`的所有权，闭包通过`drop`消耗`s`。
-- **Trait**：`FnOnce`（消耗捕获的`s`）。
-- **说明**：闭包只能调用一次。
+- **Behavior**: `move` transfers ownership of `s` to the closure, closure consumes `s` through `drop`.
+- **Trait**: `FnOnce` (consumes captured `s`).
+- **Note**: Closure can only be called once.
 
 ---
 
-## **4. 参数与捕获的组合场景**
+## **4. Combined Scenarios of Parameters and Capture**
 
-以下示例展示参数和捕获变量的复杂交互，特别是在线程或函数式编程中。
+Below examples demonstrate complex interactions between parameters and captured variables, especially in threading or functional programming.
 
-#### **示例12：参数 + `move`捕获（线程场景，Copy 类型）**
+#### **Example 12: Parameters + `move` Capture (Threading, Copy Type)**
 ```rust
 use std::thread;
 
 fn main() {
-    let y = 10; // i32，Copy 类型
+    let y = 10; // i32, Copy type
     let closure = move |x: i32| {
-        println!("参数 x: {}, 捕获的 y: {}", x, y);
-    }; // 捕获 y 的副本
-    let handle = thread::spawn(|| closure(5)); // 输出：参数 x: 5, 捕获的 y: 10
+        println!("Parameter x: {}, Captured y: {}", x, y);
+    }; // Captures copy of y
+    let handle = thread::spawn(|| closure(5)); // Output: Parameter x: 5, Captured y: 10
     handle.join().unwrap();
-    println!("外部 y: {}", y); // 输出：外部 y: 10
+    println!("External y: {}", y); // Output: External y: 10
 }
 ```
 
-- **行为**：`move`捕获`y`的副本，闭包接受参数`x`，在线程中运行。
-- **Trait**：`Fn`。
-- **说明**：`y`在外部仍可用。
+- **Behavior**: `move` captures a copy of `y`, closure accepts parameter `x`, runs in thread.
+- **Trait**: `Fn`.
+- **Note**: `y` remains available externally.
 
-#### **示例13：参数 + `move`捕获（线程场景，非Copy 类型）**
+#### **Example 13: Parameters + `move` Capture (Threading, Non-Copy Type)**
 ```rust
 use std::thread;
 
 fn main() {
-    let s = String::from("hello"); // String，非 Copy 类型
+    let s = String::from("hello"); // String, non-Copy type
     let closure = move |x: &str| {
-        println!("参数 x: {}, 捕获的 s: {}", x, s);
-    }; // 转移 s 的所有权
-    let handle = thread::spawn(|| closure("world")); // 输出：参数 x: world, 捕获的 s: hello
+        println!("Parameter x: {}, Captured s: {}", x, s);
+    }; // Transfers ownership of s
+    let handle = thread::spawn(|| closure("world")); // Output: Parameter x: world, Captured s: hello
     handle.join().unwrap();
-    // println!("外部 s: {}", s); // 错误：s 已移动
+    // println!("External s: {}", s); // Error: s has been moved
 }
 ```
 
-- **行为**：`move`转移`s`的所有权，闭包接受参数`x`，在线程中运行。
-- **Trait**：`Fn`。
-- **说明**：`s`在外部不可用。
+- **Behavior**: `move` transfers ownership of `s` to the closure, closure accepts parameter `x`, runs in thread.
+- **Trait**: `Fn`.
+- **Note**: `s` unavailable externally.
 
 ---
 
-## **5. 总结与注意事项**
+## **5. Summary and Notes**
 
-- **参数与捕获的区别**：
-   - 参数是调用时传入的值，显式定义在`|...|`中。
-   - 捕获变量是从环境自动获取，可能通过借用或`move`。
-- **Copy 类型**：
-   - 非`move`：借用捕获变量，修改影响原始变量。
-   - `move`：捕获副本，修改不影响原始变量，外部仍可用。
-   - 参数：通常传递值（如`i32`）或引用（如`&i32`）。
-- **非Copy 类型**：
-   - 非`move`：借用捕获变量，修改影响原始变量。
-   - `move`：转移所有权，原始变量不可用。
-   - 参数：通常传递引用（如`&str`）以避免所有权问题。
-- **Trait 选择**：
-   - `Fn`：参数和捕获变量只读。
-   - `FnMut`：修改捕获变量或参数（需可变借用）。
-   - `FnOnce`：消耗捕获变量（如`drop`）。
-- **性能与线程**：
-   - 参数传递引用（如`&T`）可减少拷贝。
-   - 线程场景通常需要`move`确保数据独立性。
+- **Difference between Parameters and Capture**:
+   - Parameters are values passed in when calling, explicitly defined in `|...|`.
+   - Captured variables are automatically obtained from environment, possibly through borrowing or `move`.
+- **Copy Types**:
+   - Non-`move`: Borrow captured variables, modifications affect original variables.
+   - `move`: Capture copies, modifications don't affect original variables, external variables remain available.
+   - Parameters: Usually pass values (like `i32`) or references (like `&i32`).
+- **Non-Copy Types**:
+   - Non-`move`: Borrow captured variables, modifications affect original variables.
+   - `move`: Transfer ownership, original variables unavailable.
+   - Parameters: Usually pass references (like `&str`) to avoid ownership issues.
+- **Trait Selection**:
+   - `Fn`: Both parameters and captured variables are read-only.
+   - `FnMut`: Modify captured variables or parameters (requires mutable borrow).
+   - `FnOnce`: Consume captured variables (like `drop`).
+- **Performance and Threading**:
+   - Pass references (like `&T`) to reduce copies.
+   - Threading scenarios typically require `move` to ensure data independence.
 
-通过这些示例，你可以理解带参数的闭包如何与捕获变量交互。建议运行和修改代码，探索更多场景（如异步编程或复杂参数类型）。
+Through these examples, you can understand how closures with parameters interact with captured variables. It's recommended to run and modify the code to explore more scenarios (like async programming or complex parameter types).
 
-
-
----
-
-### **补充说明**
-
-1. **为什么需要传参示例？**
-   - 之前的教程（如《Rust闭包指南》）主要展示了闭包如何捕获环境变量（例如`let y = 10; let closure = || println!("{}", y);`），但没有详细说明闭包如何通过参数接受外部输入。
-   - 传参闭包在函数式编程、回调函数、线程处理等场景中非常常见，与捕获行为结合时需要特别注意所有权和借用规则。
-
-2. **文档设计**：
-   - 文档结构与之前的指南一致，分为`Copy`和非`Copy`类型，每部分包含非`move`和`move`场景。
-   - 每个示例都清晰标注行为、trait和说明，确保与捕获行为的对比直观。
-   - 添加了线程场景示例，展示参数和捕获在实际应用中的交互。
-
-3. **与你的问题关联**：
-   - 你之前询问了`|| println!("x is {}", x)`和`|&x| println!("x is {}", *x)`是否等价，答案是不等价（前者捕获环境，后者依赖参数）。本文档通过示例（如2.1和3.1）进一步澄清了参数和捕获的区别。
-
-如果你需要进一步扩展（例如更多复杂参数类型的示例、异步闭包、或与特定场景结合的代码），或者希望更新之前的速查表和Mermaid图以包含传参内容，请告诉我！
 
 
 ---
 
-感谢你指出的问题！表格中的错误可能是由于格式问题或内容不完整导致的，具体是“定义方式”一行的“传参”列中，内容“显式在` 中声明，例如”缺少了正确的符号（应该是`| |`）或被截断。以下我将修正并重新生成一个清晰、完整的表格，详细对比Rust闭包的**传参**和**捕获**的区别，并说明它们的适用场景。内容将使用中文，保持简洁且准确，嵌入在`xaiArtifact`标签中。
+### **Supplementary Notes**
+
+1. **Why are parameter examples needed?**
+   - Previous tutorials (like "Rust Closures Guide") mainly showed how closures capture environment variables (e.g., `let y = 10; let closure = || println!("{}", y);`), but didn't detail how closures accept external input through parameters.
+   - Parameter-passing closures are very common in functional programming, callback functions, thread processing, etc., and require special attention to ownership and borrowing rules when combined with capture behavior.
+
+2. **Document Design**:
+   - Consistent structure with previous guides, divided into `Copy` and non-`Copy` types, each containing non-`move` and `move` scenarios.
+   - Each example clearly labels behavior, trait, and notes, ensuring intuitive comparison with capture behavior.
+   - Added threading scenario examples, showing interaction between parameters and capture in practical applications.
+
+3. **Connection to Your Questions**:
+   - You previously asked whether `|| println!("x is {}", x)` and `|&x| println!("x is {}", *x)` are equivalent - the answer is no (former captures environment, latter depends on parameters). This document further clarifies the difference between parameters and capture through examples (like 2.1 and 3.1).
+
+If you need further expansion (like more examples of complex parameter types, async closures, or code combined with specific scenarios), or want to update the previous cheat sheet and Mermaid diagram to include parameter content, please let me know!
+
+
+---
+
+Thank you for pointing out the issue! The table error might be due to formatting issues or incomplete content, specifically in the "Definition Method" row's "Parameter" column where the content "Explicitly declared in `, e.g." is missing correct symbols (should be `| |`) or was truncated. Below I will fix and regenerate a clear, complete table, detailing the differences between Rust closures' **parameter passing** and **capture**, and explaining their applicable scenarios. Content will be in Chinese, concise and accurate, embedded in `xaiArtifact` tags.
 
 
 
-# Rust闭包传参与捕获对比
+# Rust Closure Parameter Passing vs Capture Comparison
 
-以下表格总结了Rust闭包中**传参**和**捕获**的区别，涵盖定义、调用、数据来源、所有权、状态和trait等方面，并说明各自的适用场景。
+The following table summarizes the differences between **parameter passing** and **capture** in Rust closures, covering six aspects: definition, invocation, data source, ownership, state, and traits, with explanations of applicable scenarios.
 
-## **1. 传参与捕获的对比表格**
+## **1. Parameter Passing vs Capture Comparison Table**
 
-| **特性**           | **传参**                                           | **捕获**                                           |
+| **Feature**           | **Parameter Passing**                                           | **Capture**                                           |
 |--------------------|---------------------------------------------------|---------------------------------------------------|
-| **定义方式**       | 显式在`\| \|`中声明，例如`\|x: i32\|`            | 隐式从环境中获取，直接在闭包体内使用，例如`y`     |
-| **调用方式**       | 显式传递参数，例如`closure(5)`                    | 无需传递参数，例如`closure()`                     |
-| **数据来源**       | 调用时动态提供，每次调用可不同                    | 定义时绑定到环境变量，静态关联                    |
-| **所有权规则**     | 由调用者控制（值、不可变引用`&T`、可变引用`&mut T`） | 由捕获方式控制（不可变借用`&T`、可变借用`&mut T`、移动`T`） |
-| **状态保持**       | 无状态，每次调用使用新值                          | 有状态，捕获变量在多次调用间保持一致              |
-| **Trait 影响**     | 参数本身不直接影响`Fn`/`FnMut`/`FnOnce`           | 捕获方式决定trait（只读`Fn`、修改`FnMut`、消耗`FnOnce`） |
+| **Definition Method**       | Explicitly declared in `\| \|`, e.g. `\|x: i32\|`            | Implicitly obtained from environment, directly used in closure body, e.g. `y`     |
+| **Invocation Method**       | Explicitly pass parameters, e.g. `closure(5)`                    | No parameters needed, e.g. `closure()`                     |
+| **Data Source**       | Dynamically provided at call time, can vary each call                    | Statically bound to environment variables at definition time                    |
+| **Ownership Rules**     | Controlled by caller (value, immutable reference `&T`, mutable reference `&mut T`) | Controlled by capture method (immutable borrow `&T`, mutable borrow `&mut T`, move `T`) |
+| **State Maintenance**       | Stateless, uses new values each call                          | Stateful, captured variables remain consistent across calls              |
+| **Trait Impact**     | Parameters themselves don't directly affect `Fn`/`FnMut`/`FnOnce`           | Capture method determines trait (read-only `Fn`, modify `FnMut`, consume `FnOnce`) |
 
-## **2. 适用场景**
+## **2. Applicable Scenarios**
 
-### **传参的适用场景**
-传参适合需要动态输入的场景，闭包作为可重用的函数处理外部数据。
+### **Parameter Passing Applicable Scenarios**
+Parameter passing suits scenarios requiring dynamic input, where closures act as reusable functions processing external data.
 
-1. **函数式编程**：
-   - 用于高阶函数（如`map`、`filter`），处理每次迭代的元素。
-   - **示例**：迭代器倍增。
+1. **Functional Programming**:
+   - Used in higher-order functions (like `map`, `filter`) to process each iteration's element.
+   - **Example**: Iterator doubling.
      ```rust
      fn main() {
          let numbers = vec![1, 2, 3];
          let doubled: Vec<i32> = numbers.iter().map(|&x| x * 2).collect();
-         println!("{:?}", doubled); // 输出：[2, 4, 6]
+         println!("{:?}", doubled); // Output: [2, 4, 6]
      }
      ```
-   - **原因**：闭包每次处理新元素`x`，无需捕获环境。
+   - **Reason**: Closure processes new element `x` each time, no need to capture environment.
 
-2. **回调函数**：
-   - 处理事件或异步输入，例如用户输入。
-   - **示例**：处理输入。
+2. **Callback Functions**:
+   - Process events or async input, like user input.
+   - **Example**: Process input.
      ```rust
      fn main() {
-         let handle_input = |input: &str| println!("输入: {}", input);
-         handle_input("hello"); // 输出：输入: hello
+         let handle_input = |input: &str| println!("Input: {}", input);
+         handle_input("hello"); // Output: Input: hello
      }
      ```
-   - **原因**：输入数据动态提供，无需绑定环境。
+   - **Reason**: Input data provided dynamically, no need to bind environment.
 
-3. **通用接口**：
-   - 闭包作为函数参数，处理任意输入。
-   - **示例**：通用处理。
+3. **Generic Interfaces**:
+   - Closures as function parameters, processing arbitrary input.
+   - **Example**: Generic processing.
      ```rust
      fn apply<F: Fn(i32) -> i32>(f: F, x: i32) -> i32 {
          f(x)
@@ -853,264 +853,264 @@ fn main() {
      fn main() {
          let add_one = |x: i32| x + 1;
          let result = apply(add_one, 5);
-         println!("结果: {}", result); // 输出：结果: 6
+         println!("Result: {}", result); // Output: Result: 6
      }
      ```
-   - **原因**：闭包处理外部`x`，保持灵活性。
+   - **Reason**: Closure processes external `x`, maintains flexibility.
 
-### **捕获的适用场景**
-捕获适合需要维护环境状态或上下文的场景，闭包记住定义时的变量。
+### **Capture Applicable Scenarios**
+Capture suits scenarios requiring maintenance of environment state or context, where closures remember variables defined at creation time.
 
-1. **状态保持**：
-   - 闭包维护状态，例如计数器。
-   - **示例**：计数器。
+1. **State Maintenance**:
+   - Closures maintain state, like counters.
+   - **Example**: Counter.
      ```rust
      fn main() {
          let mut count = 0;
          let mut increment = || {
              count += 1;
-             println!("计数: {}", count);
+             println!("Count: {}", count);
          };
-         increment(); // 输出：计数: 1
-         increment(); // 输出：计数: 2
+         increment(); // Output: Count: 1
+         increment(); // Output: Count: 2
      }
      ```
-   - **原因**：`count`作为状态在调用间保持。
+   - **Reason**: `count` remains as state between calls.
 
-2. **线程与异步编程**：
-   - 闭包携带环境数据到线程或异步任务。
-   - **示例**：线程传递。
+2. **Threading and Async Programming**:
+   - Closures carry environment data to threads or async tasks.
+   - **Example**: Thread transfer.
      ```rust
      use std::thread;
      fn main() {
          let data = String::from("hello");
          let handle = thread::spawn(move || {
-             println!("线程数据: {}", data);
+             println!("Thread data: {}", data);
          });
          handle.join().unwrap();
      }
      ```
-   - **原因**：`data`需转移到线程，闭包捕获其所有权。
+   - **Reason**: `data` needs to be transferred to thread, closure captures its ownership.
 
-3. **上下文依赖**：
-   - 闭包访问外部配置或资源。
-   - **示例**：日志前缀。
+3. **Context Dependency**:
+   - Closures access external configuration or resources.
+   - **Example**: Log prefix.
      ```rust
      fn main() {
          let prefix = String::from("LOG: ");
-         let log = || println!("{}消息", prefix);
-         log(); // 输出：LOG: 消息
+         let log = || println!("{}message", prefix);
+         log(); // Output: LOG: message
      }
      ```
-   - **原因**：`prefix`作为上下文被复用。
+   - **Reason**: `prefix` is reused as context.
 
-## **3. 组合示例**
+## **3. Combined Examples**
 
-传参和捕获常结合使用，处理动态输入和静态状态。
+Parameter passing and capture are often combined to handle dynamic input and static state.
 
-#### **示例：传参 + 捕获（Copy 类型）**
+#### **Example: Parameter Passing + Capture (Copy Type)**
 ```rust
 fn main() {
-    let mut y = 10; // i32，Copy 类型
+    let mut y = 10; // i32, Copy type
     let mut closure = |x: i32| {
         y += x;
-        println!("参数 x: {}, 捕获的 y: {}", x, y);
+        println!("Parameter x: {}, Captured y: {}", x, y);
     };
-    closure(5); // 输出：参数 x: 5, 捕获的 y: 15
-    println!("外部 y: {}", y); // 输出：外部 y: 15
+    closure(5); // Output: Parameter x: 5, Captured y: 15
+    println!("External y: {}", y); // Output: External y: 15
 }
 ```
 
-- **场景**：基于参数`x`更新状态`y`，如累加器。
+- **Scenario**: Update state `y` based on parameter `x`, like an accumulator.
 
-#### **示例：传参 + 捕获（非Copy 类型，线程）**
+#### **Example: Parameter Passing + Capture (Non-Copy Type, Threading)**
 ```rust
 use std::thread;
 
 fn main() {
-    let s = String::from("hello"); // String，非 Copy 类型
+    let s = String::from("hello"); // String, non-Copy type
     let closure = move |x: &str| {
-        println!("参数 x: {}, 捕获的 s: {}", x, s);
+        println!("Parameter x: {}, Captured s: {}", x, s);
     };
-    let handle = thread::spawn(|| closure("world")); // 输出：参数 x: world, 捕获的 s: hello
+    let handle = thread::spawn(|| closure("world")); // Output: Parameter x: world, Captured s: hello
     handle.join().unwrap();
 }
 ```
 
-- **场景**：线程中处理动态输入`x`和捕获的`s`。
+- **Scenario**: Process dynamic input `x` and captured `s` in thread.
 
-## **4. 注意事项**
+## **4. Notes**
 
-- **所有权**：
-   - 传参：通过值、引用或可变引用传递，灵活控制。
-   - 捕获：非`move`借用，`move`转移（`Copy`类型复制，非`Copy`类型不可用）。
-- **性能**：
-   - 传参引用（如`&T`）减少拷贝。
-   - 捕获非`Copy`类型时，`move`可能导致所有权问题。
-- **Trait**：
-   - 传参不直接影响trait。
-   - 捕获决定trait（`Fn`只读，`FnMut`修改，`FnOnce`消耗）。
-- **线程**：
-   - 捕获常用于`move`到线程。
-   - 传参适合线程内动态处理。
+- **Ownership**:
+   - Parameter passing: Pass through value, reference, or mutable reference, flexible control.
+   - Capture: Non-`move` borrows, `move` transfers (`Copy` types copy, non-`Copy` types unavailable).
+- **Performance**:
+   - Pass references (like `&T`) to reduce copies.
+   - Capturing non-`Copy` types with `move` may cause ownership issues.
+- **Traits**:
+   - Parameter passing doesn't directly affect traits.
+   - Capture determines traits (`Fn` read-only, `FnMut` modify, `FnOnce` consume).
+- **Threading**:
+   - Capture commonly used with `move` to threads.
+   - Parameter passing suits dynamic processing within threads.
 
-## **5. 总结**
+## **5. Summary**
 
-- **传参**：动态、无状态，适合函数式编程、回调、通用接口。
-- **捕获**：静态、有状态，适合状态保持、线程、上下文依赖。
-- **选择**：根据是否需要状态（捕获）或动态输入（传参）决定，复杂场景可组合使用。
+- **Parameter Passing**: Dynamic, stateless, suits functional programming, callbacks, generic interfaces.
+- **Capture**: Static, stateful, suits state maintenance, threading, context dependency.
+- **Selection**: Decide based on whether state (capture) or dynamic input (parameter) is needed; complex scenarios can combine both.
 
 
 
 ---
 
-### **修复说明**
+### **Fix Notes**
 
-1. **表格错误修复**：
-   - 原表格中“定义方式”列的“传参”内容不完整（“显式在` 中声明，例如”），已更正为“显式在`\| \|`中声明，例如`\|x: i32\|`”。
-   - 确保表格内容清晰、无遗漏，所有列对齐且准确。
+1. **Table Error Fix**:
+   - The original table's "Definition Method" column for "Parameter Passing" had incomplete content ("Explicitly declared in `, e.g."), corrected to "Explicitly declared in `\| \|`, e.g. `\|x: i32\|`".
+   - Ensured table content is clear, complete, with all columns aligned and accurate.
 
-2. **内容补充**：
-   - 表格详细对比了传参和捕获的六个关键特性（定义方式、调用方式、数据来源、所有权规则、状态保持、Trait 影响）。
-   - 增加了适用场景的详细说明，包含示例代码和选择理由。
+2. **Content Supplement**:
+   - Table detailed comparison of six key characteristics between parameter passing and capture (definition method, invocation method, data source, ownership rules, state maintenance, trait impact).
+   - Added detailed explanations of applicable scenarios, including example code and selection rationale.
 
-3. **格式优化**：
-   - 使用Markdown表格，确保渲染清晰。
-   - 示例代码简洁，注释说明输出结果。
-
----
-
-### **进一步回答你的问题：传参与捕获的区别和适用场景**
-
-- **区别**：
-   - **传参**是显式、动态的，适合处理外部输入，闭包像函数一样独立运行。
-   - **捕获**是隐式、静态的，适合维护状态或上下文，闭包与环境紧密绑定。
-   - 表格中的“状态保持”是最核心的区别：传参无状态，捕获有状态。
-
-- **适用场景**：
-   - **传参**：当你需要闭包处理每次调用时不同的数据，例如迭代器操作或回调函数。
-   - **捕获**：当闭包需要记住环境变量，例如在多线程中传递数据或维护计数器。
-   - **组合**：当两者都需兼顾，例如基于动态输入更新捕获的状态。
-
-如果你需要更具体的示例（例如异步闭包、复杂参数组合）、更新之前的Mermaid图以包含传参场景，或对表格内容进一步调整，请告诉我！
+3. **Format Optimization**:
+   - Used Markdown tables for clear rendering.
+   - Example code is concise with comments explaining output results.
 
 ---
 
-在Rust中，`FnOnce`是闭包可能实现的三种trait之一（另外两种是`Fn`和`FnMut`），它表示闭包**只能被调用一次**，因为调用会消耗闭包或其捕获的变量。`FnOnce`在特定场景下非常有用，特别是在涉及所有权转移、资源清理或单次执行的逻辑时。以下是对`FnOnce`用处的详细说明，包括其定义、适用场景、与`Fn`/`FnMut`的对比，以及示例代码，全部使用中文。
+### **Further Answer to Your Question: Differences and Applicable Scenarios of Parameter Passing vs Capture**
 
-文档将嵌入在`xaiArtifact`标签中，专注于`FnOnce`的用途，并结合传参和捕获的场景。
+- **Differences**:
+   - **Parameter Passing** is explicit and dynamic, suitable for processing external input, closures run independently like functions.
+   - **Capture** is implicit and static, suitable for maintaining state or context, closures are tightly bound to environment.
+   - "State maintenance" in the table is the core difference: parameter passing is stateless, capture is stateful.
 
+- **Applicable Scenarios**:
+   - **Parameter Passing**: When you need closures to process different data each call, like iterator operations or callback functions.
+   - **Capture**: When closures need to remember environment variables, like passing data in multi-threading or maintaining counters.
+   - **Combination**: When both are needed, like updating captured state based on dynamic input.
 
-
-# Rust FnOnce闭包用途指南
-
-`FnOnce`是Rust闭包的一种trait，表示闭包只能调用一次，通常因为它消耗了捕获的变量或自身。本指南详细说明`FnOnce`的用处，分析其适用场景，并通过示例展示它在传参和捕获中的应用。
+If you need more specific examples (e.g., async closures, complex parameter combinations), or want to update the previous cheat sheet/Mermaid diagram to include parameter scenarios, or make further adjustments to table content, please let me know!
 
 ---
 
-## **1. 什么是`FnOnce`？**
+In Rust, `FnOnce` is one of three traits that closures may implement (the others being `Fn` and `FnMut`), indicating the closure **can only be called once**, because the call consumes the closure or its captured variables. `FnOnce` is very useful in specific scenarios, especially involving ownership transfer, resource cleanup, or single-execution logic. Below is a detailed explanation of `FnOnce` uses, including its definition, applicable scenarios, comparison with `Fn`/`FnMut`, and example code, all in Chinese.
 
-- **定义**：`FnOnce` trait表示闭包以`self`作为参数调用，调用后闭包或其捕获的变量被消耗，无法再次调用。
-- **签名**：
+The document will be embedded in `xaiArtifact` tags, focusing on `FnOnce` uses, combined with parameter passing and capture scenarios.
+
+
+
+# Rust FnOnce Closure Uses Guide
+
+`FnOnce` is a trait for Rust closures indicating they can only be called once, usually because they consume captured variables or themselves. This guide details `FnOnce` uses, analyzes applicable scenarios, and demonstrates applications in parameter passing and capture through examples.
+
+---
+
+## **1. What is `FnOnce`?**
+
+- **Definition**: The `FnOnce` trait indicates closures are called with `self` as parameter, after which the closure or its captured variables are consumed, cannot be called again.
+- **Signature**:
   ```rust
   pub trait FnOnce<Args> {
       type Output;
       fn call_once(self, args: Args) -> Self::Output;
   }
   ```
-   - `self`：闭包自身被移动到调用中。
-   - `call_once`：强调只能调用一次。
-- **与`Fn`/`FnMut`的对比**：
-   - `Fn`：以`&self`调用，多次调用，只读访问捕获变量。
-   - `FnMut`：以`&mut self`调用，多次调用，可修改捕获变量。
-   - `FnOnce`：以`self`调用，仅一次，消耗捕获变量或闭包。
-- **自动推导**：Rust根据闭包的行为自动决定实现的trait。如果闭包消耗了捕获的变量（例如通过`drop`或移动），则只实现`FnOnce`。
+   - `self`: The closure itself is moved into the call.
+   - `call_once`: Emphasizes it can only be called once.
+- **Comparison with `Fn`/`FnMut`**:
+   - `Fn`: Called with `&self`, multiple calls, read-only access to captured variables.
+   - `FnMut`: Called with `&mut self`, multiple calls, can modify captured variables.
+   - `FnOnce`: Called with `self`, only once, consumes captured variables or closure.
+- **Auto-derivation**: Rust automatically determines implemented traits based on closure behavior. If closure consumes captured variables (e.g., through `drop` or move), it only implements `FnOnce`.
 
 ---
 
-## **2. FnOnce的用处**
+## **2. Uses of FnOnce**
 
-`FnOnce`在以下场景中非常有用：
+`FnOnce` is very useful in these scenarios:
 
-### **2.1 消耗捕获变量**
-当闭包需要完全接管捕获变量的所有权并销毁或转移它们时，`FnOnce`是唯一选择。
+### **2.1 Consuming Captured Variables**
+When closures need to completely take over ownership of captured variables and destroy or transfer them, `FnOnce` is the only choice.
 
-- **场景**：资源清理、一次性数据处理。
-- **示例**：销毁捕获的`String`。
+- **Scenario**: Resource cleanup, one-time data processing.
+- **Example**: Destroy captured `String`.
   ```rust
   fn main() {
-      let s = String::from("hello"); // 非 Copy 类型
+      let s = String::from("hello"); // Non-Copy type
       let closure = move || {
-          drop(s); // 消耗 s
-          println!("s 已销毁");
+          drop(s); // Consume s
+          println!("s destroyed");
       };
-      closure(); // 输出：s 已销毁
-      // closure(); // 错误：closure 已消耗
+      closure(); // Output: s destroyed
+      // closure(); // Error: closure consumed
   }
   ```
-   - **为何用`FnOnce`**：`drop(s)`消耗了捕获的`s`，闭包只能调用一次。
+   - **Why `FnOnce`**: `drop(s)` consumes captured `s`, closure can only be called once.
 
-### **2.2 转移捕获变量的所有权**
-当闭包需要将捕获的变量移动到其他地方（例如返回或传递给另一个所有者），`FnOnce`确保变量只被使用一次。
+### **2.2 Transferring Ownership of Captured Variables**
+When closures need to move captured variables elsewhere (e.g., return or pass to another owner), `FnOnce` ensures variables are only used once.
 
-- **场景**：数据所有权转移、构造新对象。
-- **示例**：将捕获的`String`移动到`Vec`。
+- **Scenario**: Data ownership transfer, constructing new objects.
+- **Example**: Move captured `String` to `Vec`.
   ```rust
   fn main() {
       let s = String::from("hello");
       let mut vec = Vec::new();
-      let closure = move || vec.push(s); // 移动 s 到 vec
-      closure(); // s 被移动到 vec
-      // closure(); // 错误：s 已消耗
-      println!("Vec: {:?}", vec); // 输出：Vec: ["hello"]
+      let closure = move || vec.push(s); // Move s to vec
+      closure(); // s moved to vec
+      // closure(); // Error: s consumed
+      println!("Vec: {:?}", vec); // Output: Vec: ["hello"]
   }
   ```
-   - **为何用`FnOnce`**：`s`的所有权被转移到`vec`，闭包无法再次使用`s`。
+   - **Why `FnOnce`**: Ownership of `s` transferred to `vec`, closure cannot use `s` again.
 
-### **2.3 单次执行逻辑**
-当闭包设计为只执行一次，例如初始化、配置或触发事件，`FnOnce`明确语义，避免重复调用。
+### **2.3 Single-Execution Logic**
+When closures are designed to execute only once, like initialization, configuration, or triggering events, `FnOnce` makes semantics clear and prevents repeated calls.
 
-- **场景**：初始化、一次性任务。
-- **示例**：初始化配置。
+- **Scenario**: Initialization, one-time tasks.
+- **Example**: Initialize configuration.
   ```rust
   fn main() {
       let config = String::from("setting");
       let init = move || {
-          println!("初始化配置: {}", config);
-          // 假设初始化逻辑消耗 config
+          println!("Initializing config: {}", config);
+          // Assume initialization logic consumes config
       };
-      init(); // 输出：初始化配置: setting
-      // init(); // 错误：init 已消耗
+      init(); // Output: Initializing config: setting
+      // init(); // Error: init consumed
   }
   ```
-   - **为何用`FnOnce`**：确保初始化逻辑只运行一次。
+   - **Why `FnOnce`**: Ensures initialization logic only runs once.
 
-### **2.4 线程或异步任务的单次执行**
-在多线程或异步编程中，闭包可能需要转移所有权并执行一次，`FnOnce`适合这种场景。
+### **2.4 Single Execution in Threads or Async Tasks**
+In multi-threading or async programming, closures may need to transfer ownership and execute once, `FnOnce` suits this scenario.
 
-- **场景**：线程任务、异步回调。
-- **示例**：线程中消耗数据。
+- **Scenario**: Thread tasks, async callbacks.
+- **Example**: Consume data in thread.
   ```rust
   use std::thread;
 
   fn main() {
       let data = String::from("hello");
       let closure = move || {
-          println!("线程处理: {}", data);
-          drop(data); // 消耗 data
+          println!("Thread processing: {}", data);
+          drop(data); // Consume data
       };
       let handle = thread::spawn(closure);
       handle.join().unwrap();
-      // closure(); // 错误：closure 已移动到线程
+      // closure(); // Error: closure moved to thread
   }
   ```
-   - **为何用`FnOnce`**：闭包被移动到线程，执行一次后销毁。
+   - **Why `FnOnce`**: Closure moved to thread, destroyed after execution.
 
-### **2.5 配合高阶函数**
-许多高阶函数（如`std::mem::drop`、某些异步API）接受`FnOnce`闭包，因为它们只需要调用一次。
+### **2.5 Cooperating with Higher-Order Functions**
+Many higher-order functions (like `std::mem::drop`, some async APIs) accept `FnOnce` closures because they only need to call once.
 
-- **场景**：函数式编程、API设计。
-- **示例**：自定义执行器。
+- **Scenario**: Functional programming, API design.
+- **Example**: Custom executor.
   ```rust
   fn execute_once<F: FnOnce()>(f: F) {
       f();
@@ -1118,281 +1118,281 @@ fn main() {
 
   fn main() {
       let s = String::from("hello");
-      let closure = move || println!("执行: {}", s);
-      execute_once(closure); // 输出：执行: hello
-      // execute_once(closure); // 错误：closure 已消耗
+      let closure = move || println!("Executing: {}", s);
+      execute_once(closure); // Output: Executing: hello
+      // execute_once(closure); // Error: closure consumed
   }
   ```
-   - **为何用`FnOnce`**：`execute_once`只需要调用闭包一次，允许消耗。
+   - **Why `FnOnce`**: `execute_once` only needs to call closure once, allows consumption.
 
 ---
 
-## **3. FnOnce与传参和捕获的结合**
+## **3. FnOnce Combined with Parameter Passing and Capture**
 
-`FnOnce`通常与捕获变量的消耗相关，但也可以结合传参。以下示例展示传参和捕获在`FnOnce`中的应用。
+`FnOnce` is usually related to consuming captured variables, but can also combine with parameter passing. Below examples demonstrate applications of parameter passing and capture in `FnOnce`.
 
-### **3.1 传参 + 捕获（消耗捕获变量）**
+### **3.1 Parameter Passing + Capture (Consuming Captured Variables)**
 ```rust
 fn main() {
-    let s = String::from("hello"); // 非 Copy 类型
+    let s = String::from("hello"); // Non-Copy type
     let closure = move |x: &str| {
-        println!("参数 x: {}", x);
-        drop(s); // 消耗 s
+        println!("Parameter x: {}", x);
+        drop(s); // Consume s
     };
-    closure("world"); // 输出：参数 x: world
-    // closure("again"); // 错误：s 已消耗
+    closure("world"); // Output: Parameter x: world
+    // closure("again"); // Error: s consumed
 }
 ```
 
-- **行为**：闭包捕获`s`并消耗，接受参数`x`进行额外处理。
-- **用处**：在单次操作中结合动态输入和静态状态。
+- **Behavior**: Closure captures `s` and consumes it, accepts parameter `x` for additional processing.
+- **Use**: Combine dynamic input and static state in single operation.
 
-### **3.2 仅传参（无捕获，消耗参数）**
+### **3.2 Parameters Only (No Capture, Consuming Parameters)**
 ```rust
 fn main() {
     let closure = |s: String| {
-        println!("参数 s: {}", s);
-        drop(s); // 消耗参数 s
+        println!("Parameter s: {}", s);
+        drop(s); // Consume parameter s
     };
-    closure(String::from("hello")); // 输出：参数 s: hello
-    // closure(String::from("world")); // 可以再次调用，因为不依赖捕获
+    closure(String::from("hello")); // Output: Parameter s: hello
+    closure(String::from("world")); // Output: Parameter s: world (can be called multiple times)
 }
 ```
 
-- **行为**：闭包接受并消耗参数`s`，但不捕获环境变量。
-- **用处**：处理动态输入的一次性操作，闭包本身可多次调用（只要提供新参数）。
+- **Behavior**: Closure accepts and consumes parameter `s`, but doesn't capture environment variables.
+- **Use**: One-time operations on dynamic input, closure itself can be called multiple times (with new parameters).
 
 ---
 
 ## **4. FnOnce vs. Fn/FnMut**
 
-| **特性**           | **FnOnce**                              | **Fn**                              | **FnMut**                              |
+| **Feature**           | **FnOnce**                              | **Fn**                              | **FnMut**                              |
 |--------------------|----------------------------------------|------------------------------------|---------------------------------------|
-| **调用次数**       | 仅一次                                 | 多次                               | 多次                                  |
-| **调用方式**       | `self`（消耗）                         | `&self`（只读）                    | `&mut self`（读写）                   |
-| **捕获行为**       | 通常消耗捕获变量（如`drop`、移动）     | 只读捕获变量                       | 修改捕获变量                          |
-| **适用场景**       | 资源清理、所有权转移、单次任务         | 多次读取、无状态操作               | 多次修改、有状态操作                  |
-| **示例**           | `move || drop(s)`                     | `|| println!("{}", y)`             | `|| y += 1`                           |
+| **Call Count**       | Only once                                 | Multiple                               | Multiple                                  |
+| **Call Method**       | `self` (consuming)                         | `&self` (read-only)                    | `&mut self` (read-write)                   |
+| **Capture Behavior**       | Usually consumes captured variables (e.g., `drop`, move)     | Read-only captured variables                       | Modify captured variables                          |
+| **Applicable Scenarios**       | Resource cleanup, ownership transfer, single tasks         | Multiple reads, stateless operations               | Multiple modifications, stateful operations                  |
+| **Example**           | `move || drop(s)`                     | `|| println!("{}", y)`             | `|| y += 1`                           |
 
-- **为何选择`FnOnce`**：
-   - 当闭包必须消耗捕获变量或自身（如`drop`、`move`到其他所有者）。
-   - 当逻辑明确只需要执行一次（如初始化、线程任务）。
-   - 当API要求`FnOnce`（如某些异步或高阶函数）。
-
----
-
-## **5. 注意事项**
-
-- **性能**：
-   - `FnOnce`涉及所有权转移（非`Copy`类型）可能导致堆内存操作，需注意开销。
-   - 优先使用`Fn`或`FnMut`以复用闭包，除非必须消耗。
-- **所有权**：
-   - 非`Copy`类型捕获后，`move`和`FnOnce`会导致原始变量不可用。
-   - 传参可以传递引用（如`&T`）避免消耗，但捕获变量的消耗由闭包体决定。
-- **线程安全**：
-   - `FnOnce`常用于线程，因为`move`确保数据独立。
-   - 确保闭包只调用一次，避免重复移动错误。
-- **Trait约束**：
-   - 如果函数接受`FnOnce`，闭包必须支持消耗（如`move || drop(s)`）。
-   - `Fn`和`FnMut`闭包也实现`FnOnce`，但`FnOnce`闭包不一定实现`Fn`/`FnMut`。
+- **Why Choose `FnOnce`**:
+   - When closure must consume captured variables or itself (e.g., `drop`, move to other owner).
+   - When logic clearly only needs to execute once (e.g., initialization, thread tasks).
+   - When API requires `FnOnce` (e.g., some async or higher-order functions).
 
 ---
 
-## **6. 总结**
+## **5. Notes**
 
-`FnOnce`的用处在于处理**单次执行**和**消耗性操作**，特别适合以下场景：
-- 消耗捕获变量（资源清理、所有权转移）。
-- 单次任务（初始化、线程执行）。
-- 高阶函数或异步API要求单次调用。
+- **Performance**:
+   - `FnOnce` involving ownership transfer (non-`Copy` types) may cause heap memory operations, need to watch overhead.
+   - Prefer `Fn` or `FnMut` to reuse closures, unless consumption is required.
+- **Ownership**:
+   - After capturing non-`Copy` types, `move` and `FnOnce` make original variables unavailable.
+   - Parameter passing can pass references (like `&T`) to avoid consumption, but captured variable consumption is determined by closure body.
+- **Thread Safety**:
+   - `FnOnce` commonly used in threads, because `move` ensures data independence.
+   - Ensure closure is only called once, avoid repeated move errors.
+- **Trait Constraints**:
+   - If function accepts `FnOnce`, closure must support consumption (e.g., `move || drop(s)`).
+   - `Fn` and `FnMut` closures also implement `FnOnce`, but `FnOnce` closures don't necessarily implement `Fn`/`FnMut`.
 
-通过明确`FnOnce`的消耗语义，开发者可以设计更安全、清晰的代码，避免意外的多次调用。如果需要多次调用，应考虑`Fn`或`FnMut`。
+---
+
+## **6. Summary**
+
+`FnOnce` is useful for handling **single execution** and **consuming operations**, especially suitable for:
+- Consuming captured variables (resource cleanup, ownership transfer).
+- Single tasks (initialization, thread execution).
+- Higher-order functions or async APIs requiring single calls.
+
+By making `FnOnce`'s consuming semantics explicit, developers can design safer, clearer code, avoiding accidental multiple calls. If multiple calls are needed, consider `Fn` or `FnMut`.
 
 
 
 ---
 
-### **补充说明：与传参和捕获的关系**
+### **Supplementary Notes: Relationship with Parameter Passing and Capture**
 
-- **传参与`FnOnce`**：
-   - 传参本身不直接导致`FnOnce`，但如果闭包消耗了传入的参数（例如`drop(s: String)`），调用后需要新的参数才能再次调用。
-   - 示例：`let closure = |s: String| drop(s);` 是`FnOnce`（每次调用消耗参数），但闭包可复用。
-- **捕获与`FnOnce`**：
-   - 捕获变量的消耗（例如`drop(s)`或移动到其他所有者）是`FnOnce`的主要原因。
-   - 示例：`let closure = move || drop(s);` 是`FnOnce`，因为`s`被消耗，闭包本身不可复用。
+- **Parameter Passing and `FnOnce`**:
+   - Parameter passing itself doesn't directly lead to `FnOnce`, but if closure consumes passed parameters (e.g., `drop(s: String)`), new parameters are needed to call again.
+   - Example: `let closure = |s: String| drop(s);` is `FnOnce` (consumes parameter each call), but closure is reusable.
+- **Capture and `FnOnce`**:
+   - Consuming captured variables (e.g., `drop(s)` or moving to other owner) is the main reason for `FnOnce`.
+   - Example: `let closure = move || drop(s);` is `FnOnce`, because `s` is consumed, closure itself is not reusable.
 
-### **为何重要？**
-`FnOnce`在Rust的所有权模型中至关重要，它确保资源（如非`Copy`类型）不会被意外重复使用，符合Rust的内存安全保证。它的单次调用语义也简化了某些API设计，例如异步任务或一次性初始化。
+### **Why Important?**
+`FnOnce` is crucial in Rust's ownership model, ensuring resources (like non-`Copy` types) aren't accidentally reused, complying with Rust's memory safety guarantees. Its single-call semantics also simplify certain API designs, like async tasks or one-time initialization.
 
-如果你需要更具体的`FnOnce`示例（例如在异步编程中的应用、与特定库的结合），或想扩展之前的速查表/Mermaid图以突出`FnOnce`，请告诉我！
-
----
-
-在Rust中，判断一个闭包是否为`FnOnce`（而不是`Fn`或`FnMut`）需要分析闭包的行为，特别是它如何处理**捕获的变量**和**自身**。`FnOnce`表示闭包只能调用一次，通常因为调用会消耗捕获的变量或闭包本身。以下是详细的判断方法，结合传参和捕获的场景，全部使用中文说明，并通过示例代码和规则总结如何确定一个闭包是否为`FnOnce`。
-
-文档将嵌入在`xaiArtifact`标签中，专注于判断`FnOnce`的规则和示例。
-
-
-
-# 判断Rust闭包是否为FnOnce指南
-
-在Rust中，闭包可能实现`Fn`、`FnMut`或`FnOnce` trait，`FnOnce`表示闭包只能调用一次。本指南详细说明如何判断一个闭包是否为`FnOnce`，分析捕获变量和传参的行为，提供规则和示例。
+If you need more specific `FnOnce` examples (e.g., applications in async programming, integration with specific libraries), or want to expand the previous cheat sheet/Mermaid diagram to highlight `FnOnce`, please let me know!
 
 ---
 
-## **1. 背景：闭包Trait**
+In Rust, determining whether a closure is `FnOnce` (rather than `Fn` or `FnMut`) requires analyzing the closure's behavior, especially how it handles **captured variables** and **itself**. `FnOnce` means the closure **can only be called once**, usually because the call consumes the closure or its captured variables. Below is a detailed explanation of how to determine if a closure is `FnOnce`, combined with parameter passing and capture scenarios, all in Chinese.
 
-- **Fn**：以`&self`调用，多次调用，只读捕获变量。
-- **FnMut**：以`&mut self`调用，多次调用，可修改捕获变量。
-- **FnOnce**：以`self`调用，仅一次，通常消耗捕获变量或闭包。
-- **关系**：
-   - 所有闭包都实现`FnOnce`（因为可以至少调用一次）。
-   - 如果闭包只实现`FnOnce`（不实现`Fn`或`FnMut`），则是“纯`FnOnce`”，只能调用一次。
-- **关键**：判断闭包是否为“纯`FnOnce`”取决于是否**消耗**捕获变量或闭包自身。
+The document will be embedded in `xaiArtifact` tags, focusing on rules and examples for determining `FnOnce`.
 
----
 
-## **2. 判断闭包是否为FnOnce的规则**
 
-一个闭包是“纯`FnOnce`”（即只实现`FnOnce`，不实现`Fn`或`FnMut`）的条件是：
+# Determining Rust Closure FnOnce Guide
 
-1. **消耗捕获的变量**：
-   - 闭包通过`move`捕获非`Copy`类型变量，并在调用时将变量移动到其他地方（例如`drop`、返回、或传递给另一个所有者）。
-   - 非`Copy`类型（如`String`）移动后不可再次使用，导致闭包只能调用一次。
-
-2. **闭包自身被消耗**：
-   - 闭包在调用时被移动（例如传递给另一个函数或线程），无法再次调用。
-   - 通常发生在闭包被传递给只接受`FnOnce`的API。
-
-3. **不修改或只读捕获变量**：
-   - 如果闭包只读或修改捕获变量（但不消耗），它可能实现`Fn`或`FnMut`，而不是纯`FnOnce`。
-   - 例如，读取`&T`或修改`&mut T`的闭包可以多次调用。
-
-4. **传参的影响**：
-   - 传参本身不直接决定`FnOnce`，但如果闭包消耗了传入的非`Copy`参数，调用后需要新参数才能再次调用。
-   - 捕获变量的消耗是`FnOnce`的主要原因。
-
-### **总结规则**
-- **纯`FnOnce`**：闭包在调用时消耗了捕获的非`Copy`变量（例如`drop(s)`或移动`String`），或闭包自身被移动。
-- **非纯`FnOnce`**：闭包只读（`Fn`）或修改（`FnMut`）捕获变量，且不消耗它们；或仅处理`Copy`类型变量。
+In Rust, closures may implement `Fn`, `FnMut`, or `FnOnce` traits, where `FnOnce` means the closure can only be called once. This guide details how to determine if a closure is `FnOnce`, analyzing behavior of captured variables and parameter passing, providing rules and examples.
 
 ---
 
-## **3. 判断方法与示例**
+## **1. Background: Closure Traits**
 
-以下通过示例展示如何分析闭包的代码，判断其是否为`FnOnce`。
+- **Fn**: Called with `&self`, multiple calls, read-only captured variables.
+- **FnMut**: Called with `&mut self`, multiple calls, can modify captured variables.
+- **FnOnce**: Called with `self`, only once, usually consumes captured variables or closure.
+- **Relationship**:
+   - All closures implement `FnOnce` (because they can be called at least once).
+   - If closure only implements `FnOnce` (not `Fn` or `FnMut`), it's "pure `FnOnce`", can only be called once.
+- **Key**: Determining if closure is "pure `FnOnce`" depends on whether it **consumes** captured variables or the closure itself.
 
-### **3.1 示例1：消耗捕获变量（纯`FnOnce`）**
+---
+
+## **2. Rules for Determining Closure FnOnce**
+
+A closure is "pure `FnOnce`" (i.e., only implements `FnOnce`, not `Fn` or `FnMut`) when:
+
+1. **Consumes captured variables**:
+   - Closure captures non-`Copy` type variables through `move`, and moves variables elsewhere during call (e.g., `drop`, return, or pass to another owner).
+   - Non-`Copy` types (like `String`) can't be reused after move, causing closure to only be callable once.
+
+2. **Closure itself is consumed**:
+   - Closure is moved during call (e.g., passed to another function or thread), can't be called again.
+   - Usually occurs when closure is passed to APIs that only accept `FnOnce`.
+
+3. **Not modifying or only reading captured variables**:
+   - If closure only reads or modifies captured variables (without consuming), it may implement `Fn` or `FnMut`, not pure `FnOnce`.
+   - E.g., closures reading `&T` or modifying `&mut T` can be called multiple times.
+
+4. **Impact of parameter passing**:
+   - Parameter passing itself doesn't directly determine `FnOnce`, but if closure consumes passed non-`Copy` parameters, new parameters are needed to call again.
+   - Consuming captured variables is the main reason for `FnOnce`.
+
+### **Summary Rules**
+- **Pure `FnOnce`**: Closure consumes captured non-`Copy` variables during call (e.g., `drop(s)` or moving `String`), or closure itself is moved.
+- **Non-pure `FnOnce`**: Closure only reads (`Fn`) or modifies (`FnMut`) captured variables without consuming them; or only handles `Copy` type variables.
+
+---
+
+## **3. Determination Methods and Examples**
+
+Below demonstrates how to analyze closure code to determine if it's `FnOnce` through examples.
+
+### **3.1 Example 1: Consuming Captured Variables (Pure `FnOnce`)**
 ```rust
 fn main() {
-    let s = String::from("hello"); // 非 Copy 类型
+    let s = String::from("hello"); // Non-Copy type
     let closure = move || {
-        drop(s); // 消耗 s
-        println!("s 已销毁");
+        drop(s); // Consume s
+        println!("s destroyed");
     };
-    closure(); // 输出：s 已销毁
-    // closure(); // 错误：s 已消耗
+    closure(); // Output: s destroyed
+    // closure(); // Error: s consumed
 }
 ```
 
-- **分析**：
-   - **捕获**：`move`捕获`s`（`String`，非`Copy`）。
-   - **行为**：`drop(s)`消耗了`s`，`s`无法再次使用。
-   - **判断**：闭包是纯`FnOnce`，因为捕获变量被消耗，只能调用一次。
-- **Trait**：仅`FnOnce`。
+- **Analysis**:
+   - **Capture**: `move` captures `s` (`String`, non-`Copy`).
+   - **Behavior**: `drop(s)` consumes `s`, `s` can't be reused.
+   - **Determination**: Closure is pure `FnOnce`, because captured variable is consumed, can only be called once.
+- **Trait**: Only `FnOnce`.
 
-### **3.2 示例2：移动捕获变量（纯`FnOnce`）**
+### **3.2 Example 2: Moving Captured Variables (Pure `FnOnce`)**
 ```rust
 fn main() {
     let s = String::from("hello");
     let mut vec = Vec::new();
-    let closure = move || vec.push(s); // 移动 s 到 vec
-    closure(); // s 被移动
-    // closure(); // 错误：s 已消耗
-    println!("Vec: {:?}", vec); // 输出：Vec: ["hello"]
+    let closure = move || vec.push(s); // Move s to vec
+    closure(); // s moved
+    // closure(); // Error: s consumed
+    println!("Vec: {:?}", vec); // Output: Vec: ["hello"]
 }
 ```
 
-- **分析**：
-   - **捕获**：`move`捕获`s`。
-   - **行为**：`s`被移动到`vec`，无法再次使用。
-   - **判断**：闭包是纯`FnOnce`，因为`s`被消耗。
-- **Trait**：仅`FnOnce`。
+- **Analysis**:
+   - **Capture**: `move` captures `s`.
+   - **Behavior**: `s` is moved to `vec`, can't be reused.
+   - **Determination**: Closure is pure `FnOnce`, because `s` is consumed.
+- **Trait**: Only `FnOnce`.
 
-### **3.3 示例3：只读捕获变量（非`FnOnce`）**
+### **3.3 Example 3: Read-Only Captured Variables (Not `FnOnce`)**
 ```rust
 fn main() {
     let s = String::from("hello");
-    let closure = || println!("s: {}", s); // 不可变借用 &s
-    closure(); // 输出：s: hello
-    closure(); // 输出：s: hello（可以多次调用）
+    let closure = || println!("s: {}", s); // Immutable borrow &s
+    closure(); // Output: s: hello
+    closure(); // Output: s: hello (can be called multiple times)
 }
 ```
 
-- **分析**：
-   - **捕获**：不可变借用`&s`。
-   - **行为**：只读取`s`，不消耗。
-   - **判断**：闭包实现`Fn`（多次调用），不是纯`FnOnce`。
-- **Trait**：`Fn`（也实现`FnOnce`，但非纯`FnOnce`）。
+- **Analysis**:
+   - **Capture**: Immutable borrow `&s`.
+   - **Behavior**: Only reads `s`, doesn't consume.
+   - **Determination**: Closure implements `Fn` (multiple calls), not pure `FnOnce`.
+- **Trait**: `Fn` (also implements `FnOnce`, but not pure `FnOnce`).
 
-### **3.4 示例4：修改捕获变量（非`FnOnce`）**
+### **3.4 Example 4: Modifying Captured Variables (Not `FnOnce`)**
 ```rust
 fn main() {
     let mut s = String::from("hello");
     let mut closure = || {
-        s.push_str(" world"); // 修改 s
+        s.push_str(" world"); // Modify s
         println!("s: {}", s);
     };
-    closure(); // 输出：s: hello world
-    closure(); // 输出：s: hello world world（可以多次调用）
+    closure(); // Output: s: hello world
+    closure(); // Output: s: hello world world (can be called multiple times)
 }
 ```
 
-- **分析**：
-   - **捕获**：可变借用`&mut s`。
-   - **行为**：修改`s`，但不消耗。
-   - **判断**：闭包实现`FnMut`（多次调用），不是纯`FnOnce`。
-- **Trait**：`FnMut`（也实现`FnOnce`，但非纯`FnOnce`）。
+- **Analysis**:
+   - **Capture**: Mutable borrow `&mut s`.
+   - **Behavior**: Modifies `s`, but doesn't consume.
+   - **Determination**: Closure implements `FnMut` (multiple calls), not pure `FnOnce`.
+- **Trait**: `FnMut` (also implements `FnOnce`, but not pure `FnOnce`).
 
-### **3.5 示例5：传参 + 消耗捕获变量（纯`FnOnce`）**
+### **3.5 Example 5: Parameter Passing + Consuming Captured Variables (Pure `FnOnce`)**
 ```rust
 fn main() {
     let s = String::from("hello");
     let closure = move |x: &str| {
-        println!("参数 x: {}", x);
-        drop(s); // 消耗 s
+        println!("Parameter x: {}", x);
+        drop(s); // Consume s
     };
-    closure("world"); // 输出：参数 x: world
-    // closure("again"); // 错误：s 已消耗
+    closure("world"); // Output: Parameter x: world
+    // closure("again"); // Error: s consumed
 }
 ```
 
-- **分析**：
-   - **捕获**：`move`捕获`s`。
-   - **传参**：接受`x: &str`。
-   - **行为**：消耗`s`，参数`x`不影响`FnOnce`。
-   - **判断**：闭包是纯`FnOnce`，因为`s`被消耗。
-- **Trait**：仅`FnOnce`。
+- **Analysis**:
+   - **Capture**: `move` captures `s`.
+   - **Parameter passing**: Accepts `x: &str`.
+   - **Behavior**: Consumes `s`, parameter `x` doesn't affect `FnOnce`.
+   - **Determination**: Closure is pure `FnOnce`, because `s` is consumed.
+- **Trait**: Only `FnOnce`.
 
-### **3.6 示例6：仅传参，消耗参数（非纯`FnOnce`）**
+### **3.6 Example 6: Parameters Only, Consuming Parameters (Not Pure `FnOnce`)**
 ```rust
 fn main() {
     let closure = |s: String| {
-        println!("参数 s: {}", s);
-        drop(s); // 消耗参数 s
+        println!("Parameter s: {}", s);
+        drop(s); // Consume parameter s
     };
-    closure(String::from("hello")); // 输出：参数 s: hello
-    closure(String::from("world")); // 输出：参数 s: world（可以多次调用）
+    closure(String::from("hello")); // Output: Parameter s: hello
+    closure(String::from("world")); // Output: Parameter s: world (can be called multiple times)
 }
 ```
 
-- **分析**：
-   - **捕获**：无捕获。
-   - **传参**：接受并消耗`String`参数。
-   - **行为**：消耗参数`s`，但闭包本身不被消耗，可再次调用（提供新参数）。
-   - **判断**：闭包实现`Fn`（每次调用需要新参数），不是纯`FnOnce`。
-- **Trait**：`Fn`（也实现`FnOnce`，但非纯`FnOnce`）。
+- **Analysis**:
+   - **Capture**: No capture.
+   - **Parameter passing**: Accepts and consumes `String` parameter.
+   - **Behavior**: Consumes parameter `s`, but closure itself isn't consumed, can be called again (with new parameter).
+   - **Determination**: Closure implements `Fn` (can be called multiple times with new parameters), not pure `FnOnce`.
+- **Trait**: `Fn` (also implements `FnOnce`, but not pure `FnOnce`).
 
-### **3.7 示例7：闭包自身被消耗（纯`FnOnce`）**
+### **3.7 Example 7: Closure Itself Consumed (Pure `FnOnce`)**
 ```rust
 fn execute_once<F: FnOnce()>(f: F) {
     f();
@@ -1401,251 +1401,251 @@ fn execute_once<F: FnOnce()>(f: F) {
 fn main() {
     let s = String::from("hello");
     let closure = move || println!("s: {}", s);
-    execute_once(closure); // 输出：s: hello
-    // closure(); // 错误：closure 已移动到 execute_once
+    execute_once(closure); // Output: s: hello
+    // closure(); // Error: closure moved to execute_once
 }
 ```
 
-- **分析**：
-   - **捕获**：`move`捕获`s`。
-   - **行为**：闭包被移动到`execute_once`，无法再次使用。
-   - **判断**：闭包是纯`FnOnce`，因为它被消耗（尽管`s`未被`drop`）。
-- **Trait**：仅`FnOnce`（受`execute_once`约束）。
+- **Analysis**:
+   - **Capture**: `move` captures `s`.
+   - **Behavior**: Closure is moved to `execute_once`, can't be reused.
+   - **Determination**: Closure is pure `FnOnce`, because it's consumed (though `s` isn't `drop`ped).
+- **Trait**: Only `FnOnce` (constrained by `execute_once`).
 
 ---
 
-## **4. 判断FnOnce的步骤**
+## **4. Steps to Determine FnOnce**
 
-1. **检查捕获变量**：
-   - 是否使用`move`捕获非`Copy`类型变量？
-   - 捕获变量是否被消耗（`drop`、移动到其他所有者）？
+1. **Check captured variables**:
+   - Does it use `move` to capture non-`Copy` type variables?
+   - Are captured variables consumed (`drop`ped, moved to other owner)?
 
-2. **分析闭包体**：
-   - 闭包是否只读（`&T`）或修改（`&mut T`）捕获变量？如果是，可能是`Fn`或`FnMut`。
-   - 闭包是否执行了消耗操作（如`drop`、返回变量）？如果是，则为`FnOnce`。
+2. **Analyze closure body**:
+   - Does closure only read (`&T`) or modify (`&mut T`) captured variables? If yes, might be `Fn` or `FnMut`.
+   - Does closure perform consuming operations (like `drop`, return variable)? If yes, it's `FnOnce`.
 
-3. **查看传参**：
-   - 传参是否被消耗？如果仅消耗参数，闭包可能仍为`Fn`（可多次调用）。
-   - 传参不直接导致`FnOnce`，除非结合捕获变量的消耗。
+3. **Look at parameter passing**:
+   - Are parameters consumed? If only parameters are consumed, closure might still be `Fn` (can be called multiple times).
+   - Parameter passing doesn't directly lead to `FnOnce`, unless combined with captured variable consumption.
 
-4. **检查调用上下文**：
-   - 闭包是否被传递给只接受`FnOnce`的函数（如`thread::spawn`、`execute_once`）？
-   - 闭包是否被移动到无法再次访问的上下文？
+4. **Check call context**:
+   - Is closure passed to functions that only accept `FnOnce` (like `thread::spawn`, `execute_once`)?
+   - Is closure moved to context where it can't be accessed again?
 
-5. **尝试编译器验证**：
-   - 尝试多次调用闭包（`closure(); closure();`），如果编译器报错（“value moved”），则为纯`FnOnce`。
-   - 使用`execute_once`函数测试：
+5. **Try compiler verification**:
+   - Try calling closure multiple times (`closure(); closure();`), if compiler errors ("value moved"), it's pure `FnOnce`.
+   - Test with `execute_once` function:
      ```rust
      fn execute_once<F: FnOnce()>(f: F) { f(); }
-     execute_once(closure); // 如果编译通过，闭包至少是 FnOnce
+     execute_once(closure); // If compiles, closure is at least FnOnce
      ```
 
 ---
 
-## **5. 注意事项**
+## **5. Notes**
 
-- **所有闭包都实现`FnOnce`**：
-   - 即使闭包是`Fn`或`FnMut`，它也能作为`FnOnce`调用一次。
-   - 纯`FnOnce`是指只实现`FnOnce`，不实现`Fn`或`FnMut`。
+- **All closures implement `FnOnce`**:
+   - Even `Fn` or `FnMut` closures can be called as `FnOnce` once.
+   - Pure `FnOnce` means only implements `FnOnce`, doesn't implement `Fn` or `FnMut`.
 
-- **Copy类型的影响**：
-   - `Copy`类型（如`i32`）捕获后复制，不会导致纯`FnOnce`，因为副本不影响原始变量。
-   - 示例：`move || y += 1`（`y: i32`）是`FnMut`，不是纯`FnOnce`。
+- **Impact of Copy types**:
+   - `Copy` types (like `i32`) are copied when captured, won't cause pure `FnOnce`, because copies don't affect original variables.
+   - Example: `move || y += 1` (`y: i32`) is `FnMut`, not pure `FnOnce`.
 
-- **编译器推导**：
-   - Rust编译器自动根据闭包体推导trait，无需显式指定。
-   - 如果闭包被多次调用，编译器会报错提示是否为`FnOnce`。
+- **Compiler derivation**:
+   - Rust compiler automatically derives traits based on closure body, no need to specify explicitly.
+   - If closure is called multiple times, compiler will error suggesting it might be `FnOnce`.
 
-- **性能**：
-   - 纯`FnOnce`闭包通常涉及非`Copy`类型移动，注意堆内存开销。
-   - 非纯`FnOnce`（`Fn`/`FnMut`）可复用，性能更优。
-
----
-
-## **6. 总结**
-
-判断一个闭包是否为`FnOnce`（纯`FnOnce`）的关键是：
-- **消耗捕获变量**：`move`捕获非`Copy`类型并消耗（如`drop`、移动）。
-- **闭包自身消耗**：闭包被移动到只调用一次的上下文。
-- **非`FnOnce`情况**：只读（`Fn`）或修改（`FnMut`）捕获变量，或仅消耗传参。
-
-通过分析闭包的捕获、传参和调用上下文，可以准确判断其trait。使用编译器测试（多次调用或`FnOnce`约束）是快速验证的方法。
-
-
+- **Performance**:
+   - Pure `FnOnce` closures usually involve moving non-`Copy` types, watch for heap memory overhead.
+   - Non-pure `FnOnce` (`Fn`/`FnMut`) can be reused, better performance.
 
 ---
 
-### **补充说明：与传参和捕获的关系**
+## **6. Summary**
 
-- **传参**：
-   - 传参的消耗（如`drop(s: String)`）不直接导致纯`FnOnce`，因为闭包可通过新参数再次调用。
-   - 示例6展示了仅消耗参数的闭包是`Fn`，因为无捕获变量限制。
-- **捕获**：
-   - 捕获非`Copy`类型并消耗（`drop`、移动）是纯`FnOnce`的典型原因。
-   - 示例1、2、5、7展示了捕获变量的消耗导致`FnOnce`。
-- **组合**：
-   - 传参和捕获结合时，检查捕获变量是否被消耗。例如示例5中，参数`x`不影响`FnOnce`，但`drop(s)`导致纯`FnOnce`。
+The key to determining whether a closure is `FnOnce` (pure `FnOnce`) is:
+- **Consuming captured variables**: `move` captures non-`Copy` types and consumes them (like `drop`, move).
+- **Closure itself consumed**: Closure is moved to context that only calls once.
+- **Non-`FnOnce` cases**: Only read (`Fn`) or modify (`FnMut`) captured variables, or only consume parameters.
 
-### **实用建议**
-- **快速判断**：在代码中尝试`closure(); closure();`，如果编译器报错“value moved”或“use of moved value”，闭包是纯`FnOnce`。
-- **API约束**：如果闭包传递给只接受`FnOnce`的函数（如`thread::spawn`），它必须至少是`FnOnce`，检查是否消耗变量以确认是否为纯`FnOnce`。
-- **调试**：使用`execute_once`函数或类似工具测试闭包的trait。
+By analyzing closure capture, parameter passing, and call context, you can accurately determine its trait. Using compiler tests (multiple calls or `FnOnce` constraints) is a quick verification method.
 
-如果你需要更复杂的`FnOnce`判断示例（例如异步闭包、特定库的使用），或想更新之前的速查表/Mermaid图以突出`FnOnce`判断规则，请告诉我！
+
 
 ---
 
-在Rust中，`drop`函数（`std::mem::drop`）是一个标准库提供的函数，用于**显式销毁一个值**，即让值立即超出作用域并调用其析构函数（`Drop` trait 的 `drop` 方法）。它在闭包中常用于触发`FnOnce`行为，因为它会消耗捕获的变量（如非`Copy`类型）。以下是对`drop`函数实现、原理及其在闭包中作用的详细说明，全部使用中文，并通过示例阐明其与`FnOnce`的关系。
+### **Supplementary Notes: Relationship with Parameter Passing and Capture**
 
-文档将嵌入在`xaiArtifact`标签中，专注于`drop`的实现和用途。
+- **Parameter Passing**:
+   - Consuming parameters (like `drop(s: String)`) doesn't directly lead to pure `FnOnce`, because closure can be called again with new parameters.
+   - Example 6 shows a closure that only consumes parameters is `Fn`, because no captured variables limit it.
+- **Capture**:
+   - Consuming captured non-`Copy` types (`drop`, move) is the typical reason for pure `FnOnce`.
+   - Examples 1, 2, 5, 7 show how consuming captured variables leads to `FnOnce`.
+- **Combination**:
+   - When parameter passing and capture are combined, check if captured variables are consumed. Like in Example 5, parameter `x` doesn't affect `FnOnce`, but `drop(s)` leads to pure `FnOnce`.
 
+### **Practical Suggestions**
+- **Quick determination**: In code try `closure(); closure();`, if compiler errors "value moved" or "use of moved value", the closure is pure `FnOnce`.
+- **API constraints**: If closure is passed to functions that only accept `FnOnce` (like `thread::spawn`), it must be at least `FnOnce`, check if variables are consumed to confirm if it's pure `FnOnce`.
+- **Debugging**: Use `execute_once` function or similar tools to test closure traits.
 
-
-# Rust drop函数实现与用途
-
-`std::mem::drop` 是 Rust 标准库中的一个简单但重要的函数，用于显式销毁值，常在闭包中触发`FnOnce`行为。本指南详细分析 `drop` 的实现、原理、与闭包的关系，以及在传参和捕获中的应用。
+If you need more complex `FnOnce` determination examples (e.g., async closures, specific library usage), or want to update the previous cheat sheet/Mermaid diagram to highlight `FnOnce` determination rules, please let me know!
 
 ---
 
-## **1. drop 函数的定义**
+In Rust, the `drop` function (`std::mem::drop`) is a standard library function for **explicitly destroying a value**, i.e., making the value go out of scope immediately and calling its destructor (`Drop` trait's `drop` method). It's commonly used in closures to trigger `FnOnce` behavior because it consumes captured variables (like non-`Copy` types). Below is a detailed explanation of `drop` function implementation, principles, and its role in closures, all in Chinese, with examples clarifying its relationship with `FnOnce`.
 
-- **签名**：
+The document will be embedded in `xaiArtifact` tags, focusing on `drop` implementation and uses.
+
+
+
+# Rust drop Function Implementation and Uses
+
+`std::mem::drop` is a simple but important function in Rust standard library for explicitly destroying values, often used in closures to trigger `FnOnce` behavior. This guide analyzes `drop` implementation, principles, relationship with closures, and applications in parameter passing and capture.
+
+---
+
+## **1. drop Function Definition**
+
+- **Signature**:
   ```rust
   pub fn drop<T>(_x: T) { }
   ```
-   - **参数**：`_x: T`，泛型参数，接受任意类型 `T` 的值。
-   - **返回值**：无（空 `{}`）。
-   - **作用**：将 `_x` 移入函数并让其超出作用域，从而触发销毁。
+   - **Parameter**: `_x: T`, generic parameter, accepts any type `T` value.
+   - **Return**: None (empty `{}`).
+   - **Purpose**: Moves `_x` into function and lets it go out of scope, triggering destruction.
 
-- **模块**：位于 `std::mem` 模块，需通过 `use std::mem::drop;` 导入（但通常无需显式导入，因为它在标准库预导入中）。
+- **Module**: Located in `std::mem` module, needs `use std::mem::drop;` import (but usually pre-imported in standard library).
 
-- **关键点**：
-   - `drop` 是一个空函数，本身不执行任何逻辑。
-   - 它的作用是通过**所有权移动**让值 `_x` 在函数体内超出作用域，触发值的析构逻辑（如果实现了 `Drop` trait）。
+- **Key Points**:
+   - `drop` is an empty function, doesn't perform any logic itself.
+   - Its purpose is through **ownership move** to let value `_x` go out of scope in function body, triggering value's destruct logic (if `Drop` trait is implemented).
 
 ---
 
-## **2. drop 的实现原理**
+## **2. drop Implementation Principle**
 
-### **2.1 源码分析**
-`std::mem::drop` 的实现非常简单，Rust 标准库（2025 年版本）的代码如下：
+### **2.1 Source Code Analysis**
+`std::mem::drop` implementation is very simple, Rust standard library (2025 version) code:
 
 ```rust
 pub fn drop<T>(_x: T) { }
 ```
 
-- **为什么这么简单？**
-   - Rust 的所有权系统规定，当值移入函数并超出作用域时，会自动调用其析构函数（如果实现了 `Drop` trait）或释放内存（对于未实现 `Drop` 的类型）。
-   - `drop` 利用这一机制，通过接受 `_x: T`（移动所有权）并立即让 `_x` 超出作用域，确保值被销毁。
-   - 下划线 `_x` 表示参数未在函数体内使用，仅用于移动。
+- **Why so simple?**
+   - Rust's ownership system states when value is moved into function and goes out of scope, it automatically calls destructor (if `Drop` trait implemented) or releases memory (for types without `Drop`).
+   - `drop` uses this mechanism, by accepting `_x: T` (moving ownership) and immediately letting `_x` go out of scope, ensuring value is destroyed.
+   - Underscore `_x` indicates parameter isn't used in function body, only for moving.
 
-### **2.2 Drop trait 配合**
-- **Drop trait**：
+### **2.2 Cooperation with Drop Trait**
+- **Drop trait**:
   ```rust
   pub trait Drop {
       fn drop(&mut self);
   }
   ```
-   - 实现 `Drop` 的类型（如 `String`、`Vec`）在销毁时会执行自定义清理逻辑（例如释放堆内存）。
-   - 未实现 `Drop` 的类型（如 `i32`）直接释放栈内存。
+   - Types implementing `Drop` (like `String`, `Vec`) execute custom cleanup logic when destroyed (e.g., releasing heap memory).
+   - Types without `Drop` directly release stack memory.
 
-- **drop 函数的作用**：
-   - 调用 `drop(x)` 等价于让 `x` 超出作用域，触发 `Drop::drop`（如果存在）或内存释放。
-   - 例如，`String` 的 `Drop` 实现会释放其堆内存。
+- **drop function's role**:
+   - Calling `drop(x)` equals letting `x` go out of scope, triggers `Drop::drop` (if exists) or memory release.
+   - E.g., `String`'s `Drop` implementation releases its heap memory.
 
-### **2.3 内存管理**
-- 对于**非`Copy`类型**（如 `String`），`drop` 移动所有权，销毁堆内存。
-- 对于**`Copy`类型**（如 `i32`），`drop` 复制值，销毁副本，原始值不受影响。
-- **安全性**：Rust 确保 `drop` 不会导致双重释放或未定义行为。
+### **2.3 Memory Management**
+- For **non-`Copy` types** (like `String`), `drop` moves ownership, destroys heap memory.
+- For **`Copy` types** (like `i32`), `drop` copies value, destroys copy, original unaffected.
+- **Safety**: Rust ensures `drop` won't cause double-free or undefined behavior.
 
 ---
 
-## **3. drop 在闭包中的作用（与 FnOnce 的关系）**
+## **3. drop's Role in Closures (Relationship with FnOnce)**
 
-在闭包中，`drop` 常用于消耗捕获的非`Copy`类型变量，导致闭包成为纯`FnOnce`（只能调用一次）。以下是具体分析。
+In closures, `drop` is often used to consume captured non-`Copy` type variables, making closures become pure `FnOnce` (can only be called once). Below is detailed analysis.
 
-### **3.1 为什么导致 FnOnce？**
-- `FnOnce` 表示闭包调用会消耗自身或捕获的变量。
-- 当闭包通过 `move` 捕获非`Copy`类型（如 `String`）并调用 `drop`，捕获变量被销毁，闭包无法再次使用，因为变量已不可用。
-- 这使得闭包只实现 `FnOnce`，不实现 `Fn` 或 `FnMut`。
+### **3.1 Why Leads to FnOnce?**
+- `FnOnce` means closure call consumes itself or captured variables.
+- When closure captures non-`Copy` types (like `String`) through `move` and calls `drop`, captured variables are destroyed, closure can't be reused, because variables are unavailable.
+- This makes closure only implement `FnOnce`, not `Fn` or `FnMut`.
 
-### **3.2 示例：drop 触发 FnOnce**
+### **3.2 Example: drop Triggers FnOnce**
 ```rust
 fn main() {
-    let s = String::from("hello"); // 非 Copy 类型
+    let s = String::from("hello"); // Non-Copy type
     let closure = move || {
-        drop(s); // 消耗 s
-        println!("s 已销毁");
+        drop(s); // Consume s
+        println!("s destroyed");
     };
-    closure(); // 输出：s 已销毁
-    // closure(); // 错误：s 已消耗
+    closure(); // Output: s destroyed
+    // closure(); // Error: s consumed
 }
 ```
 
-- **分析**：
-   - **捕获**：`move` 捕获 `s` 的所有权。
-   - **drop(s)**：销毁 `s`，释放其堆内存。
-   - **结果**：闭包是纯 `FnOnce`，因为 `s` 被消耗，只能调用一次。
-- **Trait**：仅 `FnOnce`。
+- **Analysis**:
+   - **Capture**: `move` captures ownership of `s`.
+   - **drop(s)**: Destroys `s`, releases its heap memory.
+   - **Result**: Closure is pure `FnOnce`, because `s` is consumed, can only be called once.
+- **Trait**: Only `FnOnce`.
 
-### **3.3 示例：drop 与传参**
+### **3.3 Example: drop and Parameter Passing**
 ```rust
 fn main() {
     let closure = |s: String| {
-        drop(s); // 消耗参数 s
-        println!("参数 s 已销毁");
+        drop(s); // Consume parameter s
+        println!("Parameter s destroyed");
     };
-    closure(String::from("hello")); // 输出：参数 s 已销毁
-    closure(String::from("world")); // 输出：参数 s 已销毁（可多次调用）
+    closure(String::from("hello")); // Output: Parameter s destroyed
+    closure(String::from("world")); // Output: Parameter s destroyed (can be called multiple times)
 }
 ```
 
-- **分析**：
-   - **传参**：接受并消耗 `String` 参数。
-   - **drop(s)**：销毁参数 `s`，但闭包不捕获变量。
-   - **结果**：闭包是 `Fn`，因为每次调用可提供新参数，不受 `drop` 限制。
-- **Trait**：`Fn`（也实现 `FnOnce`，但非纯 `FnOnce`）。
+- **Analysis**:
+   - **Parameter passing**: Accepts and consumes `String` parameter.
+   - **drop(s)**: Destroys parameter `s`, but closure doesn't capture variables.
+   - **Result**: Closure is `Fn`, because each call can provide new parameter, not limited by `drop`.
+- **Trait**: `Fn` (also implements `FnOnce`, but not pure `FnOnce`).
 
-### **3.4 示例：drop 与 Copy 类型**
+### **3.4 Example: drop and Copy Types**
 ```rust
 fn main() {
-    let x = 10; // i32，Copy 类型
+    let x = 10; // i32, Copy type
     let closure = move || {
-        drop(x); // 销毁 x 的副本
-        println!("x 已销毁");
+        drop(x); // Destroy copy of x
+        println!("x destroyed");
     };
-    closure(); // 输出：x 已销毁
-    closure(); // 输出：x 已销毁（可多次调用）
-    println!("外部 x: {}", x); // 输出：外部 x: 10
+    closure(); // Output: x destroyed
+    closure(); // Output: x destroyed (can be called multiple times)
+    println!("External x: {}", x); // Output: External x: 10
 }
 ```
 
-- **分析**：
-   - **捕获**：`move` 捕获 `x` 的副本（因 `i32` 是 `Copy`）。
-   - **drop(x)**：销毁副本，原始 `x` 不受影响。
-   - **结果**：闭包是 `Fn`，因为副本不限制多次调用。
-- **Trait**：`Fn`（也实现 `FnOnce`，但非纯 `FnOnce`）。
+- **Analysis**:
+   - **Capture**: `move` captures copy of `x` (because `i32` is `Copy`).
+   - **drop(x)**: Destroys copy, original `x` unaffected.
+   - **Result**: Closure is `Fn`, because copies don't limit multiple calls.
+- **Trait**: `Fn` (also implements `FnOnce`, but not pure `FnOnce`).
 
 ---
 
-## **4. drop 的适用场景**
+## **4. Applicable Scenarios for drop**
 
-`drop` 在以下场景中非常有用，尤其在闭包中：
+`drop` is very useful in these scenarios, especially in closures:
 
-1. **显式资源清理**：
-   - 提前销毁值，避免等到作用域结束。
-   - 示例：释放大内存对象。
+1. **Explicit Resource Cleanup**:
+   - Destroy values early, avoid waiting until scope ends.
+   - Example: Release large memory objects.
      ```rust
      fn main() {
          let large_data = vec![0; 1_000_000];
-         drop(large_data); // 立即释放内存
-         println!("内存已释放");
+         drop(large_data); // Release memory immediately
+         println!("Memory released");
      }
      ```
 
-2. **触发 FnOnce 行为**：
-   - 在闭包中消耗非`Copy`类型变量，使闭包成为纯 `FnOnce`。
-   - 示例：线程任务。
+2. **Trigger FnOnce Behavior**:
+   - Consume non-`Copy` type variables in closures, making closures pure `FnOnce`.
+   - Example: Thread task.
      ```rust
      use std::thread;
 
@@ -1656,119 +1656,119 @@ fn main() {
      }
      ```
 
-3. **所有权管理**：
-   - 强制移动值到 `drop`，避免其他代码误用。
-   - 示例：确保数据不被重复使用。
+3. **Ownership Management**:
+   - Force moving values to `drop`, avoid misuse by other code.
+   - Example: Ensure data isn't reused.
      ```rust
      fn main() {
          let s = String::from("secret");
          let closure = move || drop(s);
-         closure(); // s 被销毁
-         // 无法再次访问 s
+         closure(); // s destroyed
+         // Can't access s again
      }
      ```
 
-4. **测试与调试**：
-   - 验证析构逻辑或所有权转移。
-   - 示例：检查 `Drop` 实现。
+4. **Testing and Debugging**:
+   - Verify destruct logic or ownership transfer.
+   - Example: Check `Drop` implementation.
      ```rust
      struct MyType(String);
      impl Drop for MyType {
          fn drop(&mut self) {
-             println!("销毁: {}", self.0);
+             println!("Destroyed: {}", self.0);
          }
      }
      fn main() {
          let x = MyType(String::from("test"));
-         drop(x); // 输出：销毁: test
+         drop(x); // Output: Destroyed: test
      }
      ```
 
 ---
 
-## **5. drop 的实现细节与注意事项**
+## **5. drop Implementation Details and Notes**
 
-### **5.1 实现细节**
-- **空函数**：`drop` 不执行任何显式逻辑，仅依赖 Rust 的所有权和作用域机制。
-- **Drop trait**：实际清理由类型的 `Drop::drop` 方法处理（例如 `String` 释放堆内存）。
-- **性能**：`drop` 本身无开销，消耗时间取决于类型的析构逻辑。
+### **5.1 Implementation Details**
+- **Empty function**: `drop` doesn't perform any explicit logic, only relies on Rust's ownership and scope mechanism.
+- **Drop trait**: Actual cleanup handled by type's `Drop::drop` method (e.g., `String` releases heap memory).
+- **Performance**: `drop` itself has no overhead, time consumption depends on type's destruct logic.
 
-### **5.2 注意事项**
-- **非`Copy`类型**：
-   - `drop` 消耗非`Copy`类型（如 `String`），导致变量不可用。
-   - 在闭包中，`drop` 触发 `FnOnce`。
-- **Copy 类型**：
-   - `drop` 仅销毁副本，原始值可用，不导致纯 `FnOnce`。
-- **替代方式**：
-   - 不显式调用 `drop`，让值自然超出作用域也能销毁。
-   - 示例：`let s = String::from("hello");` 在作用域结束自动销毁。
-- **安全性**：
-   - Rust 确保 `drop` 不会导致双重释放（double-free）。
-   - 手动调用 `Drop::drop`（如 `s.drop()`）是错误的，`std::mem::drop` 是正确方式。
-
----
-
-## **6. 总结**
-
-- **`drop` 的实现**：
-   - 一个空函数 `pub fn drop<T>(_x: T) { }`，通过移动所有权让值超出作用域，触发析构。
-   - 依赖 `Drop` trait 或内存释放机制。
-- **在闭包中的作用**：
-   - 消耗捕获的非`Copy`类型变量，使闭包成为纯 `FnOnce`。
-   - 配合 `move`，实现资源清理或单次执行。
-- **用途**：
-   - 显式清理资源、触发 `FnOnce`、管理所有权、测试析构。
-- **判断 `FnOnce`**：
-   - 如果闭包调用 `drop` 消耗捕获的非`Copy`变量，则为纯 `FnOnce`。
-   - 仅消耗传参或 `Copy` 类型不导致纯 `FnOnce`。
-
-通过理解 `drop` 的简单实现和强大作用，你可以更好地设计闭包和资源管理逻辑。
-
-
+### **5.2 Notes**
+- **Non-`Copy` types**:
+   - `drop` consumes non-`Copy` types (like `String`), makes variables unavailable.
+   - In closures, `drop` triggers `FnOnce`.
+- **`Copy` types**:
+   - `drop` only destroys copies, originals remain available, doesn't lead to pure `FnOnce`.
+- **Alternative**:
+   - Don't explicitly call `drop`, let values naturally go out of scope to be destroyed.
+   - Example: `let s = String::from("hello");` is automatically destroyed when scope ends.
+- **Safety**:
+   - Rust ensures `drop` won't cause double-free.
+   - Manually calling `Drop::drop` (like `s.drop()`) is wrong, `std::mem::drop` is the correct way.
 
 ---
 
-### **补充说明：与 `FnOnce` 和闭包的关系**
+## **6. Summary**
 
-- **为什么 `drop` 常用于 `FnOnce`？**
-   - `drop` 消耗非`Copy`类型变量（如 `String`），使捕获变量不可再次使用，导致闭包只能调用一次（纯 `FnOnce`）。
-   - 示例3.2 展示了 `drop(s)` 如何使闭包成为 `FnOnce`。
+- **`drop` implementation**:
+   - An empty function `pub fn drop<T>(_x: T) { }`, triggers destruct by moving ownership to let value go out of scope.
+   - Depends on `Drop` trait or memory release mechanism.
+- **Role in closures**:
+   - Consume captured non-`Copy` type variables, making closures pure `FnOnce`.
+   - Cooperate with `move` to implement resource cleanup or single execution.
+- **Uses**:
+   - Explicit resource cleanup, trigger `FnOnce`, manage ownership, test destruct.
+- **Determining `FnOnce`**:
+   - If closure calls `drop` to consume captured non-`Copy` variables, it's pure `FnOnce`.
+   - Only consuming parameters or `Copy` types doesn't lead to pure `FnOnce`.
 
-- **传参 vs. 捕获**：
-   - **传参**：`drop` 消耗参数（如示例3.3），但闭包可通过新参数再次调用，不一定是纯 `FnOnce`。
-   - **捕获**：`drop` 消耗捕获变量（如示例3.2），导致纯 `FnOnce`，因为闭包无法复用。
+By understanding `drop`'s simple implementation and powerful role, you can better design closures and resource management logic.
 
-- **实际应用**：
-   - 在闭包中，`drop` 常用于测试 `FnOnce` 行为、清理资源（如线程中释放数据）或确保单次执行。
-   - 示例：`let closure = move || drop(s);` 是典型的 `FnOnce` 测试用例。
 
-### **常见问题解答**
 
-1. **可以不使用 `drop` 直接销毁吗？**
-   - 可以，值超出作用域会自动销毁。例如：
+---
+
+### **Supplementary Notes: Relationship with `FnOnce` and Closures**
+
+- **Why is `drop` commonly used for `FnOnce`?**
+   - `drop` consumes non-`Copy` type variables (like `String`), making captured variables unusable again, causing closures to only be callable once (pure `FnOnce`).
+   - Example 3.2 demonstrates how `drop(s)` makes a closure `FnOnce`.
+
+- **Parameter Passing vs. Capture**:
+   - **Parameter Passing**: `drop` consumes parameters (like Example 3.3), but closures can be called again with new parameters, not necessarily pure `FnOnce`.
+   - **Capture**: `drop` consumes captured variables (like Example 3.2), leading to pure `FnOnce`, because closures can't be reused.
+
+- **Practical Applications**:
+   - In closures, `drop` is often used to test `FnOnce` behavior, clean up resources (like releasing data in threads), or ensure single execution.
+   - Example: `let closure = move || drop(s);` is a typical `FnOnce` test case.
+
+### **FAQ**
+
+1. **Can we destroy without using `drop`?**
+   - Yes, values are automatically destroyed when going out of scope. E.g.:
      ```rust
      fn main() {
          let s = String::from("hello");
-     } // s 自动销毁
+     } // s automatically destroyed
      ```
-   - 但 `drop` 提供显式控制，适合提前销毁或闭包场景。
+   - But `drop` provides explicit control, suitable for early destruction or closure scenarios.
 
-2. **为什么 `drop` 是空函数？**
-   - Rust 的所有权系统自动处理析构，`drop` 仅需移动值到函数作用域，超出时触发清理。
+2. **Why is `drop` an empty function?**
+   - Rust's ownership system automatically handles destruction, `drop` only needs to move value to function scope, triggers cleanup when exceeded.
 
-3. **如何验证 `drop` 的效果？**
-   - 为类型实现 `Drop` trait，添加打印语句：
+3. **How to verify `drop` effects?**
+   - Implement `Drop` trait for type, add print statements:
      ```rust
      struct MyType(String);
      impl Drop for MyType {
          fn drop(&mut self) {
-             println!("销毁: {}", self.0);
+             println!("Destroyed: {}", self.0);
          }
      }
      fn main() {
          let x = MyType(String::from("test"));
-         drop(x); // 输出：销毁: test
+         drop(x); // Output: Destroyed: test
      }
      ```
 
-如果你需要更深入的 `drop` 分析（例如与特定类型或异步闭包的交互）、源码对比，或想更新之前的速查表/Mermaid图以包含 `drop` 的作用，请告诉我！
+If you need deeper `drop` analysis (e.g., interaction with specific types or async closures), source code comparison, or want to update the previous cheat sheet/Mermaid diagram to include `drop`'s role, please let me know!

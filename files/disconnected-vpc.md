@@ -142,7 +142,7 @@ The following provides a detailed explanation of the specific configuration diff
 ---
 
 ### 1. **Template Parameter Differences**
-| 参数                          | Disconnected Cluster                          | Shared Network                              |
+| Parameter                          | Disconnected Cluster                          | Shared Network                              |
 |------------------------------|-----------------------------------------------|--------------------------------------------|
 | **VpcCidr**                  | Default 10.0.0.0/16, supports /16-/24.               | Same.                                     |
 | **AvailabilityZoneCount**     | 1-3 AZs, default 1.                             | Same.                                     |
@@ -160,7 +160,7 @@ The following provides a detailed explanation of the specific configuration diff
 ---
 
 ### 2. **Subnet Configuration Differences**
-| 配置                          | Disconnected Cluster                          | Shared Network                              |
+| Configuration                          | Disconnected Cluster                          | Shared Network                              |
 |------------------------------|-----------------------------------------------|--------------------------------------------|
 | **Subnet Count**                 | Fixed 1 public + 1 private subnet per AZ, max 3 AZs (6 subnets). | 1 public + 1 private (optional) per AZ, supports additional subnets, max 8 subnets. |
 | **CIDR Allocation**                 | VPC CIDR divided into 6 blocks (3 public + 3 private).              | VPC CIDR divided into 8 blocks, allows more subnet allocation.         |
@@ -176,7 +176,7 @@ The following provides a detailed explanation of the specific configuration diff
 ---
 
 ### 3. **Routing Configuration Differences**
-| 配置                          | Disconnected Cluster                          | Shared Network                              |
+| Configuration                          | Disconnected Cluster                          | Shared Network                              |
 |------------------------------|-----------------------------------------------|--------------------------------------------|
 | **Public Route Table**               | 1, contains 0.0.0.0/0 pointing to Internet Gateway.            | Same.                                     |
 | **Private Route Tables**               | 1 per AZ, no default route (0.0.0.0/0).           | 1 per AZ, contains 0.0.0.0/0 pointing to NAT gateway (if private subnet exists). |
@@ -190,7 +190,7 @@ The following provides a detailed explanation of the specific configuration diff
 ---
 
 ### 4. **VPC Endpoint Configuration Differences**
-| 配置                          | Disconnected Cluster                          | Shared Network                              |
+| Configuration                          | Disconnected Cluster                          | Shared Network                              |
 |------------------------------|-----------------------------------------------|--------------------------------------------|
 | **S3 Endpoint**                   | Gateway type, associated with public and private route tables.            | Same.                                     |
 | **Other Endpoints**                 | Interface types: EC2, EFS, ELB, STS, deployed in private subnets, controlled by security groups. | Not supported.                                   |
@@ -203,10 +203,10 @@ The following provides a detailed explanation of the specific configuration diff
 ---
 
 ### 5. **Conditional Logic Differences**
-| 条件                          | Disconnected Cluster                          | Shared Network                              |
+| Condition                          | Disconnected Cluster                          | Shared Network                              |
 |------------------------------|-----------------------------------------------|--------------------------------------------|
-| **DoAz2/DoAz3**              | 控制第2/3 AZ子网创建。                        | 相同。                                     |
-| **DoDhcp**                   | 控制DHCP选项集创建。                          | 相同。                                     |
+| **DoAz2/DoAz3**              | Controls creation of 2nd/3rd AZ subnets.                        | Same.                                     |
+| **DoDhcp**                   | Controls DHCP option set creation.                          | Same.                                     |
 | **DoOnlyPublicSubnets**      | Not supported.                                     | Controls whether to create only public subnets.                   |
 | **DoAz1PrivateSubnet**        | Not supported (private subnets fixed).                      | Controls AZ1 private subnet creation.                      |
 | **DoAz2/3PrivateSubnet**      | Not supported (private subnets fixed).                      | Controls AZ2/3 private subnet creation.                    |
@@ -221,7 +221,7 @@ The following provides a detailed explanation of the specific configuration diff
 ---
 
 ### 6. **Resource Sharing Configuration**
-| 配置                          | Disconnected Cluster                          | Shared Network                              |
+| Configuration                          | Disconnected Cluster                          | Shared Network                              |
 |------------------------------|-----------------------------------------------|--------------------------------------------|
 | **AWS RAM Sharing**              | Not supported.                                     | Supports (`ResourceShareSubnets`), shares public/private subnets to specified accounts. |
 | **Sharing Parameters**                 | None.                                         | `ResourceSharePrincipals` specifies target account ARN. |
@@ -233,7 +233,7 @@ The following provides a detailed explanation of the specific configuration diff
 ---
 
 ### 7. **Script Logic Differences**
-| 配置                          | Disconnected Cluster                          | Shared Network                              |
+| Configuration                          | Disconnected Cluster                          | Shared Network                              |
 |------------------------------|-----------------------------------------------|--------------------------------------------|
 | **Account Management**                 | Single account (`AWS_SHARED_CREDENTIALS_FILE`).    | Supports dual accounts (`ENABLE_SHARED_VPC`, switches to `.awscred_shared_account`). |
 | **Parameter Passing**                 | Hardcoded (e.g. `AvailabilityZoneCount`).          | Dynamically generates `vpc_params.json`, supports multiple parameters (e.g. `OnlyPublicSubnets`, `AllowedAvailabilityZoneList`). |
@@ -248,14 +248,14 @@ The following provides a detailed explanation of the specific configuration diff
 ---
 
 ### 8. **Output Differences**
-| 输出                          | Disconnected Cluster                          | Shared Network                              |
+| Output                          | Disconnected Cluster                          | Shared Network                              |
 |------------------------------|-----------------------------------------------|--------------------------------------------|
-| **VpcId**                    | 相同。                                       | 相同。                                     |
-| **PublicSubnetIds**          | 公共子网ID列表。                             | 相同，支持额外子网。                       |
-| **PrivateSubnetIds**         | 私有子网ID列表。                             | 相同，可为空（仅公共子网）。               |
-| **PublicRouteTableId**       | 公共路由表ID。                               | 相同。                                     |
-| **PrivateRouteTableIds**     | 私有路由表ID（按AZ）。                       | 相同，可为空（无私有子网）。               |
-| **AvailabilityZones**        | AZ列表。                                     | 相同，支持指定AZ。                         |
+| **VpcId**                    | Same.                                       | Same.                                     |
+| **PublicSubnetIds**          | Public subnet ID list.                             | Same, supports additional subnets.                       |
+| **PrivateSubnetIds**         | Private subnet ID list.                             | Same, can be empty (public-only subnets).               |
+| **PublicRouteTableId**       | Public route table ID.                               | Same.                                     |
+| **PrivateRouteTableIds**     | Private route table IDs (by AZ).                       | Same, can be empty (no private subnets).               |
+| **AvailabilityZones**        | AZ list.                                     | Same, supports specified AZs.                         |
 | **SubnetsByAz1/2/3**         | Not supported.                                     | Subnet information organized by AZ (public + private).          |
 | **vpc_info.json**            | Not supported.                                     | Structured JSON containing VPC ID and subnet information by AZ.     |
 
@@ -368,11 +368,11 @@ In the "disconnected cluster" configuration, internet access is prevented throug
 
 ---
 
-### 4. **安全组限制**
-- **机制**：
-    - Interface类型VPC端点（EC2、EFS、ELB、STS）关联一个安全组（`EndpointSecurityGroup`），仅允许VPC内部的流量（`CidrIp: !Ref VpcCidr`）。
-- **实现**：
-    - 安全组配置：
+### 4. **Security Group Restrictions**
+- **Mechanism**:
+    - Interface type VPC endpoints (EC2, EFS, ELB, STS) associate with a security group (`EndpointSecurityGroup`), only allowing traffic within the VPC (`CidrIp: !Ref VpcCidr`).
+- **Implementation**:
+    - Security group configuration:
       ```yaml
       EndpointSecurityGroup:
         Type: AWS::EC2::SecurityGroup
@@ -383,18 +383,18 @@ In the "disconnected cluster" configuration, internet access is prevented throug
               CidrIp: !Ref VpcCidr
           VpcId: !Ref VPC
       ```
-    - 仅允许VPC CIDR（如`10.0.0.0/16`）内的入站流量，阻止外部访问。
-- **效果**：
-    - 即使VPC端点解析到公共DNS，外部流量无法访问，强化了隔离。
+    - Only allows inbound traffic from VPC CIDR (such as `10.0.0.0/16`), blocks external access.
+- **Effect**:
+    - Even if VPC endpoints resolve to public DNS, external traffic cannot access, reinforcing isolation.
 
 ---
 
-### 5. **DNS配置**
-- **机制**：
-    - VPC启用DNS支持（`EnableDnsSupport: true`）和主机名（`EnableDnsHostnames: true`），确保VPC端点的DNS名称在VPC内解析到私有IP。
-    - 可选的DHCP选项集（`DhcpOptions`）使用`AmazonProvidedDNS`，确保AWS服务的DNS请求路由到VPC端点。
-- **实现**：
-    - VPC配置：
+### 5. **DNS Configuration**
+- **Mechanism**:
+    - VPC enables DNS support (`EnableDnsSupport: true`) and hostnames (`EnableDnsHostnames: true`), ensuring VPC endpoint DNS names resolve to private IPs within the VPC.
+    - Optional DHCP option set (`DhcpOptions`) uses `AmazonProvidedDNS`, ensuring AWS service DNS requests route to VPC endpoints.
+- **Implementation**:
+    - VPC configuration:
       ```yaml
       VPC:
         Type: "AWS::EC2::VPC"
@@ -403,7 +403,7 @@ In the "disconnected cluster" configuration, internet access is prevented throug
           EnableDnsHostnames: "true"
           CidrBlock: !Ref VpcCidr
       ```
-    - DHCP选项（若启用）：
+    - DHCP options (if enabled):
       ```yaml
       DhcpOptions:
         Type: AWS::EC2::DHCPOptions
@@ -413,45 +413,45 @@ In the "disconnected cluster" configuration, internet access is prevented throug
           DomainNameServers:
             - AmazonProvidedDNS
       ```
-- **效果**：
-    - AWS服务（如`s3.us-east-1.amazonaws.com`）的DNS请求通过VPC端点解析到VPC内部IP，避免公网DNS解析。
+- **Effect**:
+    - AWS service (such as `s3.us-east-1.amazonaws.com`) DNS requests resolve to VPC internal IPs through VPC endpoints, avoiding public DNS resolution.
 
 ---
 
-### 6. **脚本逻辑支持隔离**
-- **机制**：
-    - 脚本不配置任何允许互联网访问的资源（如NAT网关或公共IP分配）。
-    - 输出（如`private_subnet_ids`）仅包含私有子网ID，确保集群部署在隔离环境中。
-- **实现**：
-    - 脚本仅保存VPC ID、子网ID、路由表ID和AZ信息到共享目录（如`${SHARED_DIR}/vpc_id`、`${SHARED_DIR}/private_subnet_ids`），无NAT相关配置。
-    - 例如：
+### 6. **Script Logic Supports Isolation**
+- **Mechanism**:
+    - Scripts do not configure any resources that allow internet access (such as NAT gateways or public IP allocation).
+    - Outputs (such as `private_subnet_ids`) only contain private subnet IDs, ensuring cluster deployment in isolated environments.
+- **Implementation**:
+    - Scripts only save VPC ID, subnet ID, route table ID, and AZ information to shared directories (such as `${SHARED_DIR}/vpc_id`, `${SHARED_DIR}/private_subnet_ids`), no NAT-related configuration.
+    - For example:
       ```bash
       PrivateSubnetIds="$(jq -c '[.Stacks[].Outputs[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue | split(",")[]]' "${SHARED_DIR}/vpc_stack_output" | sed "s/\"/'/g")"
       echo "$PrivateSubnetIds" > "${SHARED_DIR}/private_subnet_ids"
       ```
-- **效果**：
-    - 集群部署脚本（如OpenShift安装）使用私有子网，确保工作负载无法访问互联网。
+- **Effect**:
+    - Cluster deployment scripts (such as OpenShift installation) use private subnets, ensuring workloads cannot access the internet.
 
 ---
 
-### 7. **断连环境的整体设计**
-- **架构总结**：
-    - 私有子网无默认路由或NAT网关，阻止互联网流量。
-    - VPC端点提供对S3、EC2、EFS、ELB、STS的私有访问，替代公网需求。
-    - 安全组和DNS配置确保流量限于VPC内部。
-    - 公共子网仅用于必要组件（如负载均衡器），不影响私有子网隔离。
-- **典型场景**：
-    - OpenShift集群部署在私有子网，镜像存储在通过S3端点访问的私有存储桶，API调用通过EC2/STS端点完成，文件存储使用EFS端点。
-    - 所有操作在VPC内完成，无需互联网连接。
+### 7. **Disconnected Environment Overall Design**
+- **Architecture Summary**:
+    - Private subnets have no default routes or NAT gateways, blocking internet traffic.
+    - VPC endpoints provide private access to S3, EC2, EFS, ELB, STS, replacing public internet requirements.
+    - Security groups and DNS configuration ensure traffic is limited to VPC internal.
+    - Public subnets are only used for necessary components (such as load balancers), not affecting private subnet isolation.
+- **Typical Scenarios**:
+    - OpenShift cluster deployed in private subnets, image storage in private buckets accessed through S3 endpoints, API calls completed through EC2/STS endpoints, file storage using EFS endpoints.
+    - All operations completed within VPC, no internet connection required.
 
 ---
 
-### 总结
-“Disconnected cluster”通过以下方式实现无法访问互联网：
-1. 私有子网无NAT网关和默认路由（`0.0.0.0/0`），阻止外部流量。
-2. VPC端点（S3、EC2、EFS、ELB、STS）提供AWS服务的私有访问，绕过公网。
-3. 安全组限制VPC端点流量仅限VPC内部。
-4. DNS配置确保服务请求解析到VPC端点。
-5. 脚本和模板避免配置任何互联网访问资源。
+### Summary
+The "disconnected cluster" achieves no internet access through the following methods:
+1. Private subnets have no NAT gateway and default route (`0.0.0.0/0`), blocking external traffic.
+2. VPC endpoints (S3, EC2, EFS, ELB, STS) provide private access to AWS services, bypassing the public internet.
+3. Security groups restrict VPC endpoint traffic to VPC internal only.
+4. DNS configuration ensures service requests resolve to VPC endpoints.
+5. Scripts and templates avoid configuring any internet access resources.
 
-这种设计确保集群在“断连”环境中运行，适合高安全性场景（如政府、金融机构）。如需进一步澄清或分析特定组件（如VPC端点策略），请提供更多细节！
+This design ensures clusters operate in a "disconnected" environment, suitable for high-security scenarios (such as government, financial institutions). For further clarification or analysis of specific components (such as VPC endpoint policies), please provide more details!
