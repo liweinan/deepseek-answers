@@ -1,1 +1,59 @@
-.idea
+# Translation project management files
+CLEANUP_SUMMARY.md
+FINAL_SESSION_SUMMARY.md
+PROJECT_HANDOVER.md
+SESSION_SUMMARY.md
+TECHNICAL_SUMMARY.md
+
+# Translation utility scripts
+detect_language.py
+translate_batch.py
+translate_batch_v2.py
+translate_batch_v3.py
+translate_mixed_content.py
+
+# Project tracking files (keep these for local tracking)
+# translation_progress.json
+# translation_log.md
+# language_analysis_results.txt
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Log files
+*.log
