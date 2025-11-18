@@ -353,7 +353,7 @@ Kojima has been obsessed with movies since childhood and has tried to achieve mo
 ## **2. Continuous Technical Innovation and Cross-Domain Integration**
 
 ### **(1) Self-Developed Engines, Breaking Technical Limitations**
-- Developed the "FOX Engine" ("Metal Gear Solid V"), optimizing real-time rendering to make game graphics接近电影级别.
+- Developed the "FOX Engine" ("Metal Gear Solid V"), optimizing real-time rendering to make game graphics approach cinematic quality.
 - In "Death Stranding," used high-precision motion capture and facial capture technology to achieve unprecedented character expression realism.
 
 ### **(2) Embracing AI and Cloud Technology**
@@ -368,7 +368,7 @@ Kojima believes that creation is the process of **"absorbing memes, combining me
 - **Combine**: Merges elements from different fields, like the tactical stealth gameplay of "Metal Gear" originating from the movie "The Great Escape."
 - **Create**: Gives new meaning, like the "rope" in "Death Stranding" symbolizing connection, becoming the game's core theme.
 
-This methodology allows him to continuously produce culturally deep works, rather than pure technical堆砌.
+This methodology allows him to continuously produce culturally deep works, rather than pure technical accumulation.
 
 ---
 
@@ -376,7 +376,7 @@ This methodology allows him to continuously produce culturally deep works, rathe
 
 ### **(1) Personal Charisma and Industry Influence**
 - Known as "the Kubrick of the gaming world," he has extremely high prestige, with fans even actively offering loans and office space to support his independent studio.
-- Active on social media (like Twitter), interacting with players, movie fans, and industry celebrities (Guillermo del Toro), maintaining热度.
+- Active on social media (like Twitter), interacting with players, movie fans, and industry celebrities (Guillermo del Toro), maintaining popularity.
 
 ### **(2) Cross-Domain Cooperation**
 - Cooperated with A24 on the "Death Stranding" movie, achieving "game-film linkage."
