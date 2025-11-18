@@ -1,27 +1,27 @@
 # DesignPattern 
 
-以下是常见的DesignPattern及其对应的 Mermaid Graph表示，以及对这些DesignPattern的分Class和说明。由于DesignPattern较多，我将按照经典的 **GoF（Gang of Four）DesignPattern** 分Class（Create型、结构型、行为型），并为每种Pattern提供简要说明和 Mermaid Graph。限于篇幅，我会挑选几种代表性Pattern进行展示，并提供生成所有Pattern的指导。如果需要全部Pattern的详细Graph示，请进一步说明。
+Below are common DesignPatterns with their corresponding Mermaid Graph representations, along with classification and explanations of these DesignPatterns. Since there are many DesignPatterns, I will follow the classic **GoF (Gang of Four) DesignPattern** classification (Creational, Structural, Behavioral), and provide brief explanations and Mermaid Graphs for each pattern. Due to space limitations, I will select several representative patterns for demonstration and provide guidance for generating all patterns. If you need detailed graphs for all patterns, please specify.
 
 ---
 
-### DesignPattern分Class
-根据 GoF 的分Class，DesignPattern分为三Class：
-1. **Create型Pattern**（Creational Patterns）：ProcessObject的Create机制，OptimizationObjectCreate方式。
-    - 常见Pattern：单例Pattern、工厂MethodsPattern、Abstract工厂Pattern、建造者Pattern、原型Pattern。
-2. **结构型Pattern**（Structural Patterns）：ProcessClass或Object的组合，形成更大的结构。
-    - 常见Pattern：适配器Pattern、桥接Pattern、组合Pattern、装饰者Pattern、门面Pattern、享元Pattern、代理Pattern。
-3. **行为型Pattern**（Behavioral Patterns）：关注Object之间的通信和职责分配。
-    - 常见Pattern：观察者Pattern、策略Pattern、命令Pattern、Iteration器Pattern、模板MethodsPattern、中介者Pattern、备忘录Pattern、StatePattern、访问者Pattern、责任链Pattern、Interpret器Pattern。
+### DesignPattern Classification
+According to GoF classification, DesignPatterns are divided into three categories:
+1. **Creational Patterns**: Handle object creation mechanisms, optimizing object creation methods.
+    - Common Patterns: Singleton Pattern, Factory Method Pattern, Abstract Factory Pattern, Builder Pattern, Prototype Pattern.
+2. **Structural Patterns**: Handle composition of classes or objects to form larger structures.
+    - Common Patterns: Adapter Pattern, Bridge Pattern, Composite Pattern, Decorator Pattern, Facade Pattern, Flyweight Pattern, Proxy Pattern.
+3. **Behavioral Patterns**: Focus on communication between objects and responsibility assignment.
+    - Common Patterns: Observer Pattern, Strategy Pattern, Command Pattern, Iterator Pattern, Template Method Pattern, Mediator Pattern, Memento Pattern, State Pattern, Visitor Pattern, Chain of Responsibility Pattern, Interpreter Pattern.
 
 ---
 
-### 1. Create型Pattern
+### 1. Creational Patterns
 
-#### 单例Pattern（Singleton Pattern）
-**说明**：确保一个Class只有一个实例，并提供全局访问点。常用于资源管理（如数据Library连接池）。
-**适用场景**：Logging记录器、Configure管理器等需要单一实例的场景。
+#### Singleton Pattern (Singleton Pattern)
+**Description**: Ensures a class has only one instance and provides a global access point. Commonly used for resource management (such as database connection pools).
+**Applicable Scenarios**: Logging, configuration managers, and other scenarios requiring a single instance.
 
-**Mermaid Graph**：
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Singleton {
@@ -33,17 +33,17 @@ classDiagram
     note for Singleton "Only one instance exists"
 ```
 
-**Interpret**：
-- `Singleton` Class有一个私有静态实例 `instance` 和私有构造Function。
-- `getInstance()` Methods控制实例的Create和访问，确保全局唯一性。
+**Explanation**:
+- The `Singleton` class has a private static instance `instance` and a private constructor.
+- The `getInstance()` method controls the creation and access of the instance, ensuring global uniqueness.
 
 ---
 
-#### 工厂MethodsPattern（Factory Method Pattern）
-**说明**：Definition一个CreateObject的Interface，让子Class决定实例化哪个Class。解耦Object的Create和使用。
-**适用场景**：需要根据ConditionCreate不同Class型的Object，如 UI 组件工厂。
+#### Factory Method Pattern (Factory Method Pattern)
+**Description**: Defines an interface for creating objects, allowing subclasses to decide which class to instantiate. Decouples object creation from usage.
+**Applicable Scenarios**: When different types of objects need to be created based on conditions, such as UI component factories.
 
-**Mermaid Graph**：
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Creator {
@@ -65,19 +65,19 @@ classDiagram
     ConcreteCreator --> ConcreteProduct
 ```
 
-**Interpret**：
-- `Creator` Definition工厂MethodsInterface，`ConcreteCreator` ImplementationConcreteCreate逻辑。
-- `Product` 是产品Interface，`ConcreteProduct` 是Concrete产品。
+**Explanation**:
+- `Creator` defines the factory method interface, `ConcreteCreator` implements specific creation logic.
+- `Product` is the product interface, `ConcreteProduct` is the concrete product.
 
 ---
 
-### 2. 结构型Pattern
+### 2. Structural Patterns
 
-#### 适配器Pattern（Adapter Pattern）
-**说明**：将一个Class的Interface转换为客户端期望的另一个Interface，解决Interface不兼容问题。
-**适用场景**：整合遗留系统或第三方Library。
+#### Adapter Pattern (Adapter Pattern)
+**Description**: Converts the interface of one class into another interface that clients expect, solving interface incompatibility issues.
+**Applicable Scenarios**: Integrating legacy systems or third-party libraries.
 
-**Mermaid Graph**：
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Target {
@@ -95,28 +95,28 @@ classDiagram
     Adapter --> Adaptee
 ```
 
-**Interpret**：
+**Explanation**:
 - `Target`
 
-**Interpret**：
+**Explanation**:
 - `3Adaptee`
 
-**Interpret**：
+**Explanation**:
 - `4Adapter`
 
-**Interpret**：
+**Explanation**:
 - `5Adaptee`
 
-**Interpret**：
-- `6Target` Interface。
+**Explanation**:
+- `6Target` interface.
 
 ---
 
-#### 装饰者Pattern（Decorator Pattern）
-**说明**：动态地为Object添加职责，扩展功能而不修改原有代码。
-**适用场景**：需要Flexible扩展Object功能，如流Process或 UI 组件装饰。
+#### Decorator Pattern (Decorator Pattern)
+**Description**: Dynamically adds responsibilities to objects, extending functionality without modifying existing code.
+**Applicable Scenarios**: When flexible extension of object functionality is needed, such as stream processing or UI component decoration.
 
-**Mermaid Graph**：
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Component {
@@ -140,18 +140,18 @@ classDiagram
     Decorator --> Component
 ```
 
-**Interpret**：
-- `Component` Class有一个私有静态实例 `0ConcreteComponent` Class有一个私有静态实例 `1Decorator` Class有一个私有静态实例 `2Component` Class有一个私有静态实例 `3ConcreteDecorator` 添加新功能。
+**Explanation**:
+- `Component` class has a private static instance `0ConcreteComponent` class has a private static instance `1Decorator` class has a private static instance `2Component` class has a private static instance `3ConcreteDecorator` adds new functionality.
 
 ---
 
-### 3. 行为型Pattern
+### 3. Behavioral Patterns
 
-#### 观察者Pattern（Observer Pattern）
-**说明**：DefinitionObject间一对多的依赖关系，当一个ObjectState改变时，所有依赖Object自动Update。
-**适用场景**：Event驱动系统、发布-订阅模型。
+#### Observer Pattern (Observer Pattern)
+**Description**: Defines a one-to-many dependency relationship between objects, where all dependent objects are automatically updated when an object's state changes.
+**Applicable Scenarios**: Event-driven systems, publish-subscribe models.
 
-**Mermaid Graph**：
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Subject {
@@ -179,16 +179,16 @@ classDiagram
     ConcreteSubject --> ConcreteObserver
 ```
 
-**Interpret**：
-- `Subject` Class有一个私有静态实例 `7notify()` Class有一个私有静态实例 `8Observer` Class有一个私有静态实例 `9ConcreteObserver` ImplementationConcreteUpdate逻辑。
+**Explanation**:
+- `Subject` class has a private static instance `7notify()` class has a private static instance `8Observer` class has a private static instance `9ConcreteObserver` implements specific update logic.
 
 ---
 
-### DesignPattern分Class0
-**说明**：Definition一系列Algorithm，Encapsulation并使其可互换，客户端可动态SelectionAlgorithm。
-**适用场景**：需要根据上下文切换行为，如SortAlgorithmSelection。
+### DesignPattern Classification0
+**Description**: Defines a series of algorithms, encapsulates them and makes them interchangeable, allowing clients to dynamically select algorithms.
+**Applicable Scenarios**: When behavior needs to be switched based on context, such as sorting algorithm selection.
 
-**Mermaid Graph**：
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Context {
@@ -211,21 +211,21 @@ classDiagram
     Context --> Strategy
 ```
 
-**Interpret**：
-- `Context` Class有一个私有静态实例 `2Strategy` 和私有构造Function。
-- `4Strategy` 和私有构造Function。
-- `5ConcreteStrategyA/B` ImplementationConcreteAlgorithm。
+**Explanation**:
+- `Context` class has a private static instance `2Strategy` and private constructor.
+- `4Strategy` and private constructor.
+- `5ConcreteStrategyA/B` implement concrete algorithms.
 
 ---
 
-### DesignPattern分Class1
-由于 GoF DesignPattern有 **结构型Pattern**8，逐一生成 Mermaid Graph和说明会非常冗长。以下是生成其余Pattern的建议：
-1. **结构型Pattern**9：可以使用 Mermaid 支持的编辑器（如 Mermaid Live Editor）或 IDE 插件直接生成ClassGraph。
-2. **行为型Pattern**0：
-    - **行为型Pattern**1：关注ObjectCreate，Graph示通常包含Abstract工厂/产品和具体实现。
-    - **行为型Pattern**2：关注组合关系，Graph示常包含Interface、适配/装饰Object和被操作Object。
-    - **行为型Pattern**3：关注交互，Graph示常包含主体、Interface和多个ImplementationClass。
-3. **行为型Pattern**4：编写脚本（如 Python）根据Pattern模板生成 Mermaid 代码。例如：
+### DesignPattern Classification1
+Since GoF DesignPatterns have **Structural Patterns**9, generating Mermaid Graphs and explanations for each one individually would be very lengthy. Here are suggestions for generating the remaining patterns:
+1. **Structural Patterns**9: You can use Mermaid-supported editors (such as Mermaid Live Editor) or IDE plugins to directly generate class diagrams.
+2. **Behavioral Patterns**0:
+    - **Behavioral Patterns**1: Focus on object creation, diagrams typically include abstract factories/products and concrete implementations.
+    - **Behavioral Patterns**2: Focus on composition relationships, diagrams often include interfaces, adapter/decorator objects and objects being operated on.
+    - **Behavioral Patterns**3: Focus on interaction, diagrams often include subjects, interfaces and multiple implementation classes.
+3. **Behavioral Patterns**4: Write scripts (such as Python) to generate Mermaid code based on pattern templates. For example:
    ```python
    def generate_mermaid_class_diagram(pattern_name, classes, relationships):
        print(f"classDiagram")
@@ -238,31 +238,31 @@ classDiagram
            print(f"    {rel}")
    ```
 
-4. **行为型Pattern**5：
-    - 《DesignPattern：可复用面向Object软件的基础》：详细描述 23 种Pattern。
-    - 在线Tool：Mermaid Live Editor (https://mermaid.live/)。
-    - X 平台Search：Search“DesignPattern UML”或“design patterns mermaid”获取社区分享的Graph示。
+4. **Behavioral Patterns**5:
+    - "Design Patterns: Elements of Reusable Object-Oriented Software": Detailed description of 23 patterns.
+    - Online Tools: Mermaid Live Editor (https://mermaid.live/).
+    - Platform Search: Search for "Design Pattern UML" or "design patterns mermaid" to get community-shared diagrams.
 
 ---
 
-### DesignPattern分Class2
-以上展示了 6 种代表性DesignPattern的 Mermaid Graph和说明，涵盖了Create型（单例、工厂Methods）、结构型（适配器、装饰者）和行为型（观察者、策略）。每种Pattern通过ClassGraph清晰表达了其结构和关系。如果需要特定Pattern的详细Graph示、代码Example，或全部 23 种Pattern的完整集合，请明确告知，我将进一步提供！
+### DesignPattern Classification2
+The above demonstrates Mermaid Graphs and explanations for 6 representative DesignPatterns, covering Creational (Singleton, Factory Method), Structural (Adapter, Decorator), and Behavioral (Observer, Strategy) patterns. Each pattern clearly expresses its structure and relationships through class diagrams. If you need detailed graphs for specific patterns, code examples, or a complete collection of all 23 patterns, please let me know and I will provide further information!
 
 ---
 
-以下是 GoF（Gang of Four）23种DesignPattern的完整集合，按照**行为型Pattern**1、**行为型Pattern**2和**行为型Pattern**3分Class，每种Pattern包括简要说明和对应的 **行为型Pattern**9。由于篇幅限制，我将为每种Pattern提供简洁的描述和 Mermaid Graph，重点突出其核心结构和关系。如果需要某Pattern的详细代码Example或更深入的Interpret，请进一步说明。
+Below is the complete collection of GoF (Gang of Four) 23 DesignPatterns, classified according to **Behavioral Patterns**1, **Behavioral Patterns**2, and **Behavioral Patterns**3 categories. Each pattern includes a brief explanation and corresponding **Behavioral Patterns**9. Due to space limitations, I will provide concise descriptions and Mermaid Graphs for each pattern, focusing on highlighting their core structures and relationships. If you need detailed code examples or deeper explanations for any pattern, please specify.
 
-当前日期是 2025 年 5 月 7 日，Mermaid Syntax基于最新Standard生成，可在支持 Mermaid 的编辑器（如 Mermaid Live Editor 或 VS Code）中直接渲染。
+The current date is May 7, 2025, and Mermaid Syntax is generated based on the latest standard, which can be directly rendered in editors that support Mermaid (such as Mermaid Live Editor or VS Code).
 
 ---
 
-### DesignPattern分Class3
-Create型Pattern关注Object的Create机制，OptimizationObject的实例化过程。
+### DesignPattern Classification3
+Creational Patterns focus on object creation mechanisms, optimizing the object instantiation process.
 
-### 1.1 单例Pattern（Singleton Pattern）
-**说明**：确保Class只有一个实例，并提供全局访问点。  
-**适用场景**：Logging记录、Configure管理。  
-**Mermaid Graph**：
+### 1.1 Singleton Pattern (Singleton Pattern)
+**Description**: Ensures a class has only one instance and provides a global access point.  
+**Applicable Scenarios**: Logging, configuration management.  
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Singleton {
@@ -276,10 +276,10 @@ classDiagram
 
 ---
 
-### 1.2 工厂MethodsPattern（Factory Method Pattern）
-**说明**：DefinitionCreateObject的Interface，由子Class决定实例化哪个Class。  
-**适用场景**：需要根据ConditionCreate不同Object，如 UI 组件。  
-**Mermaid Graph**：
+### 1.2 Factory Method Pattern (Factory Method Pattern)
+**Description**: Defines an interface for creating objects, allowing subclasses to decide which class to instantiate.  
+**Applicable Scenarios**: When different objects need to be created based on conditions, such as UI components.  
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Creator {
@@ -303,10 +303,10 @@ classDiagram
 
 ---
 
-### 1.3 Abstract工厂Pattern（Abstract Factory Pattern）
-**说明**：提供一个Interface，用于Create一系列相关或依赖Object的家族。  
-**适用场景**：跨平台 UI 组件Create。  
-**Mermaid Graph**：
+### 1.3 Abstract Factory Pattern (Abstract Factory Pattern)
+**Description**: Provides an interface for creating families of related or dependent objects.  
+**Applicable Scenarios**: Cross-platform UI component creation.  
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class AbstractFactory {
@@ -341,10 +341,10 @@ classDiagram
 
 ---
 
-### 1.4 建造者模式（Builder Pattern）
-**说明**：将复杂Object的构建与其表示分离，允许分步构造。  
-**适用场景**：构建复杂Object，如文档生成器。  
-**Mermaid Graph**：
+### 1.4 Builder Pattern (Builder Pattern)
+**Description**: Separates the construction of complex objects from their representation, allowing step-by-step construction.  
+**Applicable Scenarios**: Building complex objects, such as document generators.  
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Director {
@@ -403,13 +403,13 @@ classDiagram
 
 ---
 
-### DesignPattern分Class8
-结构型Pattern关注Class和Object的组合，形成更大的结构。
+### DesignPattern Classification8
+Structural Patterns focus on the composition of classes and objects to form larger structures.
 
-### 2.1 适配器Pattern（Adapter Pattern）
-**说明**：将一个Class的Interface转换为客户端期望的Interface。  
-**适用场景**：整合遗留系统或第三方Library。  
-**Mermaid Graph**：
+### 2.1 Adapter Pattern (Adapter Pattern)
+**Description**: Converts the interface of one class into another interface that clients expect.  
+**Applicable Scenarios**: Integrating legacy systems or third-party libraries.  
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Target {
@@ -429,10 +429,10 @@ classDiagram
 
 ---
 
-### 2.2 桥接Pattern（Bridge Pattern）
-**说明**：将Abstract与Implementation分离，使两者独立变化。  
-**适用场景**：需要独立扩展Abstract和Implementation，如Graph形渲染。  
-**Mermaid Graph**：
+### 2.2 Bridge Pattern (Bridge Pattern)
+**Description**: Separates abstraction from implementation, allowing both to vary independently.  
+**Applicable Scenarios**: When abstraction and implementation need to be extended independently, such as graphics rendering.  
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Abstraction {
@@ -495,10 +495,10 @@ classDiagram
 
 ---
 
-### 2.4 装饰者Pattern（Decorator Pattern）
-**说明**：动态为Object添加职责，扩展功能。  
-**适用场景**：流Process、UI 组件装饰。  
-**Mermaid Graph**：
+### 2.4 Decorator Pattern (Decorator Pattern)
+**Description**: Dynamically adds responsibilities to objects, extending functionality.  
+**Applicable Scenarios**: Stream processing, UI component decoration.  
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Component {
@@ -524,10 +524,10 @@ classDiagram
 
 ---
 
-### 2/产品和具体实现。2 门面Pattern（Facade Pattern）
-**说明**：为Complex子系统提供简化的Interface。  
-**适用场景**：简化Library或Framework的使用。  
-**Mermaid Graph**：
+### 2/Products and concrete implementations.2 Facade Pattern (Facade Pattern)
+**Description**: Provides a simplified interface for complex subsystems.  
+**Applicable Scenarios**: Simplifying the use of libraries or frameworks.  
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Facade {
@@ -615,13 +615,13 @@ classDiagram
 
 ---
 
-### 1. Create型Pattern3
-行为型Pattern关注Object间的通信和职责分配。
+### 1. Creational Pattern3
+Behavioral Patterns focus on communication between objects and responsibility assignment.
 
-### 3.1 观察者Pattern（Observer Pattern）
-**说明**：Definition一对多依赖，State变化时通知所有观察者。  
-**适用场景**：Event驱动系统。  
-**Mermaid Graph**：
+### 3.1 Observer Pattern (Observer Pattern)
+**Description**: Defines one-to-many dependencies, notifying all observers when state changes.  
+**Applicable Scenarios**: Event-driven systems.  
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Subject {
@@ -651,10 +651,10 @@ classDiagram
 
 ---
 
-### 3.2 策略Pattern（Strategy Pattern）
-**说明**：Encapsulation可互换的Algorithm，动态Selection行为。  
-**适用场景**：SortAlgorithmSelection。  
-**Mermaid Graph**：
+### 3.2 Strategy Pattern (Strategy Pattern)
+**Description**: Encapsulates interchangeable algorithms, allowing dynamic behavior selection.  
+**Applicable Scenarios**: Sorting algorithm selection.  
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Context {
@@ -679,10 +679,10 @@ classDiagram
 
 ---
 
-### 3.3 命令Pattern（Command Pattern）
-**说明**：将请求Encapsulation为Object，支持撤销和Queue操作。  
-**适用场景**：操作Logging、Transaction管理。  
-**Mermaid Graph**：
+### 3.3 Command Pattern (Command Pattern)
+**Description**: Encapsulates requests as objects, supporting undo and queue operations.  
+**Applicable Scenarios**: Operation logging, transaction management.  
+**Mermaid Graph**:
 ```mermaid
 classDiagram
     class Command {
@@ -998,38 +998,3 @@ classDiagram
 graph TD
     A[Object Creation<br>Singleton<br>Factory Method<br>Abstract Factory<br>Builder<br>Prototype]
     A --> B
-    A:::group --> NA[Intent: Optimize object creation.<br>Common: Encapsulate creation.<br>Diff: Singleton: single instance; Factory Method: single product; Abstract Factory: product families; Builder: step-by-step; Prototype: cloning.]
-
-    B[Interface Adaptation<br>Adapter<br>Decorator<br>Proxy]
-    B --> C
-    B:::group --> NB[Intent: Enhance functionality.<br>Common: Use composition.<br>Diff: Adapter: convert interface; Decorator: add duties; Proxy: control access.]
-
-    C[Structural Composition<br>Composite<br>Bridge<br>Facade]
-    C --> D
-    C:::group --> NC[Intent: Organize structure.<br>Common: Simplify complexity.<br>Diff: Composite: tree; Bridge: decouple abstraction; Facade: simplify interface.]
-
-    D[Behavior Encapsulation<br>Strategy<br>State<br>Template Method]
-    D --> E
-    D:::group --> ND[Intent: Encapsulate behavior.<br>Common: Abstract behavior.<br>Diff: Strategy: algorithm choice; State: behavior switch; Template: inherited skeleton.]
-
-    E[Object Communication<br>Observer<br>Mediator<br>Chain of Resp.<br>Command]
-    E --> F
-    E:::group --> NE[Intent: Manage communication.<br>Common: Decouple interaction.<br>Diff: Observer: broadcast; Mediator: coordinate; Chain: pass request; Command: encapsulate.]
-
-    F[Traversal & Operation<br>Iterator<br>Visitor]
-    F --> G
-    F:::group --> NF[Intent: Separate traversal/装饰Object和被操作Object。9 Decouple structure.<br>Diff: Iterator: traversal; Visitor: operation extension.]
-
-    G[State Management<br>Memento<br>Prototype]
-    G --> H
-    G:::group --> NG[Intent: Manage state.<br>Common: Handle state.<br>Diff: Memento: restore; Prototype: clone.]
-
-    H[Resource Optimization<br>Flyweight<br>Singleton]
-    H --> I
-    H:::group --> NH[Intent: Optimize resources.<br>Common: Enhance efficiency.<br>Diff: Flyweight: share objects; Singleton: single instance.]
-
-    I[Language Interpretation<br>Interpreter]
-    I:::group --> NI[Intent: Interpret language.<br>Common: Language parsing.<br>Diff: Standalone, may combine with Visitor.]
-
-    classDef group fill:#f9f,stroke:#333,stroke-width:2px;
-```

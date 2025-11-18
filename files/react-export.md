@@ -71,120 +71,120 @@ Summary: Putting multiple components in a single JSX file is completely feasible
 
 ---
 
-在你的问题中，`MainComponent` 不能放在 `import` 的大括号 `{}` 里，是因为它是通过 **默认导出**（`export default`）导出的，而大括号 `{}` 用于导入 **按需导出**（named exports）的模块。以下是详细解释：
+In your question, `MainComponent` cannot be placed inside the `import` curly braces `{}` because it is exported via **default export** (`export default`), while the curly braces `{}` are used for importing **named exports**. Here's a detailed explanation:
 
-### 1. 默认导出 vs 按需导出
-在 JavaScript 模块系统中（ES Modules），有两种导出方式：
-- **默认导出**（`export default`）：
-    - 一个模块只能有一个默认导出。
-    - 导入时不需要使用大括号 `{}`，可以直接指定任意名称。
+### 1. Default Export vs Named Export
+In the JavaScript module system (ES Modules), there are two export methods:
+- **Default Export** (`export default`):
+    - A module can only have one default export.
+    - When importing, no curly braces `{}` are needed, and you can specify any name directly.
     - 示例：
       ```jsx
       // components.jsx
       export default function MainComponent() {
-        return <div>主组件</div>;
+        return <div>Main Component</div>;
       }
       
-      // 导入
-      import MainComponent from './components'; // 不用大括号
+      // Import
+      import MainComponent from './components'; // No curly braces
       ```
-- **按需导出**（`export`）：
-    - 一个模块可以有多个按需导出。
-    - 导入时需要使用大括号 `{}`，并指定导出的具体名称。
+- **Named Export** (`export`):
+    - A module can have multiple named exports.
+    - When importing, curly braces `{}` are required, and you must specify the exact export name.
     - 示例：
       ```jsx
       // components.jsx
       export function SubComponent() {
-        return <p>辅助组件</p>;
+        return <p>Helper Component</p>;
       }
       
-      // 导入
-      import { SubComponent } from './components'; // 需要大括号
+      // Import
+      import { SubComponent } from './components'; // Curly braces required
       ```
 
-### 2. 为什么 `MainComponent` 不能用大括号？
-如果 `MainComponent` 是通过 `export default` 导出的，尝试用大括号 `{}` 导入会导致语法错误或找不到该模块，因为默认导出的模块不会被绑定到模块的命名空间中。
+### 2. Why Can't `MainComponent` Use Curly Braces?
+If `MainComponent` is exported via `export default`, attempting to import it with curly braces `{}` will result in a syntax error or module not found, because default exported modules are not bound to the module's namespace.
 
 例如：
 ```jsx
 // components.jsx
 export default function MainComponent() {
-  return <div>主组件</div>;
+  return <div>Main Component</div>;
 }
 export function SubComponent() {
-  return <p>辅助组件</p>;
+  return <p>Helper Component</p>;
 }
 
-// 错误导入
-import { MainComponent, SubComponent } from './components'; // 错误！MainComponent 不是按需导出
+// Incorrect import
+import { MainComponent, SubComponent } from './components'; // Error! MainComponent is not a named export
 ```
 
-**错误原因**：
-- `MainComponent` 是默认导出，导入时必须直接写 `import MainComponent from './components'`，而不能用 `{ MainComponent }`。
-- `{ SubComponent }` 是正确的，因为 `SubComponent` 是按需导出。
+**Error Reason**:
+- `MainComponent` is a default export, so when importing you must write `import MainComponent from './components'`, not `{ MainComponent }`.
+- `{ SubComponent }` is correct because `SubComponent` is a named export.
 
-### 3. 正确导入方式
-假设你的 `components.jsx` 文件如下：
+### 3. Correct Import Method
+Assuming your `components.jsx` file is as follows:
 ```jsx
 export default function MainComponent() {
-  return <div>主组件</div>;
+  return <div>Main Component</div>;
 }
 export function SubComponent() {
-  return <p>辅助组件</p>;
+  return <p>Helper Component</p>;
 }
 ```
 
-正确导入方式是：
+The correct import method is:
 ```jsx
 import MainComponent, { SubComponent } from './components';
 ```
 
-- `MainComponent`：直接导入默认导出。
-- `{ SubComponent }`：导入按需导出的 `SubComponent`。
+- `MainComponent`: Direct import of default export.
+- `{ SubComponent }`: Import of named export `SubComponent`.
 
-### 4. 如果想用大括号导入 `MainComponent`？
-如果你希望 `MainComponent` 也能通过大括号 `{}` 导入，必须将其改为 **按需导出**，而不是默认导出。例如：
+### 4. If You Want to Import `MainComponent` with Curly Braces?
+If you want `MainComponent` to be importable with curly braces `{}`, you must change it to a **named export** instead of a default export. For example:
 
 ```jsx
 // components.jsx
 export function MainComponent() {
-  return <div>主组件</div>;
+  return <div>Main Component</div>;
 }
 export function SubComponent() {
-  return <p>辅助组件</p>;
+  return <p>Helper Component</p>;
 }
 
-// 导入
-import { MainComponent, SubComponent } from './components'; // 现在可以了
+// Import
+import { MainComponent, SubComponent } from './components'; // Now it's possible
 ```
 
-但这意味着你失去了默认导出的便利（默认导出允许导入时自定义名称）。
+But this means you lose the convenience of default export (default export allows custom naming when importing).
 
-### 5. 混合导出示例
-你也可以混合使用默认导出和按需导出：
+### 5. Mixed Export Example
+You can also mix default export and named exports:
 ```jsx
 // components.jsx
 export default function MainComponent() {
-  return <div>主组件</div>;
+  return <div>Main Component</div>;
 }
 export function SubComponent() {
-  return <p>辅助组件</p>;
+  return <p>Helper Component</p>;
 }
 export function AnotherComponent() {
-  return <button>按钮</button>;
+  return <button>Button</button>;
 }
 ```
 
-导入：
+Import:
 ```jsx
 import MainComponent, { SubComponent, AnotherComponent } from './components';
 ```
 
-### 总结
-- `MainComponent` 不能放在 `import` 的大括号 `{}` 里，是因为它是通过 `export default` 导出的，而大括号 `{}` 只用于按需导出（`export`）。
-- 默认导出需要直接导入（`import MainComponent from ...`），按需导出需要用大括号（`import { SubComponent } from ...`）。
-- 如果你希望 `MainComponent` 用大括号导入，必须将其改为按需导出（`export function MainComponent`）。
-- 确保根据项目需求选择合适的导出方式，默认导出适合主组件，按需导出适合辅助组件或工具函数。
+### Summary
+- `MainComponent` cannot be placed in `import` curly braces `{}` because it's exported via `export default`, while curly braces `{}` are only used for named exports (`export`).
+- Default export requires direct import (`import MainComponent from ...`), named exports require curly braces (`import { SubComponent } from ...`).
+- If you want `MainComponent` to be imported with curly braces, you must change it to a named export (`export function MainComponent`).
+- Ensure you choose the appropriate export method based on project needs - default export is suitable for main components, named exports are suitable for helper components or utility functions.
 
 ---
 
