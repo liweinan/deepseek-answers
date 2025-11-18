@@ -129,6 +129,7 @@ Here are the topics:
 - [Differences Between Deep Copy and Shallow Copy](https://github.com/liweinan/deepseek-answers/blob/main/files/shallow-copy.md)
 - [In Haskell, Due to Its Pure Functional Programming Nature, All Functions Are Stateless by Default](https://github.com/liweinan/deepseek-answers/blob/main/files/haskell-monad.md)
 - [Option vs. Null](https://github.com/liweinan/deepseek-answers/blob/main/files/option-vs-null.md)
+- [在 Rust 中，问号操作符 `?` 是非常重要的语法糖](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-question.md)
 
 ### Linux Administration & DevOps
 
