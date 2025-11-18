@@ -403,27 +403,27 @@ From `aws-provision-bastionhost-commands.sh`, we can see the bastion host is con
   CidrIp: 0.0.0.0/0  # HTTP proxy port
 ```
 
-### 3. **Mirror Registry的URL配置**
+### 3. **Mirror Registry URL Configuration**
 
 ```bash
-# 在bastion host脚本中设置
+# Set in bastion host script
 MIRROR_REGISTRY_URL="${BASTION_HOST_PUBLIC_DNS}:5000"
 echo "${MIRROR_REGISTRY_URL}" > "${SHARED_DIR}/mirror_registry_url"
 ```
 
-### 4. **实际部署方式**
+### 4. **Actual Deployment Methods**
 
-#### **A. 通过Ignition配置部署**
+#### **A. Deploy via Ignition Configuration**
 ```bash
-# bastion host使用Ignition配置
+# Bastion host uses Ignition configuration
 bastion_ignition_file="${SHARED_DIR}/${CLUSTER_NAME}-bastion.ign"
 
-# Ignition配置包含mirror registry的安装和配置
+# Ignition configuration includes mirror registry installation and configuration
 ```
 
-#### **B. 容器化部署**
+#### **B. Containerized Deployment**
 ```yaml
-# 通常在bastion host上运行容器化的registry
+# Usually run containerized registry on bastion host
 apiVersion: v1
 kind: Pod
 metadata:
@@ -439,41 +439,41 @@ spec:
       mountPath: /var/lib/registry
 ```
 
-### 5. **为什么选择Bastion Host**
+### 5. **Why Choose Bastion Host**
 
-#### **A. 网络优势**
-- **双重网络访问**: 可以访问互联网（同步镜像）和内部网络（服务集群）
-- **网络隔离**: 作为网络边界，控制流量流向
-- **安全控制**: 集中管理网络访问策略
+#### **A. Network Advantages**
+- **Dual Network Access**: Can access both internet (sync images) and internal network (service cluster)
+- **Network Isolation**: Acts as network boundary, controlling traffic flow
+- **Security Control**: Centralized management of network access policies
 
-#### **B. 资源管理**
-- **存储集中**: 镜像存储在bastion host上，集群节点共享访问
-- **带宽优化**: 避免每个节点都从外部拉取镜像
-- **缓存效果**: 一次同步，多次使用
+#### **B. Resource Management**
+- **Centralized Storage**: Image storage on bastion host, shared access by cluster nodes
+- **Bandwidth Optimization**: Avoid each node pulling images from external sources
+- **Caching Effect**: Sync once, use multiple times
 
-#### **C. 运维便利**
-- **统一管理**: 镜像同步、更新、维护都在一个地方
-- **监控集中**: 可以统一监控镜像仓库状态
-- **备份简单**: 只需要备份bastion host上的数据
+#### **C. Operational Convenience**
+- **Unified Management**: Image sync, update, and maintenance all in one place
+- **Centralized Monitoring**: Can monitor mirror registry status uniformly
+- **Simple Backup**: Only need to backup data on bastion host
 
-### 6. **实际工作流程**
+### 6. **Actual Workflow**
 
 ```bash
-# 1. Bastion Host创建
+# 1. Bastion Host Creation
 aws-provision-bastionhost-commands.sh
-# 创建EC2实例，配置安全组，安装mirror registry
+# Create EC2 instance, configure security groups, install mirror registry
 
-# 2. 镜像同步
+# 2. Image Synchronization
 mirror-images-by-oc-mirror-commands.sh
-# 在bastion host上执行oc-mirror，同步镜像到本地registry
+# Execute oc-mirror on bastion host, sync images to local registry
 
-# 3. 集群安装
-# 集群安装时从bastion host的mirror registry拉取镜像
+# 3. Cluster Installation
+# Cluster pulls images from bastion host's mirror registry during installation
 ```
 
-### 7. **配置示例**
+### 7. **Configuration Examples**
 
-#### **A. Bastion Host上的Registry配置**
+#### **A. Registry Configuration on Bastion Host**
 ```yaml
 # /etc/registry/config.yml
 version: 0.1
@@ -494,7 +494,7 @@ auth:
     path: /etc/registry/auth/htpasswd
 ```
 
-#### **B. 集群中的镜像配置**
+#### **B. Image Configuration in Cluster**
 ```yaml
 # ImageContentSourcePolicy
 apiVersion: operator.openshift.io/v1alpha1
@@ -508,50 +508,50 @@ spec:
     source: registry.redhat.io/openshift4
 ```
 
-### 8. **其他可能的部署方式**
+### 8. **Other Possible Deployment Methods**
 
-虽然主要部署在bastion host，但也有其他选择：
+Although mainly deployed on bastion host, there are other options:
 
-#### **A. 独立服务器**
+#### **A. Standalone Server**
 ```bash
-# 专门的镜像仓库服务器
+# Dedicated mirror registry server
 MIRROR_REGISTRY_HOST="mirror-registry.example.com:5000"
 ```
 
-#### **B. 集群内部**
+#### **B. Inside Cluster**
 ```bash
-# 在集群内部部署registry
-# 但需要先有基础镜像才能启动
+# Deploy registry inside cluster
+# But requires base images to start first
 ```
 
-### 9. **总结**
+### 9. **Summary**
 
-**Mirror Registry确实安装在bastion host里面**，这种设计有以下优势：
+**Mirror Registry is indeed installed inside the bastion host**, this design has the following advantages:
 
-1. **网络架构合理**: 作为网络边界，控制内外流量
-2. **资源利用高效**: 集中存储，共享访问
-3. **运维管理简单**: 统一管理镜像同步和维护
-4. **安全控制好**: 集中管理访问策略和认证
+1. **Reasonable Network Architecture**: Acts as network boundary, controlling internal and external traffic
+2. **Efficient Resource Utilization**: Centralized storage, shared access
+3. **Simple Operations Management**: Unified management of image sync and maintenance
+4. **Good Security Control**: Centralized management of access policies and authentication
 
-这种架构是disconnected cluster部署的标准模式，确保了镜像同步的效率和安全性。
+This architecture is the standard pattern for disconnected cluster deployment, ensuring efficiency and security of image synchronization.
 
 ---
 
-Ignition是Red Hat CoreOS (RHCOS) 和 Fedora CoreOS (FCOS) 使用的**系统初始化工具**，用于在系统首次启动时配置操作系统。让我详细解释一下：
+Ignition is the **system initialization tool** used by Red Hat CoreOS (RHCOS) and Fedora CoreOS (FCOS) to configure the operating system during first boot. Let me explain in detail:
 
-## Ignition配置概述
+## Ignition Configuration Overview
 
-### 1. **什么是Ignition**
+### 1. **What is Ignition**
 
-Ignition是CoreOS家族的**第一启动配置工具**，类似于：
+Ignition is the **first boot configuration tool** for the CoreOS family, similar to:
 - **cloud-init** (Ubuntu/Debian)
 - **user-data** (AWS)
 - **custom-data** (Azure)
 
-### 2. **核心功能**
+### 2. **Core Functions**
 
 ```yaml
-# Ignition配置示例
+# Ignition configuration example
 {
   "ignition": {
     "version": "3.4.0",
@@ -590,17 +590,17 @@ Ignition是CoreOS家族的**第一启动配置工具**，类似于：
 }
 ```
 
-### 3. **在Bastion Host中的应用**
+### 3. **Application in Bastion Host**
 
-#### **A. 创建Ignition配置**
+#### **A. Create Ignition Configuration**
 ```bash
-# 在aws-provision-bastionhost-commands.sh中
+# In aws-provision-bastionhost-commands.sh
 bastion_ignition_file="${SHARED_DIR}/${CLUSTER_NAME}-bastion.ign"
 
-# 这个文件包含了bastion host的完整配置
+# This file contains the complete configuration for bastion host
 ```
 
-#### **B. 配置内容示例**
+#### **B. Configuration Content Example**
 ```json
 {
   "ignition": {
@@ -653,9 +653,9 @@ bastion_ignition_file="${SHARED_DIR}/${CLUSTER_NAME}-bastion.ign"
 }
 ```
 
-### 4. **Ignition配置的组成部分**
+### 4. **Components of Ignition Configuration**
 
-#### **A. 文件系统配置 (storage)**
+#### **A. File System Configuration (storage)**
 ```json
 "storage": {
   "files": [
@@ -682,7 +682,7 @@ bastion_ignition_file="${SHARED_DIR}/${CLUSTER_NAME}-bastion.ign"
 }
 ```
 
-#### **B. 系统服务配置 (systemd)**
+#### **B. System Service Configuration (systemd)**
 ```json
 "systemd": {
   "units": [
@@ -695,7 +695,7 @@ bastion_ignition_file="${SHARED_DIR}/${CLUSTER_NAME}-bastion.ign"
 }
 ```
 
-#### **C. 用户配置 (passwd)**
+#### **C. User Configuration (passwd)**
 ```json
 "passwd": {
   "users": [
@@ -709,11 +709,11 @@ bastion_ignition_file="${SHARED_DIR}/${CLUSTER_NAME}-bastion.ign"
 }
 ```
 
-### 5. **在AWS中的使用**
+### 5. **Usage in AWS**
 
-#### **A. 通过UserData传递**
+#### **A. Pass via UserData**
 ```bash
-# 在CloudFormation模板中
+# In CloudFormation template
 UserData:
   Fn::Base64:
     !Sub
@@ -721,23 +721,23 @@ UserData:
       - IgnitionLocation: !Ref BastionIgnitionLocation
 ```
 
-#### **B. S3存储配置**
+#### **B. S3 Storage Configuration**
 ```bash
-# 将Ignition配置上传到S3
+# Upload Ignition configuration to S3
 ign_location="s3://${s3_bucket_name}/bastion.ign"
 aws --region $REGION s3 cp ${bastion_ignition_file} "${ign_location}"
 ```
 
-### 6. **Ignition vs 其他配置工具**
+### 6. **Ignition vs Other Configuration Tools**
 
-| 特性 | Ignition | cloud-init | user-data |
+| Feature | Ignition | cloud-init | user-data |
 |------|----------|------------|-----------|
-| **目标系统** | CoreOS | Ubuntu/Debian | AWS EC2 |
-| **配置格式** | JSON | YAML/Shell | Shell/Cloud-init |
-| **执行时机** | 首次启动 | 首次启动 | 首次启动 |
-| **配置方式** | 声明式 | 脚本式 | 脚本式 |
+| **Target System** | CoreOS | Ubuntu/Debian | AWS EC2 |
+| **Configuration Format** | JSON | YAML/Shell | Shell/Cloud-init |
+| **Execution Timing** | First boot | First boot | First boot |
+| **Configuration Method** | Declarative | Scripted | Scripted |
 
-### 7. **实际工作流程**
+### 7. **Actual Workflow**
 
 ```mermaid
 sequenceDiagram
@@ -746,27 +746,27 @@ sequenceDiagram
     participant EC2 as EC2 Instance
     participant Ignition as Ignition Service
 
-    Admin->>S3: 1. 上传Ignition配置
-    S3-->>Admin: 配置已存储
+    Admin->>S3: 1. Upload Ignition configuration
+    S3-->>Admin: Configuration stored
 
-    Admin->>EC2: 2. 启动EC2实例
-    Note over EC2: UserData包含Ignition配置URL
+    Admin->>EC2: 2. Launch EC2 instance
+    Note over EC2: UserData contains Ignition configuration URL
 
-    EC2->>Ignition: 3. 首次启动时读取配置
-    Ignition->>S3: 4. 下载完整配置
-    S3-->>Ignition: 返回配置内容
+    EC2->>Ignition: 3. Read configuration during first boot
+    Ignition->>S3: 4. Download complete configuration
+    S3-->>Ignition: Return configuration content
 
-    Ignition->>EC2: 5. 应用配置
-    Note over EC2: 创建文件、目录、服务等
+    Ignition->>EC2: 5. Apply configuration
+    Note over EC2: Create files, directories, services, etc.
 
-    EC2-->>Admin: 6. 系统配置完成
+    EC2-->>Admin: 6. System configuration complete
 ```
 
-### 8. **优势**
+### 8. **Advantages**
 
-#### **A. 声明式配置**
+#### **A. Declarative Configuration**
 ```json
-// 声明要创建什么，而不是如何创建
+// Declare what to create, not how to create
 {
   "storage": {
     "files": [
@@ -779,28 +779,28 @@ sequenceDiagram
 }
 ```
 
-#### **B. 幂等性**
-- 多次执行结果相同
-- 不会产生副作用
+#### **B. Idempotency**
+- Same result from multiple executions
+- No side effects
 
-#### **C. 安全性**
-- 配置在传输和存储时加密
-- 支持TLS验证
+#### **C. Security**
+- Configuration encrypted during transmission and storage
+- Supports TLS verification
 
-#### **D. 灵活性**
-- 支持多种数据源
-- 可以引用外部配置
+#### **D. Flexibility**
+- Supports multiple data sources
+- Can reference external configurations
 
-### 9. **在Disconnected Cluster中的作用**
+### 9. **Role in Disconnected Cluster**
 
-在disconnected cluster部署中，Ignition配置用于：
+In disconnected cluster deployment, Ignition configuration is used for:
 
-1. **配置Bastion Host**: 安装mirror registry、HTTP代理等服务
-2. **设置网络**: 配置网络接口、路由等
-3. **安装软件**: 安装必要的工具和容器
-4. **配置服务**: 启动和配置各种服务
-5. **设置认证**: 配置SSH密钥、用户账户等
+1. **Configure Bastion Host**: Install mirror registry, HTTP proxy and other services
+2. **Set up Network**: Configure network interfaces, routing, etc.
+3. **Install Software**: Install necessary tools and containers
+4. **Configure Services**: Start and configure various services
+5. **Set up Authentication**: Configure SSH keys, user accounts, etc.
 
-### 总结
+### Summary
 
-Ignition是CoreOS系统的**核心配置工具**，它提供了一种**声明式、安全、可靠**的方式来配置系统。在disconnected cluster部署中，它确保了bastion host能够正确安装和配置所有必要的服务，为后续的镜像同步和集群安装提供基础设施支持。
+Ignition is the **core configuration tool** for CoreOS systems, providing a **declarative, secure, and reliable** way to configure systems. In disconnected cluster deployment, it ensures that the bastion host can correctly install and configure all necessary services, providing infrastructure support for subsequent image synchronization and cluster installation.
