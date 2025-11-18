@@ -1,16 +1,16 @@
-# XSS跨域问题与正确防护方法
+# XSS Cross-Domain Issues and Correct Protection Methods
 
-## XSS跨域问题概述
+## XSS Cross-Domain Issues Overview
 
-XSS（跨站脚本攻击）与跨域问题密切相关，主要体现在以下几个方面：
+XSS (Cross-Site Scripting) attacks are closely related to cross-domain issues, mainly reflected in the following aspects:
 
-1. **恶意脚本跨域执行**：攻击者注入的脚本可以在受害者的浏览器中跨域运行
-2. **跨域数据窃取**：通过XSS可以窃取不同源的敏感数据
-3. **跨域请求伪造**：利用XSS发起跨域请求，执行未授权的操作
+1. **Malicious Script Cross-Domain Execution**: Scripts injected by attackers can run cross-domain in the victim's browser
+2. **Cross-Domain Data Theft**: Sensitive data from different origins can be stolen through XSS
+3. **Cross-Domain Request Forgery**: Using XSS to initiate cross-domain requests and execute unauthorized operations
 
-## 正确的防护设置方法
+## Correct Protection Configuration Methods
 
-### 1. 内容安全策略 (CSP)
+### 1. Content Security Policy (CSP)
 
 ```http
 Content-Security-Policy: 
@@ -22,34 +22,34 @@ Content-Security-Policy:
   frame-ancestors 'none';
 ```
 
-**关键配置**：
-- 限制脚本只能从同源加载 (`'self'`)
-- 禁止内联脚本 (`'unsafe-inline'`)
-- 禁用动态代码执行 (`'unsafe-eval'`)
-- 限制资源加载源
+**Key Configuration**:
+- Restrict scripts to load only from same origin (`'self'`)
+- Prohibit inline scripts (`'unsafe-inline'`)
+- Disable dynamic code execution (`'unsafe-eval'`)
+- Restrict resource loading sources
 
-### 2. 跨域资源共享 (CORS) 正确配置
+### 2. Cross-Origin Resource Sharing (CORS) Correct Configuration
 
 ```http
 Access-Control-Allow-Origin: https://trusted-domain.com
 Access-Control-Allow-Methods: GET, POST
 Access-Control-Allow-Headers: Content-Type
-Access-Control-Allow-Credentials: false  # 除非必要，否则保持false
+Access-Control-Allow-Credentials: false  # Keep false unless necessary
 ```
 
-### 3. 输入输出处理
+### 3. Input and Output Processing
 
-**输入验证**：
+**Input Validation**:
 ```javascript
-// 使用正则表达式过滤特殊字符
+// Use regular expressions to filter special characters
 function sanitizeInput(input) {
   return input.replace(/[<>"'&]/g, '');
 }
 ```
 
-**输出编码**：
+**Output Encoding**:
 ```javascript
-// HTML实体编码
+// HTML entity encoding
 function htmlEncode(str) {
   return str.replace(/[&<>'"]/g, 
     tag => ({
@@ -62,7 +62,7 @@ function htmlEncode(str) {
 }
 ```
 
-### 4. Cookie安全设置
+### 4. Cookie Security Settings
 
 ```http
 Set-Cookie: 
@@ -74,26 +74,26 @@ Set-Cookie:
   Domain=example.com
 ```
 
-### 5. 现代前端框架的安全实践
+### 5. Modern Frontend Framework Security Practices
 
-**React**：
+**React**:
 ```jsx
-// React自动转义XSS
+// React automatically escapes XSS
 <div>{userContent}</div>
 
-// 危险情况需要明确使用dangerouslySetInnerHTML
+// Dangerous cases require explicit use of dangerouslySetInnerHTML
 <div dangerouslySetInnerHTML={{__html: sanitizedContent}} />
 ```
 
-**Vue**：
+**Vue**:
 ```html
-<!-- Vue默认转义 -->
+<!-- Vue defaults to escaping -->
 <div v-html="sanitizedContent"></div>
 ```
 
-## 进阶防护措施
+## Advanced Protection Measures
 
-1. **子资源完整性 (SRI)**
+1. **Subresource Integrity (SRI)**
 ```html
 <script 
   src="https://example.com/script.js"
@@ -102,124 +102,124 @@ Set-Cookie:
 </script>
 ```
 
-2. **X-XSS-Protection头**（传统浏览器）
+2. **X-XSS-Protection Header** (Legacy browsers)
 ```http
 X-XSS-Protection: 1; mode=block
 ```
 
-3. **X-Frame-Options防止点击劫持**
+3. **X-Frame-Options to Prevent Clickjacking**
 ```http
 X-Frame-Options: DENY
 ```
 
-## 开发注意事项
+## Development Considerations
 
-1. 永远不要信任客户端数据
-2. 使用专业库处理XSS：
+1. Never trust client-side data
+2. Use professional libraries to handle XSS:
     - DOMPurify
     - sanitize-html
     - xss-filters
-3. 定期安全审计和渗透测试
-4. 保持所有依赖库更新
+3. Regular security audits and penetration testing
+4. Keep all dependency libraries updated
 
-正确实施这些措施可以显著降低XSS和跨域攻击的风险，构建更安全的Web应用。
-
----
-
-安全配置需要在**多个层面**协同实施，具体分布如下：
+Properly implementing these measures can significantly reduce the risk of XSS and cross-domain attacks, building more secure web applications.
 
 ---
 
-### **1. 服务端配置（必须）**
-**主要责任**：设置安全HTTP头、输入验证、输出编码
-- **配置位置**：
-    - Web服务器（Nginx/Apache）
-    - 应用框架（Node.js/Spring/Django等）
+Security configuration needs to be implemented **at multiple levels** in coordination, distributed as follows:
 
-**关键配置**：
+---
+
+### **1. Server-Side Configuration (Required)**
+**Primary Responsibility**: Set security HTTP headers, input validation, output encoding
+- **Configuration Locations**:
+    - Web servers (Nginx/Apache)
+    - Application frameworks (Node.js/Spring/Django, etc.)
+
+**Key Configuration**:
 ```nginx
-# Nginx示例（部分配置）
+# Nginx example (partial configuration)
 add_header Content-Security-Policy "default-src 'self'";
 add_header X-Frame-Options "DENY";
 add_header X-Content-Type-Options "nosniff";
 ```
 
 ```javascript
-// Node.js中间件示例
-app.use(helmet()); // 使用helmet自动设置安全头
+// Node.js middleware example
+app.use(helmet()); // Use helmet to automatically set security headers
 ```
 
 ---
 
-### **2. 浏览器端（辅助）**
-**主要责任**：遵守服务端的安全策略、执行内置防护
-- **自动生效**：
-    - 解析CSP、CORS等HTTP头
-    - 根据`HttpOnly`限制Cookie访问
-    - 根据`SameSite`限制Cookie发送
+### **2. Browser-Side (Auxiliary)**
+**Primary Responsibility**: Comply with server security policies, execute built-in protection
+- **Automatic Activation**:
+    - Parse CSP, CORS and other HTTP headers
+    - Restrict Cookie access based on `HttpOnly`
+    - Restrict Cookie sending based on `SameSite`
 
-- **开发者需注意**：
+- **Developers Should Note**:
   ```javascript
-  // 正确使用API（前端也需要配合）
+  // Correct API usage (frontend also needs to cooperate)
   fetch(url, { 
-    credentials: 'same-origin' // 避免意外跨域带Cookie
+    credentials: 'same-origin' // Avoid accidentally sending cookies cross-domain
   });
   ```
 
 ---
 
-### **3. 客户端代码（必须配合）**
-**主要责任**：安全的数据处理和DOM操作
-- **安全实践**：
+### **3. Client-Side Code (Must Cooperate)**
+**Primary Responsibility**: Secure data processing and DOM operations
+- **Security Practices**:
   ```javascript
-  // 避免危险操作
-  element.innerHTML = userInput; // ❌ 危险
-  element.textContent = userInput; // ✅ 安全
+  // Avoid dangerous operations
+  element.innerHTML = userInput; // ❌ Dangerous
+  element.textContent = userInput; // ✅ Safe
 
-  // 使用专业库
+  // Use professional libraries
   import DOMPurify from 'dompurify';
   element.innerHTML = DOMPurify.sanitize(userInput);
   ```
 
 ---
 
-### **各层级的配置分工**
-| 安全措施            | 服务端 | 浏览器 | 客户端代码 |
+### **Configuration Division by Level**
+| Security Measure            | Server | Browser | Client Code |
 |---------------------|--------|--------|------------|
-| CSP头               | ✅     | 执行   | -          |
-| CORS头              | ✅     | 执行   | -          |
-| Cookie安全属性      | ✅     | 执行   | -          |
-| 输入验证            | ✅     | -      | 可选       |
-| 输出编码            | ✅     | -      | ✅         |
-| DOM操作安全         | -      | -      | ✅         |
-| 框架安全特性        | -      | -      | ✅         |
+| CSP Header               | ✅     | Execute   | -          |
+| CORS Header              | ✅     | Execute   | -          |
+| Cookie Security Attributes      | ✅     | Execute   | -          |
+| Input Validation            | ✅     | -      | Optional       |
+| Output Encoding            | ✅     | -      | ✅         |
+| DOM Operation Security         | -      | -      | ✅         |
+| Framework Security Features        | -      | -      | ✅         |
 
 ---
 
-### **最佳实践流程**
-1. **服务端**：设置严格的安全HTTP头（CSP/CORS等）
-2. **服务端**：对所有输入进行验证和过滤
-3. **服务端**：对输出进行上下文相关编码
-4. **客户端**：避免使用`innerHTML`等危险API
-5. **客户端**：使用`textContent`或消毒库处理动态内容
-6. **浏览器**：自动强制执行服务端的安全策略
+### **Best Practice Workflow**
+1. **Server**: Set strict security HTTP headers (CSP/CORS, etc.)
+2. **Server**: Validate and filter all inputs
+3. **Server**: Perform context-aware encoding on outputs
+4. **Client**: Avoid using dangerous APIs like `innerHTML`
+5. **Client**: Use `textContent` or sanitization libraries to handle dynamic content
+6. **Browser**: Automatically enforce server security policies
 
-**示例**：防御存储型XSS的完整流程
+**Example**: Complete workflow for defending against stored XSS
 ```
-用户输入 → 服务端输入验证 → 数据库存储 → 
-服务端输出编码 → 客户端用textContent渲染 → 
-浏览器根据CSP阻止违规加载
+User Input → Server Input Validation → Database Storage → 
+Server Output Encoding → Client Renders with textContent → 
+Browser Blocks Violations Based on CSP
 ```
 
-所有层级必须协同工作才能提供全面防护，其中**服务端配置是基础防线**，客户端和浏览器是必要的补充。
+All levels must work together to provide comprehensive protection, with **server configuration as the foundational defense line**, and client and browser as necessary supplements.
 
 ---
 
-以下是一个完整的跨域安全配置示例，涵盖服务端、客户端和浏览器三端的协同配置：
+Below is a complete cross-domain security configuration example covering server, client, and browser three-end coordination:
 
 ---
 
-### **1. 服务端配置 (Node.js + Express 示例)**
+### **1. Server-Side Configuration (Node.js + Express Example)**
 ```javascript
 const express = require('express');
 const helmet = require('helmet');
@@ -230,7 +230,7 @@ const dompurify = DOMPurify(new JSDOM('').window);
 
 const app = express();
 
-// 1. 安全HTTP头设置
+// 1. Security HTTP header settings
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -246,7 +246,7 @@ app.use(helmet({
   frameguard: { action: 'deny' }
 }));
 
-// 2. CORS配置
+// 2. CORS configuration
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'https://trusted-client.com');
   res.header('Access-Control-Allow-Methods', 'GET,POST');
@@ -255,7 +255,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// 3. Cookie安全设置
+// 3. Cookie security settings
 app.use(cookieParser());
 app.use((req, res, next) => {
   res.cookie('sessionID', 'abc123', {
@@ -267,7 +267,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// 4. 输入消毒中间件
+// 4. Input sanitization middleware
 app.use(express.json({
   verify: (req, res, buf) => {
     try {
@@ -276,14 +276,14 @@ app.use(express.json({
       throw new Error('Invalid JSON');
     }
   },
-  limit: '10kb' // 防止过大JSON攻击
+  limit: '10kb' // Prevent oversized JSON attacks
 }));
 
-// 5. 输出处理示例
+// 5. Output processing example
 app.get('/comments', (req, res) => {
   const rawComments = getCommentsFromDB(); 
   
-  // 消毒后再发送
+  // Sanitize before sending
   const safeComments = rawComments.map(comment => ({
     ...comment,
     content: dompurify.sanitize(comment.content)
@@ -295,7 +295,7 @@ app.get('/comments', (req, res) => {
 
 ---
 
-### **2. 客户端代码 (React 示例)**
+### **2. Client-Side Code (React Example)**
 ```jsx
 import React, { useState, useEffect } from 'react';
 import DOMPurify from 'dompurify';
@@ -304,47 +304,47 @@ function CommentSection() {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
 
-  // 1. 安全获取数据
+  // 1. Secure data fetching
   useEffect(() => {
     fetch('https://api.example.com/comments', {
-      credentials: 'same-origin', // 配合Cookie策略
+      credentials: 'same-origin', // Coordinate with Cookie policy
       headers: { 'Content-Type': 'application/json' }
     })
       .then(res => res.json())
       .then(data => setComments(data));
   }, []);
 
-  // 2. 安全提交数据
+  // 2. Secure data submission
   const handleSubmit = () => {
-    // 前端验证
+    // Frontend validation
     if (!newComment.trim()) return;
     
     fetch('https://api.example.com/comments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        content: newComment.substring(0, 1000) // 长度限制
+        content: newComment.substring(0, 1000) // Length limit
       })
     });
   };
 
-  // 3. 安全渲染
+  // 3. Secure rendering
   return (
     <div>
-      {/* 安全输入框 */}
+      {/* Secure input field */}
       <textarea 
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
         maxLength="1000"
       />
       
-      {/* 安全渲染评论 */}
+      {/* Secure comment rendering */}
       {comments.map(comment => (
         <div key={comment.id}>
-          {/* 使用React默认转义 */}
+          {/* Use React default escaping */}
           <p>{comment.author}</p>
           
-          {/* 需要渲染HTML时消毒 */}
+          {/* Sanitize when HTML rendering is needed */}
           <div 
             dangerouslySetInnerHTML={{ 
               __html: DOMPurify.sanitize(comment.content) 
@@ -359,20 +359,20 @@ function CommentSection() {
 
 ---
 
-### **3. 浏览器/HTML 配置**
+### **3. Browser/HTML Configuration**
 ```html
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- 1. 禁用旧版浏览器不安全的默认行为 -->
+  <!-- 1. Disable unsafe default behaviors in legacy browsers -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   
-  <!-- 2. 启用现代浏览器安全特性 -->
+  <!-- 2. Enable modern browser security features -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
   
-  <!-- 3. 子资源完整性检查 -->
+  <!-- 3. Subresource integrity check -->
   <script 
     src="https://cdn.example.com/react.production.min.js"
     integrity="sha384-4z8Mj7h3A5XFAK4XwcmkX4j5/EN25i/L3Z5+OFD9z5F5F5F5F5F5F5F5F5F5F5F5"
@@ -382,10 +382,10 @@ function CommentSection() {
 <body>
   <div id="root"></div>
   
-  <!-- 4. 安全加载脚本 -->
+  <!-- 4. Secure script loading -->
   <script type="module" src="/static/js/main.js"></script>
   
-  <!-- 5. 禁止iframe嵌套 -->
+  <!-- 5. Prevent iframe embedding -->
   <script>
     if (window !== window.top) {
       window.top.location = window.location;
@@ -397,34 +397,34 @@ function CommentSection() {
 
 ---
 
-### **4. Web服务器配置 (Nginx 示例)**
+### **4. Web Server Configuration (Nginx Example)**
 ```nginx
 server {
     listen 443 ssl;
     server_name example.com;
     
-    # TLS配置
+    # TLS configuration
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
     
-    # 安全头 (补充应用层的设置)
+    # Security headers (supplement application layer settings)
     add_header X-XSS-Protection "1; mode=block";
     add_header X-Content-Type-Options "nosniff";
     add_header Referrer-Policy "strict-origin-when-cross-origin";
     
-    # 静态资源缓存策略
+    # Static resource caching strategy
     location /static/ {
         add_header Cache-Control "public, max-age=31536000, immutable";
     }
     
-    # API路由禁用缓存
+    # API routes disable caching
     location /api/ {
         add_header Cache-Control "no-store";
         proxy_pass http://backend;
     }
     
-    # 禁止敏感文件访问
+    # Deny access to sensitive files
     location ~* \.(env|git|htaccess)$ {
         deny all;
     }
@@ -433,30 +433,30 @@ server {
 
 ---
 
-### **各端协同防护矩阵**
-| 攻击类型       | 服务端防护                          | 客户端防护                          | 浏览器防护               |
+### **Multi-End Collaborative Protection Matrix**
+| Attack Type       | Server-Side Protection                          | Client-Side Protection                          | Browser Protection               |
 |----------------|-----------------------------------|-----------------------------------|-------------------------|
-| **存储型XSS**  | 输入消毒 + CSP                    | 避免innerHTML + 内容消毒           | CSP执行 + XSS过滤器      |
-| **反射型XSS**  | 输出编码                          | URL参数验证                        | X-XSS-Protection头       |
-| **DOM型XSS**   | -                                 | 使用textContent代替innerHTML       | 现代框架自动转义          |
-| **CSRF**       | SameSite Cookie + CSRF Token      | 自动携带Token                      | 遵循Cookie策略           |
-| **点击劫持**   | X-Frame-Options头                 | frame busting脚本                  | 强制执行frame策略         |
-| **数据泄露**   | CORS严格配置                      | 安全fetch配置                      | 同源策略强制执行          |
+| **Stored XSS**  | Input sanitization + CSP                    | Avoid innerHTML + content sanitization           | CSP enforcement + XSS filter      |
+| **Reflected XSS**  | Output encoding                          | URL parameter validation                        | X-XSS-Protection header       |
+| **DOM-based XSS**   | -                                 | Use textContent instead of innerHTML       | Modern framework auto-escaping          |
+| **CSRF**       | SameSite Cookie + CSRF Token      | Automatically carry Token                      | Follow Cookie policy           |
+| **Clickjacking**   | X-Frame-Options header                 | Frame busting script                  | Enforce frame policy         |
+| **Data Leakage**   | CORS strict configuration                      | Secure fetch configuration                      | Same-origin policy enforcement          |
 
-这个完整示例展示了如何通过多端协作构建深度防御体系。实际应用中需根据具体技术栈调整实现方式，但核心安全原则保持一致。
-
----
-
-如果服务端不配置跨域相关的HTTP头（如`Access-Control-Allow-Origin`等），浏览器会根据**同源策略（Same-Origin Policy）**严格限制跨域请求，具体表现如下：
+This complete example demonstrates how to build a defense-in-depth system through multi-end collaboration. In actual applications, implementation methods need to be adjusted according to specific technology stacks, but core security principles remain consistent.
 
 ---
 
-### **1. 简单请求（Simple Requests）**
-**典型场景**：普通GET/POST请求，Content-Type为`text/plain`、`multipart/form-data`或`application/x-www-form-urlencoded`  
-**结果**：
-- 请求能到达服务端，服务端会正常处理并返回响应
-- **但浏览器会拦截响应**，拒绝将结果返回给前端JavaScript代码
-- 控制台报错：
+If the server does not configure cross-domain related HTTP headers (such as `Access-Control-Allow-Origin`, etc.), the browser will strictly restrict cross-domain requests according to the **Same-Origin Policy**, with the following specific behaviors:
+
+---
+
+### **1. Simple Requests**
+**Typical Scenario**: Regular GET/POST requests with Content-Type of `text/plain`, `multipart/form-data`, or `application/x-www-form-urlencoded`  
+**Result**:
+- The request can reach the server, and the server will process and return a response normally
+- **But the browser will intercept the response**, refusing to return the result to frontend JavaScript code
+- Console error:
   ```bash
   Access to fetch at 'http://api.example.com/data' from origin 'http://client.com' 
   has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
@@ -464,45 +464,45 @@ server {
 
 ---
 
-### **2. 预检请求（Preflight Requests）**
-**典型场景**：自定义请求头、PUT/DELETE方法、`application/json`等Content-Type  
-**结果**：
-- 浏览器先发送`OPTIONS`预检请求
-- 因服务端未返回正确的CORS头，预检**直接失败**
-- 控制台报错：
+### **2. Preflight Requests**
+**Typical Scenario**: Custom request headers, PUT/DELETE methods, `application/json` Content-Type, etc.  
+**Result**:
+- Browser first sends an `OPTIONS` preflight request
+- Because the server does not return correct CORS headers, the preflight **fails directly**
+- Console error:
   ```bash
   Access to fetch at 'http://api.example.com/data' from origin 'http://client.com' 
   has been blocked by CORS policy: Response to preflight request doesn't pass access control check: 
   No 'Access-Control-Allow-Origin' header is present on the requested resource.
   ```
-- **实际请求不会发送到服务端**
+- **The actual request will not be sent to the server**
 
 ---
 
-### **3. 例外情况**
-即使没有CORS头，以下情况仍能跨域：
-| 场景                | 原理                                                                 |
+### **3. Exception Cases**
+Even without CORS headers, the following cases can still cross domains:
+| Scenario                | Principle                                                                 |
 |---------------------|----------------------------------------------------------------------|
-| **JSONP**           | 通过`<script>`标签加载（已淘汰，存在安全隐患）                       |
-| **图片/音视频资源** | `<img>`, `<video>`等标签默认允许跨域加载（但JavaScript不能读取内容） |
-| **服务器代理**       | 通过同源的后端服务中转请求                                           |
-| **浏览器插件**       | 插件可能不受同源策略限制（如Postman）                                |
+| **JSONP**           | Load via `<script>` tag (deprecated, security risks)                       |
+| **Image/Audio/Video Resources** | `<img>`, `<video>` and other tags allow cross-domain loading by default (but JavaScript cannot read content) |
+| **Server Proxy**       | Forward requests through same-origin backend service                                           |
+| **Browser Extensions**       | Extensions may not be restricted by same-origin policy (e.g., Postman)                                |
 
 ---
 
-### **4. 潜在风险**
-如果强制绕过限制（如关闭浏览器安全设置或使用非浏览器工具）：
-1. **请求能正常完成**：服务端无法仅靠不配置CORS来阻止攻击
-2. **CSRF风险**：恶意网站可能利用用户已登录的状态发起请求（需配合`SameSite Cookie`等其他防护）
+### **4. Potential Risks**
+If restrictions are forcibly bypassed (such as disabling browser security settings or using non-browser tools):
+1. **Request can complete normally**: The server cannot prevent attacks solely by not configuring CORS
+2. **CSRF Risk**: Malicious websites may exploit logged-in user state to initiate requests (requires other protections like `SameSite Cookie`)
 
 ---
 
-### **正确解决方案**
-应在服务端**按需配置**CORS，而非完全禁用：
+### **Correct Solution**
+Should configure CORS on the server **as needed**, rather than completely disabling it:
 ```javascript
-// Express示例（最小安全配置）
+// Express example (minimal security configuration)
 app.use((req, res, next) => {
-  // 明确指定允许的源，而非使用 '*'
+  // Explicitly specify allowed origins, not using '*'
   const allowedOrigins = ['https://trusted-client.com'];
   const origin = req.headers.origin;
   
@@ -517,46 +517,46 @@ app.use((req, res, next) => {
 
 ---
 
-### **各场景总结**
-| 请求类型       | 服务端无CORS头时表现           | 解决方案                          |
+### **Summary by Scenario**
+| Request Type       | Behavior When Server Has No CORS Headers           | Solution                          |
 |----------------|-------------------------------|-----------------------------------|
-| 简单请求       | 浏览器拦截响应                | 配置`Access-Control-Allow-Origin` |
-| 预检请求       | 浏览器阻止请求发送            | 正确响应`OPTIONS`请求             |
-| 需要带Cookie   | 完全无法跨域                  | 添加`Access-Control-Allow-Credentials: true` |
-| 非浏览器环境   | 请求正常完成（如cURL、Postman）| 服务端仍需自主验证权限            |
+| Simple Request       | Browser intercepts response                | Configure `Access-Control-Allow-Origin` |
+| Preflight Request       | Browser prevents request from being sent            | Properly respond to `OPTIONS` request             |
+| Requires Cookies   | Completely unable to cross domain                  | Add `Access-Control-Allow-Credentials: true` |
+| Non-browser Environment   | Request completes normally (e.g., cURL, Postman)| Server still needs to verify permissions independently            |
 
-**核心原则**：CORS是浏览器的安全机制，而非服务端的访问控制。服务端应同时实施：
-1. **身份验证**（如JWT）
-2. **权限检查**
-3. **CSRF防护**（如SameSite Cookie）
-4. **输入验证**
-
----
-
-如果前端不主动处理跨域问题（即不配置任何跨域相关的代码或设置），浏览器会根据**同源策略（Same-Origin Policy）**严格限制跨域请求，具体表现如下：
+**Core Principle**: CORS is a browser security mechanism, not server access control. The server should also implement:
+1. **Authentication** (e.g., JWT)
+2. **Permission Checks**
+3. **CSRF Protection** (e.g., SameSite Cookie)
+4. **Input Validation**
 
 ---
 
-### **1. 请求表现**
-#### **场景1：前端直接发起跨域请求**
+If the frontend does not actively handle cross-domain issues (i.e., does not configure any cross-domain related code or settings), the browser will strictly restrict cross-domain requests according to the **Same-Origin Policy**, with the following specific behaviors:
+
+---
+
+### **1. Request Behavior**
+#### **Scenario 1: Frontend Directly Initiates Cross-Domain Request**
 ```javascript
-// 前端代码（未做任何跨域处理）
+// Frontend code (no cross-domain handling)
 fetch('https://api.other-domain.com/data')
   .then(response => response.json())
   .then(data => console.log(data))
   .catch(error => console.error(error));
 ```
-**结果**：
-- **浏览器控制台报错**：
+**Result**:
+- **Browser console error**:
   ```bash
   Access to fetch at 'https://api.other-domain.com/data' from origin 'https://your-site.com' 
   has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
   ```
-- **请求可能到达服务端**（查看服务端日志可见请求），但浏览器会拦截响应，前端代码无法读取响应内容。
+- **Request may reach the server** (visible in server logs), but the browser will intercept the response, and frontend code cannot read the response content.
 
-#### **场景2：跨域资源加载（如字体、图片）**
+#### **Scenario 2: Cross-Domain Resource Loading (e.g., fonts, images)**
 ```html
-<!-- 尝试加载跨域字体 -->
+<!-- Attempt to load cross-domain font -->
 <style>
   @font-face {
     font-family: 'CustomFont';
@@ -564,9 +564,9 @@ fetch('https://api.other-domain.com/data')
   }
 </style>
 ```
-**结果**：
-- 字体/图片可能**加载失败**（取决于资源类型和服务端配置）
-- 控制台报错：
+**Result**:
+- Font/image may **fail to load** (depending on resource type and server configuration)
+- Console error:
   ```bash
   Access to font at 'https://other-domain.com/font.woff2' from origin 'https://your-site.com' 
   has been blocked by CORS policy.
@@ -574,60 +574,60 @@ fetch('https://api.other-domain.com/data')
 
 ---
 
-### **2. 根本原因**
-浏览器会**主动拦截**跨域请求的响应，除非满足以下条件之一：
-1. 服务端返回正确的CORS头（如`Access-Control-Allow-Origin`）
-2. 请求属于**同源**（协议+域名+端口完全一致）
-3. 使用豁免规则（如`<img>`、`<script>`标签的部分场景）
+### **2. Root Cause**
+The browser will **actively intercept** cross-domain request responses unless one of the following conditions is met:
+1. Server returns correct CORS headers (e.g., `Access-Control-Allow-Origin`)
+2. Request is **same-origin** (protocol + domain + port exactly match)
+3. Uses exemption rules (e.g., some scenarios with `<img>`, `<script>` tags)
 
 ---
 
-### **3. 特殊情况与例外**
-#### **不受跨域限制的场景**
-| 场景                | 原因                                                                 |
+### **3. Special Cases and Exceptions**
+#### **Scenarios Not Restricted by Cross-Domain**
+| Scenario                | Reason                                                                 |
 |---------------------|----------------------------------------------------------------------|
-| **`<img>` 标签**    | 可以加载跨域图片（但JavaScript无法通过`canvas`读取内容）             |
-| **`<script>` 标签** | 可以加载跨域JS（需服务端不返回`X-Content-Type-Options: nosniff`）    |
-| **`<link>` 标签**   | 可以加载跨域CSS（但可能无法使用其中的字体资源）                      |
-| **JSONP**           | 通过`<script>`标签绕过限制（已淘汰，存在安全隐患）                  |
+| **`<img>` Tag**    | Can load cross-domain images (but JavaScript cannot read content via `canvas`)             |
+| **`<script>` Tag** | Can load cross-domain JS (requires server not to return `X-Content-Type-Options: nosniff`)    |
+| **`<link>` Tag**   | Can load cross-domain CSS (but may not be able to use fonts within)                      |
+| **JSONP**           | Bypass restrictions via `<script>` tag (deprecated, security risks)                  |
 
-#### **可能“看似成功”但实际受限的情况**
-1. **表单提交**：
+#### **Cases That May "Appear Successful" But Are Actually Restricted**
+1. **Form Submission**:
    ```html
    <form action="https://api.other-domain.com/submit" method="POST">
      <input type="text" name="data">
-     <button type="submit">提交</button>
+     <button type="submit">Submit</button>
    </form>
    ```
-    - **表现**：请求能发送到服务端，但前端无法读取响应内容。
+    - **Behavior**: Request can be sent to the server, but frontend cannot read response content.
 
-2. **服务端代理**：
-    - 前端请求同源的服务端接口，由服务端中转请求到目标域（此时浏览器看到的是同源请求）。
+2. **Server Proxy**:
+    - Frontend requests same-origin server interface, server forwards request to target domain (browser sees this as same-origin request).
 
 ---
 
-### **4. 前端主动解决方案**
-如果服务端无法修改（如第三方API），前端可采取以下**合法**手段：
-#### **方案1：配置代理服务器**
+### **4. Frontend Active Solutions**
+If the server cannot be modified (e.g., third-party API), the frontend can take the following **legal** approaches:
+#### **Solution 1: Configure Proxy Server**
 ```nginx
-# Nginx代理配置示例
+# Nginx proxy configuration example
 location /api/ {
   proxy_pass https://api.other-domain.com/;
   proxy_set_header Host api.other-domain.com;
 }
 ```
-前端只需请求同源URL（如`/api/data`），由Nginx转发。
+Frontend only needs to request same-origin URL (e.g., `/api/data`), forwarded by Nginx.
 
-#### **方案2：浏览器开发模式临时禁用限制**
-- **Chrome启动参数**（仅限开发调试）：
+#### **Solution 2: Temporarily Disable Restrictions in Browser Development Mode**
+- **Chrome startup parameters** (development/debugging only):
   ```bash
   chrome.exe --disable-web-security --user-data-dir=/tmp
   ```
-  ⚠️ 生产环境绝对不可用！
+  ⚠️ Absolutely not for production!
 
-#### **方案3：使用CORS中间件（开发时）**
+#### **Solution 3: Use CORS Middleware (During Development)**
 ```javascript
-// 本地开发服务器配置（如webpack-dev-server）
+// Local development server configuration (e.g., webpack-dev-server)
 devServer: {
   proxy: {
     '/api': 'https://api.other-domain.com'
@@ -637,53 +637,53 @@ devServer: {
 
 ---
 
-### **5. 错误做法与风险**
-| 错误尝试                | 风险                                                                 |
+### **5. Wrong Approaches and Risks**
+| Wrong Attempt                | Risk                                                                 |
 |-------------------------|----------------------------------------------------------------------|
-| **强制修改浏览器安全设置** | 用户浏览器不可控，且会暴露所有网站的安全风险                         |
-| **使用`try-catch`绕过**  | 无法捕获CORS错误（浏览器根本不会将响应返回给代码）                   |
-| **完全依赖JSONP**        | 仅支持GET请求，且可能引入XSS漏洞                                    |
+| **Force Modify Browser Security Settings** | User browsers are uncontrollable and will expose security risks for all websites                         |
+| **Use `try-catch` to Bypass**  | Cannot catch CORS errors (browser doesn't return response to code at all)                   |
+| **Completely Rely on JSONP**        | Only supports GET requests and may introduce XSS vulnerabilities                                    |
 
 ---
 
-### **总结**
-- **如果前端不处理跨域**：浏览器会按同源策略拦截请求，开发者工具中可见请求被标记为`CORS error`。
-- **合法解决方案**：
-    1. 优先让服务端配置CORS头
-    2. 次选使用同源代理
-    3. 开发环境可配置工具链代理
-- **绝不推荐**：在生产环境使用任何绕过浏览器安全机制的方法。
+### **Summary**
+- **If frontend doesn't handle cross-domain**: Browser will intercept requests according to same-origin policy, visible in developer tools as `CORS error`.
+- **Legal Solutions**:
+    1. Priority: Have server configure CORS headers
+    2. Alternative: Use same-origin proxy
+    3. Development environment: Configure toolchain proxy
+- **Never Recommended**: Use any method to bypass browser security mechanisms in production.
 
-正确流程：  
-**前端发现CORS问题 → 检查服务端配置 → 协商添加CORS头或改用代理方案**。
-
----
-
-正确配置前端跨域请求需要**服务端和前端协同配合**，以下是具体方法和最佳实践：
+Correct Process:  
+**Frontend discovers CORS issue → Check server configuration → Negotiate adding CORS headers or switch to proxy solution**.
 
 ---
 
-### **一、服务端必须配置的响应头**
-服务端需在响应中添加以下HTTP头（以Node.js为例）：
+Correctly configuring frontend cross-domain requests requires **server and frontend coordination**, below are specific methods and best practices:
+
+---
+
+### **I. Response Headers Server Must Configure**
+The server needs to add the following HTTP headers in responses (Node.js example):
 ```javascript
-// Express中间件示例
+// Express middleware example
 app.use((req, res, next) => {
-  // 允许指定的源（不要用'*'，否则无法带Cookie）
+  // Allow specified origin (don't use '*', otherwise cannot send cookies)
   res.header('Access-Control-Allow-Origin', 'https://your-frontend.com'); 
   
-  // 允许的HTTP方法
+  // Allowed HTTP methods
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   
-  // 允许的请求头
+  // Allowed request headers
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
-  // 允许携带Cookie（如果需要）
+  // Allow sending cookies (if needed)
   res.header('Access-Control-Allow-Credentials', 'true');
   
-  // 预检请求缓存时间（秒）
+  // Preflight request cache time (seconds)
   res.header('Access-Control-Max-Age', '86400');
   
-  // 对OPTIONS请求直接返回200
+  // Return 200 directly for OPTIONS requests
   if (req.method === 'OPTIONS') return res.sendStatus(200);
   
   next();
@@ -692,19 +692,19 @@ app.use((req, res, next) => {
 
 ---
 
-### **二、前端正确发起跨域请求**
-#### 1. 简单请求（Simple Request）
+### **II. Frontend Correctly Initiates Cross-Domain Requests**
+#### 1. Simple Request
 ```javascript
 fetch('https://api.example.com/data', {
-  method: 'GET', // 或 POST（Content-Type为 application/x-www-form-urlencoded）
+  method: 'GET', // or POST (Content-Type is application/x-www-form-urlencoded)
   headers: {
     'Content-Type': 'application/x-www-form-urlencoded',
   },
-  credentials: 'include' // 如果需要带Cookie
+  credentials: 'include' // if cookies are needed
 })
 ```
 
-#### 2. 需预检的请求（Preflight Request）
+#### 2. Preflight Request
 ```javascript
 fetch('https://api.example.com/data', {
   method: 'PUT',
@@ -717,7 +717,7 @@ fetch('https://api.example.com/data', {
 });
 ```
 
-#### 3. 带自定义头的请求
+#### 3. Request with Custom Headers
 ```javascript
 fetch('https://api.example.com/data', {
   headers: {
@@ -729,22 +729,22 @@ fetch('https://api.example.com/data', {
 
 ---
 
-### **三、不同场景的解决方案**
-#### 场景1：控制第三方API（服务端可修改）
-- 按上述方法配置服务端CORS头
+### **III. Solutions for Different Scenarios**
+#### Scenario 1: Control Third-Party API (Server Can Be Modified)
+- Configure server CORS headers as described above
 
-#### 场景2：无法修改第三方API
-**方案A：通过同源代理**
+#### Scenario 2: Cannot Modify Third-Party API
+**Solution A: Through Same-Origin Proxy**
 ```nginx
-# Nginx配置
+# Nginx configuration
 location /api/ {
   proxy_pass https://api.other-domain.com/;
   proxy_set_header Host api.other-domain.com;
 }
 ```
-前端请求`/api/data` → Nginx转发到`https://api.other-domain.com/data`
+Frontend requests `/api/data` → Nginx forwards to `https://api.other-domain.com/data`
 
-**方案B：JSONP（仅限GET请求）**
+**Solution B: JSONP (GET requests only)**
 ```javascript
 function handleResponse(data) {
   console.log(data);
@@ -756,71 +756,71 @@ document.body.appendChild(script);
 
 ---
 
-### **四、安全注意事项**
-1. **不要使用`Access-Control-Allow-Origin: *`**
-    - 如果请求需要带Cookie或Authorization头，必须指定具体域名
+### **IV. Security Considerations**
+1. **Don't use `Access-Control-Allow-Origin: *`**
+    - If requests need to send cookies or Authorization headers, must specify specific domain
 
-2. **敏感接口额外保护**
-    - 即使配置了CORS，仍需验证`Origin`头防止CSRF
+2. **Additional Protection for Sensitive Interfaces**
+    - Even with CORS configured, still need to verify `Origin` header to prevent CSRF
    ```javascript
-   // 服务端校验Origin示例
+   // Server Origin validation example
    const allowedOrigins = ['https://your-frontend.com'];
    if (!allowedOrigins.includes(req.headers.origin)) {
      return res.status(403).send('Forbidden');
    }
    ```
 
-3. **生产环境禁用以下配置**
+3. **Disable Following Configuration in Production**
    ```javascript
-   // 危险配置（绝对不要用）
+   // Dangerous configuration (absolutely don't use)
    res.header('Access-Control-Allow-Origin', '*');
-   res.header('Access-Control-Allow-Credentials', 'true'); // 与'*'冲突
+   res.header('Access-Control-Allow-Credentials', 'true'); // Conflicts with '*'
    ```
 
 ---
 
-### **五、常见问题排查**
-| 问题现象 | 可能原因 | 解决方案 |
+### **V. Common Issue Troubleshooting**
+| Issue | Possible Cause | Solution |
 |---------|---------|---------|
-| 预检请求失败 | 服务端未正确处理`OPTIONS`方法 | 添加OPTIONS路由 |
-| 带Cookie请求被拒绝 | 未设置`credentials: 'include'` | 前后端同时配置 |
-| 自定义头未生效 | 未在`Access-Control-Allow-Headers`中声明 | 服务端添加对应头 |
+| Preflight request fails | Server doesn't properly handle `OPTIONS` method | Add OPTIONS route |
+| Cookie request rejected | `credentials: 'include'` not set | Configure both frontend and backend |
+| Custom header not effective | Not declared in `Access-Control-Allow-Headers` | Server adds corresponding header |
 
 ---
 
-### **六、完整工作流程**
-1. 浏览器发送实际请求（简单请求）或先发`OPTIONS`预检请求（复杂请求）
-2. 服务端响应CORS头
-3. 浏览器验证头信息，通过则解除限制
-4. 前端收到响应数据
+### **VI. Complete Workflow**
+1. Browser sends actual request (simple request) or first sends `OPTIONS` preflight request (complex request)
+2. Server responds with CORS headers
+3. Browser validates header information, removes restrictions if passed
+4. Frontend receives response data
 
 ---
 
-按照以上方法配置，既能保证安全性，又能实现合法的跨域请求。对于敏感操作（如修改数据），建议始终通过同源代理中转。
+Following the above methods can ensure security while achieving legal cross-domain requests. For sensitive operations (such as modifying data), it's recommended to always use same-origin proxy forwarding.
 
 ---
 
-# 避免前端XSS注入的全面防护方案
+# Comprehensive Protection Plan to Avoid Frontend XSS Injection
 
-XSS（跨站脚本攻击）是Web应用最常见的安全威胁之一，以下是全方位的防护策略和实践方法：
+XSS (Cross-Site Scripting) attacks are one of the most common security threats in web applications. Below is a comprehensive defense strategy and practical methods:
 
-## 一、基础防护措施
+## I. Basic Protection Measures
 
-### 1. 输入验证与过滤
+### 1. Input Validation and Filtering
 ```javascript
-// 使用正则表达式过滤危险字符
+// Use regular expressions to filter dangerous characters
 function sanitizeInput(input) {
   return input.replace(/[<>"'&\/]/g, '');
 }
 
-// 或使用专业库
+// Or use professional libraries
 import DOMPurify from 'dompurify';
 const clean = DOMPurify.sanitize(userInput);
 ```
 
-### 2. 输出编码
+### 2. Output Encoding
 ```javascript
-// HTML实体编码
+// HTML entity encoding
 function htmlEncode(str) {
   return str.replace(/[&<>'"]/g, 
     char => ({
@@ -833,29 +833,29 @@ function htmlEncode(str) {
 }
 ```
 
-## 二、现代框架的安全实践
+## II. Modern Framework Security Practices
 
-### React安全实践
+### React Security Practices
 ```jsx
-// 自动转义内容
+// Automatically escape content
 <div>{userContent}</div> 
 
-// 需要渲染HTML时消毒
+// Sanitize when HTML rendering is needed
 <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlContent) }} />
 ```
 
-### Vue安全实践
+### Vue Security Practices
 ```html
-<!-- 自动转义 -->
+<!-- Automatic escaping -->
 <div>{{ userContent }}</div>
 
-<!-- 需要渲染HTML时使用v-html + 消毒 -->
+<!-- Use v-html + sanitization when HTML rendering is needed -->
 <div v-html="sanitizedHtml"></div>
 ```
 
-## 三、内容安全策略（CSP）
+## III. Content Security Policy (CSP)
 
-### 配置示例
+### Configuration Example
 ```http
 Content-Security-Policy: 
   default-src 'self';
@@ -866,13 +866,13 @@ Content-Security-Policy:
   frame-ancestors 'none';
 ```
 
-### 元标签方式
+### Meta Tag Method
 ```html
 <meta http-equiv="Content-Security-Policy" 
       content="default-src 'self'; script-src 'self'">
 ```
 
-## 四、安全HTTP头配置
+## IV. Security HTTP Header Configuration
 
 ```http
 X-XSS-Protection: 1; mode=block
@@ -881,53 +881,53 @@ X-Frame-Options: DENY
 Referrer-Policy: no-referrer-when-downgrade
 ```
 
-## 五、DOM操作安全
+## V. DOM Operation Security
 
-### 危险操作（避免使用）
+### Dangerous Operations (Avoid Using)
 ```javascript
 element.innerHTML = userInput;
 document.write(userInput);
 eval(userInput);
 ```
 
-### 安全替代方案
+### Safe Alternatives
 ```javascript
 element.textContent = userInput;
 element.setAttribute('data-value', userInput);
 ```
 
-## 六、专业防护库推荐
+## VI. Professional Protection Library Recommendations
 
-1. **DOMPurify** - HTML消毒
+1. **DOMPurify** - HTML sanitization
    ```bash
    npm install dompurify
    ```
 
-2. **xss-filters** - 通用XSS过滤
+2. **xss-filters** - General XSS filtering
    ```bash
    npm install xss-filters
    ```
 
-3. **sanitize-html** - 富文本消毒
+3. **sanitize-html** - Rich text sanitization
    ```bash
    npm install sanitize-html
    ```
 
-## 七、进阶防护技术
+## VII. Advanced Protection Technologies
 
-### 1. 子资源完整性（SRI）
+### 1. Subresource Integrity (SRI)
 ```html
 <script src="https://example.com/script.js"
         integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC"
         crossorigin="anonymous"></script>
 ```
 
-### 2. Trusted Types API（Chrome）
+### 2. Trusted Types API (Chrome)
 ```javascript
-// 服务端头
+// Server header
 Content-Security-Policy: require-trusted-types-for 'script'
 
-// 前端配置
+// Frontend configuration
 if (window.trustedTypes) {
   const policy = trustedTypes.createPolicy('default', {
     createHTML: input => DOMPurify.sanitize(input)
@@ -935,25 +935,25 @@ if (window.trustedTypes) {
 }
 ```
 
-## 八、开发流程中的安全实践
+## VIII. Security Practices in Development Process
 
-1. **代码审查**：检查所有动态内容渲染点
-2. **自动化扫描**：使用工具如OWASP ZAP
-3. **安全测试**：定期进行渗透测试
-4. **依赖更新**：保持安全库版本最新
+1. **Code Review**: Check all dynamic content rendering points
+2. **Automated Scanning**: Use tools like OWASP ZAP
+3. **Security Testing**: Regular penetration testing
+4. **Dependency Updates**: Keep security library versions up to date
 
-## 九、常见XSS攻击场景防御
+## IX. Common XSS Attack Scenario Defense
 
-### 1. 存储型XSS
-- 所有用户输入在存储前消毒
-- 输出时再次编码
+### 1. Stored XSS
+- Sanitize all user input before storage
+- Encode again on output
 
-### 2. 反射型XSS
-- 对URL参数严格验证
-- 实现CSP限制内联脚本
+### 2. Reflected XSS
+- Strictly validate URL parameters
+- Implement CSP to restrict inline scripts
 
-### 3. DOM型XSS
-- 避免使用`eval()`、`setTimeout(string)`等
-- 使用`textContent`代替`innerHTML`
+### 3. DOM-based XSS
+- Avoid using `eval()`, `setTimeout(string)`, etc.
+- Use `textContent` instead of `innerHTML`
 
-通过实施以上多层次的防御措施，可以显著降低XSS攻击风险。记住：**没有单一的银弹解决方案**，安全需要纵深防御体系。
+By implementing the above multi-layered defense measures, XSS attack risks can be significantly reduced. Remember: **There is no single silver bullet solution**, security requires a defense-in-depth system.

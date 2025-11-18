@@ -6,7 +6,7 @@ High-speed rail ticketing system is a complex real-time trading system involving
 
 ### Dijkstra or A* Algorithm
 - **Purpose**: Calculate optimal travel routes for high-speed rail trains
-- **实现**：
+- **Implementation**:
   ```python
   def dijkstra(graph, start):
       distances = {node: float('infinity') for node in graph}

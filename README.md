@@ -6,7 +6,7 @@ Here are the topics:
 
 - [Circular Queue (Ring Buffer): Introduction and Advantages](https://github.com/liweinan/deepseek-answers/blob/main/files/ring-buffer.md)
 - [Spin Locks: A Low-Level Synchronization Primitive](https://github.com/liweinan/deepseek-answers/blob/main/files/spin-lock.md)
-- [高铁订票系统核心算法解析](https://github.com/liweinan/deepseek-answers/blob/main/files/gaotie.md)
+- [High-Speed Rail Ticketing System Core Algorithms Analysis](https://github.com/liweinan/deepseek-answers/blob/main/files/gaotie.md)
 - [Raft 的并发性能限制](https://github.com/liweinan/deepseek-answers/blob/main/files/raft-perform.md)
 - [工厂模式（Factory Pattern）和策略模式](https://github.com/liweinan/deepseek-answers/blob/main/files/strategy_vs_factory_pattern.md)
 - [DTO（Data Transfer Object）类是一种设计模式](https://github.com/liweinan/deepseek-answers/blob/main/files/dto-class.md)
@@ -20,11 +20,11 @@ Here are the topics:
 ### AI / Machine Learning / BlockChain
 
 - [全球AI - 区块链 -软件工具项目融资情况以及项目介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/ai-stat.md)
-- [数字人民币与DeFi的关系解析](https://github.com/liweinan/deepseek-answers/blob/main/files/rmb.md)
+- [Analysis of the Relationship Between Digital Yuan and DeFi](https://github.com/liweinan/deepseek-answers/blob/main/files/rmb.md)
 - [few-shot learning](https://github.com/liweinan/deepseek-answers/blob/main/files/ai-fewshot.md)
 - [推理模型介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/models-intro.md)
 - [LangChain4j的使用](https://github.com/liweinan/deepseek-answers/blob/main/files/langchain4j-use.md)
-- [**Cursor** 支持类似 **Trae** 的规则（Rules）功能](https://github.com/liweinan/deepseek-answers/blob/main/files/trae-rules.md)
+- [Yes, **Cursor** Supports Rules Functionality Similar to **Trae**](https://github.com/liweinan/deepseek-answers/blob/main/files/trae-rules.md)
 - [对比分析 Cursor 的**跨目录工作区**和**在两个独立窗口中打开项目并将另一个项目的目录拖拽到 AI 窗口作为上下文**这两种方式](https://github.com/liweinan/deepseek-answers/blob/main/files/cursor-cross-workspace-drag.md)
 - [未来程序员的发展前景](https://github.com/liweinan/deepseek-answers/blob/main/files/programmer.md)
 
@@ -142,14 +142,14 @@ Here are the topics:
 
 ### Testing
 
-- [**Jenkins Pipeline手把手教程 - 为OpenShift测试设计**](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-jenkins.md)
+- [**Jenkins Pipeline Step-by-Step Tutorial - Designed for OpenShift Testing**](https://github.com/liweinan/deepseek-answers/blob/main/files/oc-jenkins.md)
 
 ### Frontend Frameworks
 
-- [Vue Mixin 示例](https://github.com/liweinan/deepseek-answers/blob/main/files/vue-mixin.md)
-- [Vue Composition API 详解与示例](https://github.com/liweinan/deepseek-answers/blob/main/files/vue-composition-api.md)
+- [Vue Mixin Example](https://github.com/liweinan/deepseek-answers/blob/main/files/vue-mixin.md)
+- [Vue Composition API Detailed Explanation and Examples](https://github.com/liweinan/deepseek-answers/blob/main/files/vue-composition-api.md)
 - [Comparing the Vue and React data models.](https://github.com/liweinan/deepseek-answers/blob/main/files/vue-vs-react-data-model.md)
-- [XSS跨域问题与正确防护方法](https://github.com/liweinan/deepseek-answers/blob/main/files/xss-solution.md)
+- [XSS Cross-Domain Issues and Correct Protection Methods](https://github.com/liweinan/deepseek-answers/blob/main/files/xss-solution.md)
 - [Node.js servers](https://github.com/liweinan/deepseek-answers/blob/main/files/nodejs-servers.md)
 - [Introduction to Node.js](https://github.com/liweinan/deepseek-answers/blob/main/files/node-intro.md)
 - [**Tauri** 的架构解析和基本用法指南](https://github.com/liweinan/deepseek-answers/blob/main/files/tauri-intro.md)
@@ -175,7 +175,7 @@ Here are the topics:
 - [Ent Framework in Go: A Modern Entity Framework](https://github.com/liweinan/deepseek-answers/blob/main/files/go-ent.md)
 - [Comparison: `computed` in Vue vs `useEffect` in React](https://github.com/liweinan/deepseek-answers/blob/main/files/vue-computed-vs-react-useeffect.md)
 - [Redis 键空间通知（Keyspace Notifications）](https://github.com/liweinan/deepseek-answers/blob/main/files/redis-key.md)
-- [Manticore Search 支持的数据源和格式](https://github.com/liweinan/deepseek-answers/blob/main/files/manticoresearch-datasource.md)
+- [Manticore Search Data Sources and Formats Supported](https://github.com/liweinan/deepseek-answers/blob/main/files/manticoresearch-datasource.md)
 - [SmallRye 是一个开源项目](https://github.com/liweinan/deepseek-answers/blob/main/files/smallrye.md)
 - [在Quarkus REST 中的`Multi<String>`](https://github.com/liweinan/deepseek-answers/blob/main/files/quarkus-multi.md)
 - [关于Quarkus微服务实践项目推荐的问题](https://github.com/liweinan/deepseek-answers/blob/main/files/quarkus-microservice.md)
@@ -193,7 +193,7 @@ Here are the topics:
 - [OpenShift的构建策略](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-build-strategies.md)
 - [ReplicaSet 创建的 Pod 可以跨节点（Node）部署](https://github.com/liweinan/deepseek-answers/blob/main/files/replicaret-cross-node.md)
 - [StatefulSet介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/statefulset-intro.md)
-- [OpenShift API Server介绍](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-api-server.md)
+- [OpenShift API Server Introduction](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-api-server.md)
 - [**Hypershift 简介**](https://github.com/liweinan/deepseek-answers/blob/main/files/hypershift-intro.md)
 - [**Kubernetes Service** 的样例](https://github.com/liweinan/deepseek-answers/blob/main/files/a-sample-of-k8s-service-config.md)
 - [**OpenShift 中的 Headless Service（无头服务）**](https://github.com/liweinan/deepseek-answers/blob/main/files/openshift-headless-service.md)

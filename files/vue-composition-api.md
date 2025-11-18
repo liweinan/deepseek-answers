@@ -1,23 +1,23 @@
-# Vue Composition API 详解与示例
+# Vue Composition API Detailed Explanation and Examples
 
-Composition API 是 Vue 3 引入的一套新的 API 风格，它提供了更好的代码组织和复用方式，特别是对于复杂组件逻辑的管理。
+Composition API is a new API style introduced in Vue 3, providing better code organization and reusability, especially for managing complex component logic.
 
-## Composition API 核心概念
+## Composition API Core Concepts
 
-1. **响应式状态**：使用 `ref` 和 `reactive` 创建
-2. **组合函数**：将相关功能组织在一起
-3. **生命周期钩子**：以函数形式使用
-4. **代码复用**：通过自定义组合函数实现
+1. **Reactive State**: Created using `ref` and `reactive`
+2. **Composables**: Organize related functionality together
+3. **Lifecycle Hooks**: Used in function form
+4. **Code Reusability**: Achieved through custom composable functions
 
-## 基础示例：计数器组件
+## Basic Example: Counter Component
 
 ```javascript
 <template>
   <div>
-    <p>计数: {{ count }}</p>
-    <button @click="increment">增加</button>
-    <button @click="decrement">减少</button>
-    <p>两倍计数: {{ doubleCount }}</p>
+    <p>Count: {{ count }}</p>
+    <button @click="increment">Increment</button>
+    <button @click="decrement">Decrement</button>
+    <p>Double Count: {{ doubleCount }}</p>
   </div>
 </template>
 
@@ -26,13 +26,13 @@ import { ref, computed } from 'vue';
 
 export default {
   setup() {
-    // 响应式状态
+    // Reactive state
     const count = ref(0);
 
-    // 计算属性
+    // Computed property
     const doubleCount = computed(() => count.value * 2);
 
-    // 方法
+    // Methods
     const increment = () => {
       count.value++;
     };
@@ -41,7 +41,7 @@ export default {
       count.value--;
     };
 
-    // 返回模板中可用的内容
+    // Return what's available in template
     return {
       count,
       doubleCount,
@@ -53,9 +53,9 @@ export default {
 </script>
 ```
 
-## 进阶示例：组合函数复用逻辑
+## Advanced Example: Composable Function for Logic Reuse
 
-### 1. 创建可复用的组合函数
+### 1. Create Reusable Composable Function
 
 ```javascript
 // src/composables/useCounter.js
@@ -83,18 +83,18 @@ export default function useCounter(initialValue = 0) {
 }
 ```
 
-### 2. 在组件中使用组合函数
+### 2. Use Composable Function in Component
 
 ```javascript
 <template>
   <div>
-    <p>主计数: {{ count }}</p>
-    <p>两倍计数: {{ doubleCount }}</p>
-    <button @click="increment">增加</button>
-    <button @click="decrement">减少</button>
+    <p>Main Count: {{ count }}</p>
+    <p>Double Count: {{ doubleCount }}</p>
+    <button @click="increment">Increment</button>
+    <button @click="decrement">Decrement</button>
     
-    <p>副计数: {{ secondary.count }}</p>
-    <button @click="secondary.increment">增加副计数</button>
+    <p>Secondary Count: {{ secondary.count }}</p>
+    <button @click="secondary.increment">Increment Secondary</button>
   </div>
 </template>
 
@@ -103,10 +103,10 @@ import useCounter from '@/composables/useCounter';
 
 export default {
   setup() {
-    // 使用组合函数
+    // Use composable function
     const { count, doubleCount, increment, decrement } = useCounter(5);
     
-    // 可以多次使用同一个组合函数
+    // Can use the same composable function multiple times
     const secondary = useCounter(10);
     
     return {
@@ -121,9 +121,9 @@ export default {
 </script>
 ```
 
-## 实际应用场景示例：获取鼠标位置
+## Practical Application Example: Get Mouse Position
 
-### 1. 创建鼠标跟踪组合函数
+### 1. Create Mouse Tracking Composable Function
 
 ```javascript
 // src/composables/useMousePosition.js
@@ -150,12 +150,12 @@ export default function useMousePosition() {
 }
 ```
 
-### 2. 在组件中使用
+### 2. Use in Component
 
 ```vue
 <template>
   <div>
-    <p>鼠标位置: ({{ x }}, {{ y }})</p>
+    <p>Mouse Position: ({{ x }}, {{ y }})</p>
   </div>
 </template>
 
@@ -172,22 +172,22 @@ export default {
 </script>
 ```
 
-## Composition API 的优势
+## Advantages of Composition API
 
-1. **更好的逻辑复用**：比 mixins 更清晰，没有命名冲突
-2. **更灵活的代码组织**：可以按功能而非选项类型组织代码
-3. **更好的类型推断**：对 TypeScript 支持更好
-4. **更小的打包体积**：可以按需导入
-5. **更清晰的依赖关系**：所有响应式依赖都显式声明
+1. **Better Logic Reuse**: Clearer than mixins, no naming conflicts
+2. **More Flexible Code Organization**: Can organize code by functionality rather than option types
+3. **Better Type Inference**: Better TypeScript support
+4. **Smaller Bundle Size**: Can import on demand
+5. **Clearer Dependencies**: All reactive dependencies are explicitly declared
 
-## 与 Options API 对比
+## Comparison with Options API
 
-| 特性 | Composition API | Options API |
+| Feature | Composition API | Options API |
 |------|----------------|-------------|
-| 代码组织 | 按功能逻辑组织 | 按选项类型(data, methods等)组织 |
-| 复用性 | 高(组合函数) | 中(mixins) |
-| TypeScript支持 | 优秀 | 一般 |
-| 学习曲线 | 较陡峭 | 较平缓 |
-| 适用场景 | 复杂组件 | 简单组件 |
+| Code Organization | Organized by functional logic | Organized by option types (data, methods, etc.) |
+| Reusability | High (composable functions) | Medium (mixins) |
+| TypeScript Support | Excellent | Average |
+| Learning Curve | Steeper | Gentler |
+| Use Cases | Complex components | Simple components |
 
-- [ ] Composition API 不是要完全替代 Options API，而是提供了另一种选择，特别是在处理复杂逻辑时更为强大。
+- [ ] Composition API is not meant to completely replace Options API, but provides another option, especially more powerful when handling complex logic.

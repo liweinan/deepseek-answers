@@ -13,7 +13,8 @@ translate_batch_v3.py
 translate_mixed_content.py
 
 # Project tracking files (keep these for local tracking)
-# translation_progress.json
+translation_progress.json
+PROJECT_BRIEF.md
 # translation_log.md
 # language_analysis_results.txt
 
@@ -57,4 +58,3 @@ ENV/
 
 # Log files
 *.log
-PROJECT_BRIEF.md
