@@ -187,7 +187,7 @@ For comprehensive explanation, here are some other common Kubernetes network com
 
 - **Service Mesh (like Istio, Linkerd)**:
   - **Application Layer (L7)**: Service mesh provides advanced traffic management (like retries, timeouts, A/B testing), service-to-service authentication and encryption, operating at application layer
-  - **Transport Layer (L4)**: Some functions (like TCP traffic control) involve transport layer
+  - **Transport Layer (L4, partial functions)**: Some functions (like TCP traffic control) involve transport layer
 
 - **DNS (CoreDNS)**:
   - **Application Layer (L7)**: CoreDNS provides DNS services within Kubernetes cluster (like resolving Service names to ClusterIP), belonging to application layer
@@ -233,7 +233,7 @@ graph TD
 
 - **Diagram Structure**:
   - Left side shows OSI seven-layer network model, from Physical Layer (L1) to Application Layer (L7)
-  - Right side shows Kubernetes network components (kube-proxy, CNI, Ingress controller, Service Mesh, CoreDNS, Pod applications), with arrows pointing to their main operating network layers
+  - Right side shows Kubernetes network components (kube-proxy, CNI plugins, Ingress controllers, Service Mesh, CoreDNS, Pod applications), with arrows pointing to their main operating network layers
   - Each component is labeled with its main functions and corresponding OSI layers
 
 - **Component Positioning**:
@@ -246,7 +246,7 @@ graph TD
 
 ### Rendering Instructions
 
-- Copy the above Mermaid code to tools that support Mermaid (like Mermaid Live Editor, VS Code Mermaid plugin, or GitHub Markdown) to render
+- Copy the above Mermaid code to tools that support Mermaid (like Mermaid Live Editor, VS Code Mermaid plugin, or GitHub Markdown renderers supporting Mermaid) to render
 - The diagram clearly shows the position of each component in the OSI model, facilitating understanding of the layered responsibilities of Kubernetes network components
 
 If you need to further adjust the diagram (like adding specific CNI plugins or more detailed interaction relationships), or have more specific questions about network behavior of certain components, please let me know!
@@ -364,11 +364,11 @@ The following table summarizes the functions, OSI layers, and applicable scenari
 |-------------------------------|-----------------|--------------------------------------------------------------------------|-----------------------|-----------------------------------------------|----------------------------------|
 | **Kubernetes kube-proxy**     | Core Component        | Service discovery and load balancing (iptables/IPVS)                                      | L3, L4                | https://github.com/kubernetes/kubernetes       | All Kubernetes clusters               |
 | **Cilium eBPF kube-proxy**    | Alternative Solution        | eBPF-based service forwarding, replaces kube-proxy, high performance                             | L3, L4                | https://github.com/cilium/cilium              | High-performance, large-scale clusters                |
-| **Flannel**                   | CNI Plugin        | Simple Overlay network (VXLAN/UDP)                                           | L2, L3                | https://github.com/flannel-io/flannel          | Simple small to medium clusters                    |
-| **Calico**                    | CNI Plugin        | Overlay (VXLAN)/Underlay (BGP), network policies                               | L2, L3, L4            | https://github.com/projectcalico/calico       | Security-sensitive, high-performance clusters              |
-| **Cilium**                    | CNI Plugin        | eBPF-based, Overlay/Underlay, L7 policies                                          | L2, L3, L4, L7        | https://github.com/cilium/cilium              | High-performance, complex network scenarios              |
-| **WeaveNet**                  | CNI Plugin        | Overlay network, encrypted communication                                                   | L2, L3                | https://github.com/weaveworks/weave           | Clusters with high security requirements                |
-| **AWS VPC CNI**               | CNI Plugin        | Underlay network, utilizes AWS VPC ENI                                          | L2, L3                | https://github.com/aws/amazon-vpc-cni-k8s     | AWS EKS environments                      |
+| **Flannel**                   | CNI Plugin        | Simple Overlay network (VXLAN/UDP), suitable for small to medium clusters                                           | L2, L3                | https://github.com/flannel-io/flannel          | Simple small to medium clusters                    |
+| **Calico**                    | CNI Plugin        | Overlay (VXLAN) and Underlay (BGP), provides network policies                               | L2, L3, L4            | https://github.com/projectcalico/calico       | Security-sensitive, high-performance clusters              |
+| **Cilium**                    | CNI Plugin        | eBPF-based, Overlay/Underlay, L7 policies, high performance                                          | L2, L3, L4, L7        | https://github.com/cilium/cilium              | High-performance, complex network scenarios              |
+| **WeaveNet**                  | CNI Plugin        | Overlay network, supports encrypted communication                                                   | L2, L3                | https://github.com/weaveworks/weave           | Clusters with high security requirements                |
+| **AWS VPC CNI**               | CNI Plugin        | Underlay network, utilizes AWS VPC ENI for IP allocation                                          | L2, L3                | https://github.com/aws/amazon-vpc-cni-k8s     | AWS EKS environments                      |
 | **Kube-OVN**                  | CNI Plugin        | OVN/OVS-based, Overlay, static IP, ACL, QoS                                      | L2, L3, L4            | https://github.com/kubeovn/kube-ovn           | Complex networks, Windows support            |
 | **CoreDNS**                   | DNS Service        | Cluster DNS resolution, resolves Service names to ClusterIP                             | L7                    | https://github.com/coredns/coredns            | All Kubernetes clusters               |
 | **Nginx Ingress Controller**  | Ingress Controller  | HTTP/HTTPS routing, load balancing                                                | L7                    | https://github.com/kubernetes/ingress-nginx   | HTTP traffic management                     |
@@ -383,7 +383,7 @@ The following table summarizes the functions, OSI layers, and applicable scenari
 
 ### 3. **Mermaid Diagram**
 
-The following Mermaid diagram shows the position of Kubernetes network components and their related projects in the OSI seven-layer network model, covering kube-proxy, CNI plugins, CoreDNS, Ingress controllers, Service Mesh, and underlying network components.
+The following Mermaid diagram shows the position of Kubernetes network components and their related projects in the OSI seven-layer network model, covering kube-proxy, CNI plugins, DNS, Ingress controllers, Service Mesh, and underlying network components.
 
 ```mermaid
 graph TD
@@ -472,7 +472,7 @@ graph TD
   - **CNI Plugins**: Flannel, Calico, Cilium, etc., covering L2 (virtual network card), L3 (IPAM, routing), L4 (network policies), Cilium extends to L7 (HTTP policies)
   - **CoreDNS**: L7, responsible for DNS resolution
   - **Ingress Controllers**: Nginx, Traefik, Contour, etc., L7, handle HTTP/HTTPS routing
-  - **Service Mesh**: Istio, Linkerd, Consul Connect, L7 and L4, provide advanced traffic management
+  - **Service Mesh**: Istio, Linkerd, etc., L7 and L4, provide advanced traffic management
   - **Underlying Network**: OVS and Linux Kernel, L1-L4, provide basic network functions
   - **Pod Applications**: L7 and L4, run business logic
 

@@ -1,40 +1,40 @@
-# 让我详细解释eBPF的跳板机制（Trampoline Mechanism）：
+# Detailed Explanation of eBPF Trampoline Mechanism
 
-## 跳板机制概述
+## Trampoline Mechanism Overview
 
-跳板机制是eBPF程序执行的核心基础设施，它充当用户空间eBPF程序与内核事件之间的桥梁，确保程序能够安全、高效地在内核中执行。
+The trampoline mechanism is the core infrastructure for eBPF program execution, serving as a bridge between userspace eBPF programs and kernel events, ensuring programs can execute safely and efficiently in the kernel.
 
-## 1. 跳板机制的核心数据结构
+## 1. Core Data Structures of Trampoline Mechanism
 
 ```c
 // kernel/bpf/trampoline.c
 struct bpf_trampoline {
-    struct hlist_node hlist;           // 哈希链表节点
-    struct ftrace_ops fops;            // ftrace操作结构
-    struct bpf_prog *prog;             // 关联的eBPF程序
-    void *image;                       // 跳板代码镜像
-    void *image_end;                   // 镜像结束地址
-    u64 key;                          // 唯一标识键
+    struct hlist_node hlist;           // Hash list node
+    struct ftrace_ops fops;            // ftrace operation structure
+    struct bpf_prog *prog;             // Associated eBPF program
+    void *image;                       // Trampoline code image
+    void *image_end;                   // Image end address
+    u64 key;                          // Unique identifier key
     struct bpf_tramp_links {
-        struct bpf_tramp_link *links[BPF_MAX_TRAMP_PROGS]; // 链接数组
-        int nr_links;                  // 链接数量
+        struct bpf_tramp_link *links[BPF_MAX_TRAMP_PROGS]; // Links array
+        int nr_links;                  // Number of links
     } *tlinks;
-    struct mutex mutex;                // 互斥锁
-    refcount_t refcnt;                 // 引用计数
-    u32 flags;                        // 标志位
+    struct mutex mutex;                // Mutex lock
+    refcount_t refcnt;                 // Reference count
+    u32 flags;                        // Flags
     u64 bpf_cookie;                   // BPF cookie
 };
 
-// 跳板运行上下文
+// Trampoline run context
 struct bpf_tramp_run_ctx {
-    struct bpf_prog *prog;            // 要执行的程序
-    u64 args[5];                      // 函数参数
-    u64 ret;                          // 返回值
-    bool called;                      // 是否已调用
+    struct bpf_prog *prog;            // Program to execute
+    u64 args[5];                      // Function arguments
+    u64 ret;                          // Return value
+    bool called;                      // Whether called
 };
 ```
 
-## 2. 跳板创建过程
+## 2. Trampoline Creation Process
 
 ```c
 // kernel/bpf/trampoline.c

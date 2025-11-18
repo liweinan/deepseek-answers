@@ -1,4 +1,4 @@
-# Java题 - Sherlock and the Valid String
+# Java Problem - Sherlock and the Valid String
 
 - https://www.hackerrank.com/challenges/one-month-preparation-kit-sherlock-and-valid-string
 

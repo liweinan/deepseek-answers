@@ -1,36 +1,36 @@
-# Java的并行Stream通过**Spliterator**和**Fork/Join框架**实现数据划分，以支持并行处理。以下是其数据划分的核心机制：
+# Java's parallel Stream implements data partitioning through **Spliterator** and **Fork/Join framework** to support parallel processing. Below is the core mechanism of its data partitioning:
 
-1. **Spliterator分割数据**：
-    - 并行Stream使用`Spliterator`（Splittable Iterator）来描述数据源的分割特性。`Spliterator`提供了`trySplit()`方法，用于将数据源划分为更小的子任务。
-    - 数据源（如List、数组或流）会被分割成多个部分，通常基于数据的特性（如数组的大小或集合的元素数量）。分割的目标是尽量保证子任务的粒度均衡。
-    - 例如，对于数组，`Spliterator`会尝试将数据分成大致相等的块（如二分法）；对于链表等结构，分割可能基于估计的元素数量。
+1. **Spliterator Splits Data**:
+    - Parallel Stream uses `Spliterator` (Splittable Iterator) to describe the partitioning characteristics of the data source. `Spliterator` provides the `trySplit()` method to divide the data source into smaller subtasks.
+    - The data source (such as List, array, or stream) will be split into multiple parts, usually based on data characteristics (such as array size or collection element count). The goal of partitioning is to ensure balanced granularity of subtasks as much as possible.
+    - For example, for arrays, `Spliterator` will try to divide data into roughly equal chunks (such as binary splitting); for structures like linked lists, partitioning may be based on estimated element counts.
 
-2. **Fork/Join框架调度任务**：
-    - 分割后的子任务被提交到**Fork/Join池**（默认使用`ForkJoinPool.commonPool()`），这是一个专门为并行任务设计的线程池。
-    - 每个子任务由一个线程处理，Fork/Join框架通过**工作窃取（Work-Stealing）**算法优化线程利用率：空闲线程会从其他线程的队列中“窃取”任务。
+2. **Fork/Join Framework Schedules Tasks**:
+    - The partitioned subtasks are submitted to the **Fork/Join pool** (default uses `ForkJoinPool.commonPool()`), which is a thread pool specifically designed for parallel tasks.
+    - Each subtask is processed by one thread, and the Fork/Join framework optimizes thread utilization through the **Work-Stealing** algorithm: idle threads will "steal" tasks from other threads' queues.
 
-3. **数据划分的策略**：
-    - **自动分割**：Stream框架根据数据源的大小和类型自动决定分割方式。例如，`ArrayList`的`Spliterator`会将数据分成两半，直到子任务达到一定阈值（通常由`ForkJoinPool`的配置或数据规模决定）。
-    - **最小分割粒度**：为了避免过多的任务分割开销，Java会设置一个最小分割阈值（由`Spliterator`的`estimateSize()`和`characteristics()`控制）。
-    - **数据特性影响划分**：`Spliterator`的特性（如`SIZED`、`ORDERED`、`SUBSIZED`）会影响分割策略。例如，如果数据源是`SIZED`（已知大小），分割会更精确；如果数据是无序的（如Set），可以更灵活地划分。
+3. **Data Partitioning Strategies**:
+    - **Automatic Partitioning**: The Stream framework automatically determines the partitioning method based on the data source size and type. For example, `ArrayList`'s `Spliterator` will split data in half until subtasks reach a certain threshold (usually determined by `ForkJoinPool` configuration or data scale).
+    - **Minimum Partitioning Granularity**: To avoid excessive task partitioning overhead, Java sets a minimum partitioning threshold (controlled by `Spliterator`'s `estimateSize()` and `characteristics()`).
+    - **Data Characteristics Affect Partitioning**: `Spliterator` characteristics (such as `SIZED`, `ORDERED`, `SUBSIZED`) affect partitioning strategies. For example, if the data source is `SIZED` (known size), partitioning will be more precise; if data is unordered (like Set), it can be partitioned more flexibly.
 
-4. **并行处理流程**：
-    - 数据源通过`stream().parallel()`或`parallelStream()`进入并行模式。
-    - `Spliterator`将数据分割成多个子任务，分配给Fork/Join池中的线程。
-    - 每个线程独立处理自己的数据块，执行Stream操作（如map、filter等）。
-    - 最终结果通过归约操作（如reduce、collect）合并。
+4. **Parallel Processing Flow**:
+    - The data source enters parallel mode through `stream().parallel()` or `parallelStream()`.
+    - `Spliterator` splits the data into multiple subtasks and assigns them to threads in the Fork/Join pool.
+    - Each thread independently processes its own data block, executing Stream operations (such as map, filter, etc.).
+    - The final results are merged through reduction operations (such as reduce, collect).
 
-5. **注意事项**：
-    - **负载均衡**：如果数据划分不均匀（例如链表或不规则数据），可能导致某些线程空闲，降低并行效率。
-    - **线程开销**：过多的分割或小任务可能导致线程管理开销大于并行收益。
-    - **数据源类型**：不同数据源（如数组、集合、文件）的`Spliterator`实现会影响划分效率。例如，`ArrayList`的划分效率高于`LinkedList`。
+5. **Notes**:
+    - **Load Balancing**: If data partitioning is uneven (such as linked lists or irregular data), it may cause some threads to be idle, reducing parallel efficiency.
+    - **Thread Overhead**: Excessive partitioning or small tasks may cause thread management overhead to exceed parallel benefits.
+    - **Data Source Type**: Different data source `Spliterator` implementations (such as arrays, collections, files) affect partitioning efficiency. For example, `ArrayList` has higher partitioning efficiency than `LinkedList`.
 
-**总结**：
-Java并行Stream通过`Spliterator`将数据源分割成多个子任务，结合Fork/Join框架实现并行处理。划分策略依赖于数据源的特性（如大小、有序性）和Spliterator的实现，目标是实现负载均衡和高效并行计算。对于性能优化，建议使用适合并行处理的数据结构（如`ArrayList`）并避免过于复杂的操作。
+**Summary**:
+Java parallel Stream divides the data source into multiple subtasks through `Spliterator`, combined with the Fork/Join framework to achieve parallel processing. Partitioning strategies depend on data source characteristics (such as size, ordering) and Spliterator implementation, with the goal of achieving load balancing and efficient parallel computation. For performance optimization, it is recommended to use data structures suitable for parallel processing (such as `ArrayList`) and avoid overly complex operations.
 
 ---
 
-下面是一个使用 Java 的 `Spliterator` 的示例，展示如何自定义一个 `Spliterator` 来分割数据，并结合并行 Stream 进行处理。这个例子以一个简单的字符串数组为基础，演示数据的划分和并行处理。
+Below is an example using Java's `Spliterator`, showing how to customize a `Spliterator` to split data and combine it with parallel Stream processing. This example uses a simple string array as the basis to demonstrate data partitioning and parallel processing.
 
 ```java
 import java.util.Arrays;
@@ -40,14 +40,14 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-// 自定义 Spliterator 用于分割字符串数组
+// Custom Spliterator for splitting string array
 class CustomStringSpliterator extends Spliterators.AbstractSpliterator<String> {
-    private final String[] data; // 数据源
-    private int start; // 当前分片的起始索引
-    private int end; // 当前分片的结束索引
+    private final String[] data; // Data source
+    private int start; // Start index of current slice
+    private int end; // End index of current slice
 
     public CustomStringSpliterator(String[] data, int start, int end) {
-        // 构造函数，传入数据和范围，设置 Spliterator 特性
+        // Constructor, pass data and range, set Spliterator characteristics
         super(end - start, SIZED | SUBSIZED | NONNULL | IMMUTABLE);
         this.data = data;
         this.start = start;
@@ -56,7 +56,7 @@ class CustomStringSpliterator extends Spliterators.AbstractSpliterator<String> {
 
     @Override
     public boolean tryAdvance(Consumer<? super String> action) {
-        // 逐个处理元素
+        // Process elements one by one
         if (start < end) {
             action.accept(data[start++]);
             return true;
@@ -66,58 +66,58 @@ class CustomStringSpliterator extends Spliterators.AbstractSpliterator<String> {
 
     @Override
     public Spliterator<String> trySplit() {
-        // 尝试将当前数据分片
-        int mid = start + (end - start) / 2; // 二分法分割
+        // Try to split current data slice
+        int mid = start + (end - start) / 2; // Binary splitting
         if (mid <= start || mid >= end) {
-            return null; // 数据无法再分，返回 null
+            return null; // Data cannot be split further, return null
         }
 
-        // 创建新的 Spliterator，覆盖前半部分
+        // Create new Spliterator, cover first half
         CustomStringSpliterator newSpliterator = new CustomStringSpliterator(data, start, mid);
-        // 更新当前 Spliterator 的起始位置为后半部分
+        // Update current Spliterator's start position to second half
         this.start = mid;
         return newSpliterator;
     }
 
     @Override
     public long estimateSize() {
-        // 估计当前分片的大小
+        // Estimate size of current slice
         return end - start;
     }
 }
 
 public class SpliteratorExample {
     public static void main(String[] args) {
-        // 准备数据
+        // Prepare data
         String[] words = {"apple", "banana", "cherry", "date", "elderberry", "fig", "grape"};
 
-        // 创建自定义 Spliterator
+        // Create custom Spliterator
         Spliterator<String> spliterator = new CustomStringSpliterator(words, 0, words.length);
 
-        // 创建并行 Stream
+        // Create parallel Stream
         Stream<String> parallelStream = StreamSupport.stream(spliterator, true);
 
-        // 并行处理：将每个单词转换为大写并打印
+        // Parallel processing: convert each word to uppercase and print
         parallelStream.forEach(word -> System.out.println(Thread.currentThread().getName() + ": " + word.toUpperCase()));
     }
 }
 ```
 
-### 代码说明
-1. **自定义 Spliterator**：
-    - `CustomStringSpliterator` 继承了 `Spliterators.AbstractSpliterator`，用于处理字符串数组。
-    - 构造函数指定数据源和分片范围，并设置 `Spliterator` 的特性（如 `SIZED`、`SUBSIZED` 等）。
-    - `tryAdvance` 方法实现逐个元素处理，供串行处理使用。
-    - `trySplit` 方法实现数据分割，采用二分法将数据分成两部分，返回一个新的 `Spliterator` 处理前半部分，当前 `Spliterator` 处理后半部分。
-    - `estimateSize` 方法返回当前分片的大小，用于优化分割。
+### Code Explanation
+1. **Custom Spliterator**:
+    - `CustomStringSpliterator` inherits from `Spliterators.AbstractSpliterator`, used for processing string arrays.
+    - The constructor specifies the data source and slice range, and sets `Spliterator` characteristics (such as `SIZED`, `SUBSIZED`, etc.).
+    - The `tryAdvance` method implements element-by-element processing, used for serial processing.
+    - The `trySplit` method implements data partitioning, using binary splitting to divide data into two parts, returning a new `Spliterator` to process the first half, with the current `Spliterator` processing the second half.
+    - The `estimateSize` method returns the size of the current slice, used for optimizing partitioning.
 
-2. **并行 Stream**：
-    - 使用 `StreamSupport.stream(spliterator, true)` 创建一个并行 Stream，`true` 表示启用并行模式。
-    - `forEach` 操作将每个单词转换为大写，并打印处理线程的名称，展示并行执行的效果。
+2. **Parallel Stream**:
+    - Uses `StreamSupport.stream(spliterator, true)` to create a parallel Stream, where `true` indicates enabling parallel mode.
+    - The `forEach` operation converts each word to uppercase and prints the processing thread name, demonstrating the effect of parallel execution.
 
-3. **运行结果**：
-    - 运行时，数据会被分割成多个子任务，分派到 `ForkJoinPool` 的不同线程中处理。
-    - 输出类似以下（线程名称和顺序可能因运行环境而异）：
+3. **Running Results**:
+    - During runtime, data will be split into multiple subtasks and assigned to different threads in the `ForkJoinPool` for processing.
+    - The output is similar to the following (thread names and order may vary depending on the runtime environment):
       ```
       ForkJoinPool.commonPool-worker-1: APPLE
       ForkJoinPool.commonPool-worker-3: BANANA
@@ -128,9 +128,9 @@ public class SpliteratorExample {
       ForkJoinPool.commonPool-worker-1: GRAPE
       ```
 
-### 注意事项
-- **分割策略**：示例中使用二分法分割数据，适合均匀数据结构（如数组）。对于不规则数据（如链表），需要更复杂的分割逻辑。
-- **特性设置**：`Spliterator` 的特性（如 `SIZED`、`NONNULL`）影响 Stream 的优化，确保正确设置以提高性能。
-- **性能考虑**：过多的分割可能增加线程管理开销，需根据数据规模调整分割阈值。
+### Notes
+- **Partitioning Strategy**: The example uses binary splitting for data, suitable for uniform data structures (such as arrays). For irregular data (such as linked lists), more complex partitioning logic is needed.
+- **Characteristic Settings**: `Spliterator` characteristics (such as `SIZED`, `NONNULL`) affect Stream optimization, ensure correct settings to improve performance.
+- **Performance Considerations**: Excessive partitioning may increase thread management overhead, adjust partitioning thresholds according to data scale.
 
-这个例子展示了如何通过自定义 `Spliterator` 控制数据划分，并结合并行 Stream 实现高效处理。你可以根据具体需求修改 `trySplit` 的逻辑或处理操作。
+This example shows how to control data partitioning through custom `Spliterator` and achieve efficient processing combined with parallel Stream. You can modify the logic of `trySplit` or processing operations according to specific needs.

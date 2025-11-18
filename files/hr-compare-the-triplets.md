@@ -9,7 +9,7 @@
 3. **Utilize Stream API**: Combine Stream features to simplify comparison and collection logic.
 4. **Improve readability**: Keep code concise and easy to understand.
 
-以下是优化后的代码，以及逐步分析：
+Below is the optimized code, along with step-by-step analysis:
 
 ### Optimized Code
 
@@ -37,8 +37,7 @@ public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
     - Reduces conversion overhead from array to `List`.
 
 3. **Use `List.of`**:
-    - `List.of(scoreA, scoreB)`（Java 9+）直接创建不可修改的 `List<Integer>`，比
-      `Arrays.stream().boxed().collect(Collectors.toList())` it's more concise.
+    - `List.of(scoreA, scoreB)` (Java 9+) directly creates an unmodifiable `List<Integer>`, which is more concise than `Arrays.stream().boxed().collect(Collectors.toList())`.
     - Note: `List` created by `List.of` is unmodifiable. If the caller needs to modify `List`, can use
       `new ArrayList<>(List.of(scoreA, scoreB))`.
 
@@ -105,9 +104,7 @@ public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
 List<Integer> a = Arrays.asList(5, 6, 7);
 List<Integer> b = Arrays.asList(3, 6, 10);
 List<Integer> result = compareTriplets(a, b);
-System.out.
-
-println(result); // 输出: [2, 1]
+System.out.println(result); // Output: [2, 1]
 ```
 
 - `a` scores 2 (5>3, 6=6 doesn't count, 7>10), `b` scores 1 (10>7).
@@ -116,10 +113,9 @@ If you have specific scenarios (like needing Stream or other constraints), pleas
 
 ---
 
-是的，可以优化掉 `for` 循环，使用 Java 的 Stream API 或其他方式来实现更简洁的代码。目标是保持功能不变（比较
-`List<Integer> a` 和 `List<Integer> b`，统计 `a` 和 `b` 的得分），同时消除显式的 `for` 循环。以下是几种替代方案，以及它们的优缺点分析。
+Yes, you can optimize away the `for` loop using Java's Stream API or other approaches to achieve more concise code. The goal is to maintain the same functionality (comparing `List<Integer> a` and `List<Integer> b`, counting scores for `a` and `b`) while eliminating explicit `for` loops. Below are several alternative approaches, along with their pros and cons analysis.
 
-### 优化方案 1：使用 Stream API 和 `IntStream`
+### Optimization Approach 1: Using Stream API and `IntStream`
 
 ```java
 public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
@@ -133,22 +129,22 @@ public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
 }
 ```
 
-**说明**：
+**Explanation**:
 
-- `IntStream.range(0, a.size())`：生成从 0 到 `a.size()-1` 的索引流，替代 `for` 循环的索引。
-- `filter(i -> a.get(i) > b.get(i))`：筛选出 `a.get(i) > b.get(i)` 的情况，`count()` 计算满足条件的次数。
-- 类似地计算 `scoreB`。
-- `List.of(scoreA, scoreB)`：直接创建包含得分的不可修改 `List<Integer>`。
-- **优点**：
-    - 完全消除了 `for` 循环，代码更声明式。
-    - 逻辑清晰，易于理解。
-- **缺点**：
-    - 需要两次遍历（分别计算 `scoreA` 和 `scoreB`），时间复杂度为 O(2n)。
-    - 相比单次 `for` 循环，性能略低（但对小数据量如三元组影响不大）。
+- `IntStream.range(0, a.size())`: generates an index stream from 0 to `a.size()-1`, replacing the index in the `for` loop.
+- `filter(i -> a.get(i) > b.get(i))`: filters cases where `a.get(i) > b.get(i)`, and `count()` calculates the number of matches.
+- Similarly calculate `scoreB`.
+- `List.of(scoreA, scoreB)`: directly creates an unmodifiable `List<Integer>` containing the scores.
+- **Advantages**:
+    - Completely eliminates the `for` loop, making the code more declarative.
+    - Clear logic, easy to understand.
+- **Disadvantages**:
+    - Requires two traversals (calculating `scoreA` and `scoreB` separately), time complexity is O(2n).
+    - Slightly lower performance compared to single `for` loop (but negligible for small data like triplets).
 
-### 优化方案 2：单次 Stream 遍历
+### Optimization Approach 2: Single Stream Traversal
 
-为了避免两次遍历，可以用一次 Stream 操作同时计算 `scoreA` 和 `scoreB`，通过 `reduce` 或自定义收集器来累积结果。
+To avoid two traversals, you can use a single Stream operation to calculate both `scoreA` and `scoreB` simultaneously, accumulating results through `reduce` or custom collectors.
 
 ```java
 public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
@@ -164,25 +160,24 @@ public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
 }
 ```
 
-**说明**：
+**Explanation**:
 
-- `IntStream.range(0, a.size())`：生成索引流。
-- `reduce`：
-    - 初始值：`new int[]{0, 0}`（`acc[0]` 表示 `scoreA`，`acc[1]` 表示 `scoreB`）。
-    - 累积逻辑：根据 `a.get(i)` 和 `b.get(i)` 的比较，更新 `acc[0]` 或 `acc[1]`。
-    - 组合器：`(x, y) -> x`（串行流无需组合，直接返回）。
-- `List.of(scores[0], scores[1])`：将数组转换为 `List<Integer>`。
-- **优点**：
-    - 单次遍历，时间复杂度为 O(n)，性能与原 `for` 循环相当。
-    - 消除了显式 `for` 循环，代码更函数式。
-- **缺点**：
-    - `reduce` 的逻辑稍复杂，可读性略低于方案 1。
-    - 使用数组作为中间状态，稍显不优雅。
+- `IntStream.range(0, a.size())`: generates an index stream.
+- `reduce`:
+    - Initial value: `new int[]{0, 0}` (`acc[0]` represents `scoreA`, `acc[1]` represents `scoreB`).
+    - Accumulation logic: update `acc[0]` or `acc[1]` based on comparison of `a.get(i)` and `b.get(i)`.
+    - Combiner: `(x, y) -> x` (no combination needed for serial streams, just return).
+- `List.of(scores[0], scores[1])`: converts the array to `List<Integer>`.
+- **Advantages**:
+    - Single traversal, time complexity is O(n), performance comparable to original `for` loop.
+    - Eliminates explicit `for` loop, making the code more functional.
+- **Disadvantages**:
+    - `reduce` logic is slightly more complex, readability is slightly lower than approach 1.
+    - Using array as intermediate state is somewhat inelegant.
 
-### 优化方案 3：使用 `zip` 风格的 Stream（需要额外库或自定义）
+### Optimization Approach 3: Using `zip`-style Stream (requires additional library or custom implementation)
 
-Java 的标准库没有直接的 `zip` 操作（将两个流按索引配对）。但可以通过 `IntStream` 和 `Iterator` 模拟，或使用第三方库（如
-StreamEx）。这里展示一个标准库的实现：
+Java's standard library doesn't have a direct `zip` operation (pairing two streams by index). But it can be simulated through `IntStream` and `Iterator`, or use third-party libraries (like StreamEx). Here we show a standard library implementation:
 
 ```java
 public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
@@ -201,97 +196,93 @@ public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
 }
 ```
 
-**说明**：
+**Explanation**:
 
-- `Iterator`：从 `a` 和 `b` 获取迭代器。
-- `Stream.generate`：生成 `[a[i], b[i]]` 对的流，`limit(a.size())` 限制长度。
-- `reduce`：类似方案 2，累积 `scoreA` 和 `scoreB`。
-- **优点**：
-    - 单次遍历，O(n) 时间复杂度。
-    - 更贴近 `zip` 风格，逻辑直观。
-- **缺点**：
-    - 使用 `Iterator` 和 `Stream.generate` 复杂，可读性较差。
-    - 需确保 `a` 和 `b` 长度一致，否则可能抛异常。
+- `Iterator`: gets iterators from `a` and `b`.
+- `Stream.generate`: generates a stream of `[a[i], b[i]]` pairs, `limit(a.size())` restricts the length.
+- `reduce`: similar to Approach 2, accumulates `scoreA` and `scoreB`.
+- **Advantages**:
+    - Single traversal, O(n) time complexity.
+    - Closer to `zip` style, intuitive logic.
+- **Disadvantages**:
+    - Using `Iterator` and `Stream.generate` is complex, poor readability.
+    - Need to ensure `a` and `b` have the same length, otherwise may throw exception.
 
-### 推荐方案
+### Recommended Approach
 
-- **首选方案 1（双 Stream）**：
-    - 代码最简洁，逻辑清晰，易于维护。
-    - 对于小数据量（如三元组，`a.size() == 3`），两次遍历的性能开销可以忽略。
-    - 示例：
+- **Preferred Approach 1 (Dual Stream)**:
+    - Code is most concise, logic is clear, easy to maintain.
+    - For small data (like triplets, `a.size() == 3`), the performance overhead of two traversals is negligible.
+    - Example:
       ```java
       List<Integer> a = Arrays.asList(5, 6, 7);
       List<Integer> b = Arrays.asList(3, 6, 10);
       List<Integer> result = compareTriplets(a, b);
-      System.out.println(result); // 输出: [2, 1]
+      System.out.println(result); // Output: [2, 1]
       ```
 
-- **如果性能敏感，选择方案 2（单 Stream reduce）**：
-    - 单次遍历，适合大数据量。
-    - 但可读性稍逊，需权衡。
+- **If performance is sensitive, choose Approach 2 (Single Stream reduce)**:
+    - Single traversal, suitable for large data volumes.
+    - But readability is slightly worse, needs trade-off.
 
-- **避免方案 3**：
-    - 除非明确需要 `zip` 风格或使用第三方库（如 StreamEx），否则复杂度过高。
+- **Avoid Approach 3**:
+    - Unless explicitly needing `zip` style or using third-party libraries (like StreamEx), otherwise complexity is too high.
 
-### 注意事项
+### Notes
 
-- **输入校验**：确保 `a` 和 `b` 非空且长度相等，否则可能抛异常。可以在方法开头添加：
+- **Input validation**: Ensure `a` and `b` are non-null and have equal length, otherwise may throw exception. Can add at the beginning of the method:
   ```java
   if (a == null || b == null || a.size() != b.size()) {
       throw new IllegalArgumentException("Invalid input lists");
   }
   ```
-- **不可修改 `List`**：`List.of` 返回不可修改的 `List`。如果调用方需要修改结果，替换为 `Arrays.asList(scoreA, scoreB)` 或
-  `new ArrayList<>(List.of(scoreA, scoreB))`。
-- **Java 版本**：方案 1 和 2 依赖 Java 8+（Stream API）和 Java 9+（`List.of`）。如果使用旧版本，需用 `Arrays.asList`。
+- **Unmodifiable `List`**: `List.of` returns an unmodifiable `List`. If the caller needs to modify the result, replace with `Arrays.asList(scoreA, scoreB)` or `new ArrayList<>(List.of(scoreA, scoreB))`.
+- **Java Version**: Approaches 1 and 2 depend on Java 8+ (Stream API) and Java 9+ (`List.of`). If using older versions, use `Arrays.asList`.
 
-### 总结
+### Summary
 
-通过 Stream API，可以完全消除 `for` 循环。方案 1（双 Stream）是最简洁和推荐的选择，适合大多数场景。如果对性能有极高要求，可选择方案
-2（单 Stream reduce）。根据你的需求（例如是否优先可读性或性能），可以选择合适的实现。
+Through the Stream API, you can completely eliminate the `for` loop. Approach 1 (Dual Stream) is the most concise and recommended choice, suitable for most scenarios. If you have extremely high performance requirements, you can choose Approach 2 (Single Stream reduce). Based on your needs (such as whether to prioritize readability or performance), you can choose the appropriate implementation.
 
-如果有进一步需求（如支持特定输入格式或性能测试），请告诉我，我可以继续调整！
+If you have further requirements (such as supporting specific input formats or performance testing), please let me know and I can continue to adjust!
 
 ---
 
-在 Java 的 Stream API 中，`IntStream` 的 `reduce`
-方法是一个终端操作，用于将流中的元素通过某种累积逻辑合并为一个最终结果。它非常适合聚合操作，比如求和、求最大值或自定义的累积计算。结合你的问题（优化
-`compareTriplets` 方法中使用的 `reduce`），我将详细解释 `IntStream.reduce` 方法的原理、参数、用法，并以你的代码场景为例说明。
+In Java's Stream API, the `reduce` method of `IntStream` is a terminal operation used to merge elements in the stream into a single final result through some accumulation logic. It is very suitable for aggregation operations, such as summation, finding maximum values, or custom accumulation calculations. Combined with your question (optimizing the `reduce` used in the `compareTriplets` method), I will explain in detail the principles, parameters, and usage of the `IntStream.reduce` method, and illustrate with your code scenario.
 
-### `IntStream.reduce` 方法概览
+### `IntStream.reduce` Method Overview
 
-`IntStream` 是 Stream API 中处理原始 `int` 值的专用流接口。`reduce` 方法有几种重载形式，我们重点分析你代码中可能用到的形式：
+`IntStream` is a specialized stream interface in the Stream API for handling primitive `int` values. The `reduce` method has several overload forms, we focus on analyzing the form that might be used in your code:
 
 ```java
 T reduce(T identity, BinaryOperator<T> accumulator, BinaryOperator<T> combiner);
 ```
 
-**参数解释**：
+**Parameter Explanation**:
 
-1. **`identity`**（初始值）：
-    - 类型为 `T`，表示归约操作的起点（初始值）。
-    - 它作为累积的初始状态，即使流为空，也会返回这个值。
-    - 例如，在求和时，`identity` 可能是 `0`；在你的场景中，`identity` 是一个 `int[]` 数组 `{0, 0}`。
+1. **`identity`** (initial value):
+    - Type is `T`, represents the starting point of the reduction operation (initial value).
+    - It serves as the initial state of accumulation, and this value will be returned even if the stream is empty.
+    - For example, in summation, `identity` might be `0`; in your scenario, `identity` is an `int[]` array `{0, 0}`.
 
-2. **`accumulator`**（累积函数）：
-    - 类型为 `BinaryOperator<T>`，即一个函数，接受两个参数（当前累积结果和流中的下一个元素），返回新的累积结果。
-    - 签名：`(T, int) -> T`，其中第一个参数是当前的累积值（`T` 类型），第二个参数是 `IntStream` 中的 `int` 值。
-    - 在你的场景中，`accumulator` 检查索引 `i` 处的元素比较结果，更新 `int[]` 数组。
+2. **`accumulator`** (accumulation function):
+    - Type is `BinaryOperator<T>`, a function that accepts two parameters (current accumulation result and next element in the stream) and returns a new accumulation result.
+    - Signature: `(T, int) -> T`, where the first parameter is the current accumulation value (type `T`), and the second parameter is the `int` value in `IntStream`.
+    - In your scenario, `accumulator` checks the element comparison result at index `i` and updates the `int[]` array.
 
-3. **`combiner`**（组合函数）：
-    - 类型为 `BinaryOperator<T>`，即一个函数，接受两个 `T` 类型的结果并合并它们。
-    - 签名：`(T, T) -> T`，用于并行流中合并多个线程的中间结果。
-    - 在串行流中，`combiner` 通常不被调用，可以简单定义为 `(x, y) -> x`。
-    - 在你的代码中，`combiner` 是 `(x, y) -> x`，因为你使用的是串行流，合并逻辑无需实现。
+3. **`combiner`** (combination function):
+    - Type is `BinaryOperator<T>`, a function that accepts two results of type `T` and merges them.
+    - Signature: `(T, T) -> T`, used to merge intermediate results from multiple threads in parallel streams.
+    - In serial streams, `combiner` is usually not called and can be simply defined as `(x, y) -> x`.
+    - In your code, `combiner` is `(x, y) -> x` because you are using a serial stream, and merge logic doesn't need to be implemented.
 
-**返回值**：
+**Return Value**:
 
-- `reduce` 返回类型为 `T`，即累积结果的类型。
-- 在你的场景中，`T` 是 `int[]`，表示 `[scoreA, scoreB]`。
+- `reduce` returns type `T`, which is the type of the accumulation result.
+- In your scenario, `T` is `int[]`, representing `[scoreA, scoreB]`.
 
-### 你的代码中的 `reduce`（方案 2 示例）
+### The `reduce` in Your Code (Approach 2 Example)
 
-以下是你优化的 `compareTriplets` 方法中使用的 `reduce`：
+Below is the `reduce` used in your optimized `compareTriplets` method:
 
 ```java
 public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
@@ -307,64 +298,62 @@ public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
 }
 ```
 
-**逐步解析 `reduce` 的工作原理**：
+**Step-by-step Analysis of How `reduce` Works**:
 
-1. **初始化**：
-    - `identity` 是 `new int[]{0, 0}`，表示初始得分 `[scoreA, scoreB]`，即 `[0, 0]`。
-    - 这个数组作为累积的起点，`acc[0]` 记录 `a` 的得分，`acc[1]` 记录 `b` 的得分。
+1. **Initialization**:
+    - `identity` is `new int[]{0, 0}`, representing the initial scores `[scoreA, scoreB]`, i.e., `[0, 0]`.
+    - This array serves as the starting point of accumulation, `acc[0]` records `a`'s score, `acc[1]` records `b`'s score.
 
-2. **累积过程**：
-    - `IntStream.range(0, a.size())` 生成索引 `0, 1, ..., a.size()-1`。
-    - 对于每个索引 `i`，`accumulator` 函数 `(acc, i) -> {...}` 被调用：
-        - `acc` 是当前的累积结果（`int[]` 类型），初始为 `identity`（`{0, 0}`）。
-        - `i` 是 `IntStream` 中的当前元素（索引值）。
-        - 逻辑：
-            - 如果 `a.get(i) > b.get(i)`，则 `acc[0]++`（`a` 得分加 1）。
-            - 如果 `a.get(i) < b.get(i)`，则 `acc[1]++`（`b` 得分加 1）。
-            - 返回更新后的 `acc`（同一个数组对象，内容可能被修改）。
-    - 每次调用 `accumulator`，`acc` 被更新并传递给下一次迭代。
+2. **Accumulation Process**:
+    - `IntStream.range(0, a.size())` generates indices `0, 1, ..., a.size()-1`.
+    - For each index `i`, the `accumulator` function `(acc, i) -> {...}` is called:
+        - `acc` is the current accumulation result (type `int[]`), initially `identity` (`{0, 0}`).
+        - `i` is the current element in `IntStream` (index value).
+        - Logic:
+            - If `a.get(i) > b.get(i)`, then `acc[0]++` (`a`'s score increases by 1).
+            - If `a.get(i) < b.get(i)`, then `acc[1]++` (`b`'s score increases by 1).
+            - Returns the updated `acc` (same array object, content may be modified).
+    - Each time `accumulator` is called, `acc` is updated and passed to the next iteration.
 
-3. **组合（Combiner）**：
-    - `combiner` 定义为 `(x, y) -> x`，表示在并行流中如何合并两个 `int[]` 结果。
-    - 因为你的代码是串行流（`IntStream` 默认串行），`combiner` 不会被调用，定义为 `(x, y) -> x` 只是占位。
-    - 如果是并行流，`combiner` 需要合并两个 `int[]`（例如，`[scoreA1, scoreB1]` 和 `[scoreA2, scoreB2]` 合并为
-      `[scoreA1 + scoreA2, scoreB1 + scoreB2]`）。
+3. **Combination (Combiner)**:
+    - `combiner` is defined as `(x, y) -> x`, representing how to merge two `int[]` results in parallel streams.
+    - Because your code is a serial stream (`IntStream` is serial by default), `combiner` won't be called, defining it as `(x, y) -> x` is just a placeholder.
+    - If it's a parallel stream, `combiner` needs to merge two `int[]` (e.g., merge `[scoreA1, scoreB1]` and `[scoreA2, scoreB2]` into `[scoreA1 + scoreA2, scoreB1 + scoreB2]`).
 
-4. **最终结果**：
-    - 流处理完所有索引后，`reduce` 返回最终的 `int[] scores`，其中 `scores[0]` 是 `a` 的总得分，`scores[1]` 是 `b` 的总得分。
-    - `List.of(scores[0], scores[1])` 将数组转换为 `List<Integer>`。
+4. **Final Result**:
+    - After the stream processes all indices, `reduce` returns the final `int[] scores`, where `scores[0]` is `a`'s total score and `scores[1]` is `b`'s total score.
+    - `List.of(scores[0], scores[1])` converts the array to `List<Integer>`.
 
-**执行流程示例**：
-假设 `a = [5, 6, 7]`，`b = [3, 6, 10]`：
+**Execution Flow Example**:
+Assume `a = [5, 6, 7]`, `b = [3, 6, 10]`:
 
-- 初始：`acc = [0, 0]`。
-- `i = 0`：`a.get(0) = 5 > b.get(0) = 3`，`acc[0]++`，`acc = [1, 0]`。
-- `i = 1`：`a.get(1) = 6 == b.get(1) = 6`，无操作，`acc = [1, 0]`。
-- `i = 2`：`a.get(2) = 7 < b.get(2) = 10`，`acc[1]++`，`acc = [1, 1]`。
-- 结束：`scores = [1, 1]`。
-- 返回：`List.of(1, 1)`，即 `[1, 1]`。
+- Initial: `acc = [0, 0]`.
+- `i = 0`: `a.get(0) = 5 > b.get(0) = 3`, `acc[0]++`, `acc = [1, 0]`.
+- `i = 1`: `a.get(1) = 6 == b.get(1) = 6`, no operation, `acc = [1, 0]`.
+- `i = 2`: `a.get(2) = 7 < b.get(2) = 10`, `acc[1]++`, `acc = [1, 1]`.
+- End: `scores = [1, 1]`.
+- Return: `List.of(1, 1)`, i.e., `[1, 1]`.
 
-### 其他 `reduce` 重载形式
+### Other `reduce` Overload Forms
 
-`IntStream` 还有其他 `reduce` 方法，可能在不同场景下有用：
+`IntStream` has other `reduce` methods that may be useful in different scenarios:
 
-1. **`int reduce(int identity, IntBinaryOperator op)`**：
-    - 适用于返回 `int` 的归约。
-    - 示例：求和 `IntStream.of(1, 2, 3).reduce(0, (a, b) -> a + b)` 返回 `6`。
-    - 不适合你的场景，因为你需要返回 `int[]`。
+1. **`int reduce(int identity, IntBinaryOperator op)`**:
+    - Suitable for reduction that returns `int`.
+    - Example: summation `IntStream.of(1, 2, 3).reduce(0, (a, b) -> a + b)` returns `6`.
+    - Not suitable for your scenario, because you need to return `int[]`.
 
-2. **`OptionalInt reduce(IntBinaryOperator op)`**：
-    - 无初始值，流为空时返回 `OptionalInt.empty()`。
-    - 示例：`IntStream.of(1, 2, 3).reduce((a, b) -> a + b)` 返回 `OptionalInt[6]`。
-    - 不适合你的场景，因为你需要明确的初始值 `[0, 0]`。
+2. **`OptionalInt reduce(IntBinaryOperator op)`**:
+    - No initial value, returns `OptionalInt.empty()` when stream is empty.
+    - Example: `IntStream.of(1, 2, 3).reduce((a, b) -> a + b)` returns `OptionalInt[6]`.
+    - Not suitable for your scenario, because you need a clear initial value `[0, 0]`.
 
-### 关键注意事项
+### Key Considerations
 
-1. **副作用**：
-    - 你的 `accumulator` 修改了 `acc` 数组（`acc[0]++` 和 `acc[1]++`），这在 Stream 操作中应谨慎使用。
-    - 理想情况下，`reduce` 的 `accumulator` 应无副作用（即返回新对象而非修改输入）。但在你的场景中，修改数组是可接受的，因为
-      `int[]` 是可变对象，且逻辑简单。
-    - 如果需要无副作用，可以创建新数组：
+1. **Side Effects**:
+    - Your `accumulator` modifies the `acc` array (`acc[0]++` and `acc[1]++`), which should be used cautiously in Stream operations.
+    - Ideally, the `accumulator` of `reduce` should have no side effects (i.e., return new objects rather than modifying input). But in your scenario, modifying the array is acceptable because `int[]` is a mutable object and the logic is simple.
+    - If side effects are needed, you can create a new array:
       ```java
       (acc, i) -> {
           int[] newAcc = acc.clone();
@@ -373,30 +362,30 @@ public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
           return newAcc;
       }
       ```
-      但这会增加内存开销。
+      But this will increase memory overhead.
 
-2. **并行流**：
-    - 你的代码使用 `(x, y) -> x` 作为 `combiner`，仅适用于串行流。
-    - 如果启用并行流（`.parallel()`），需要定义正确的 `combiner`，例如：
+2. **Parallel Streams**:
+    - Your code uses `(x, y) -> x` as `combiner`, only suitable for serial streams.
+    - If parallel streams are enabled (`.parallel()``), you need to define the correct `combiner`, for example:
       ```java
       (x, y) -> new int[]{x[0] + y[0], x[1] + y[1]}
       ```
-      以合并两个 `int[]` 的得分。
+      to merge the scores of two `int[]`.
 
-3. **性能**：
-    - `reduce` 遍历一次流，时间复杂度为 O(n)，与原 `for` 循环相当。
-    - 但 `reduce` 的函数式调用和对象操作（如数组访问）可能引入轻微开销。
+3. **Performance**:
+    - `reduce` traverses the stream once, time complexity is O(n), comparable to the original `for` loop.
+    - But the functional calls and object operations of `reduce` (such as array access) may introduce slight overhead.
 
-4. **可读性**：
-    - `reduce` 逻辑较复杂，尤其是当 `accumulator` 包含条件语句时。
-    - 对于简单场景（如你的代码），`reduce` 的可读性可能不如方案 1（双 `filter` 和 `count`）。
+4. **Readability**:
+    - `reduce` logic is more complex, especially when `accumulator` contains conditional statements.
+    - For simple scenarios (like your code), the readability of `reduce` may not be as good as Approach 1 (dual `filter` and `count`).
 
-### 改进建议
+### Improvement Suggestions
 
-虽然你的 `reduce` 实现已经有效，但可以考虑以下改进：
+Although your `reduce` implementation is already effective, you can consider the following improvements:
 
-1. **提升可读性**：
-    - 将条件逻辑提取为辅助方法，使 `reduce` 更清晰：
+1. **Improve Readability**:
+    - Extract conditional logic into helper methods to make `reduce` clearer:
       ```java
       private static int[] updateScores(int[] acc, int aVal, int bVal) {
           if (aVal > bVal) acc[0]++;
@@ -413,28 +402,25 @@ public static List<Integer> compareTriplets(List<Integer> a, List<Integer> b) {
       }
       ```
 
-2. **并行支持**：
-    - 如果需要并行流，定义正确的 `combiner`：
+2. **Parallel Support**:
+    - If parallel streams are needed, define the correct `combiner`:
       ```java
       (x, y) -> new int[]{x[0] + y[0], x[1] + y[1]}
       ```
 
-3. **替代方案**：
-    - 如果可读性优先，考虑方案 1（双 Stream）：
+3. **Alternative Approaches**:
+    - If readability is prioritized, consider Approach 1 (Dual Stream):
       ```java
       int scoreA = (int) IntStream.range(0, a.size()).filter(i -> a.get(i) > b.get(i)).count();
       int scoreB = (int) IntStream.range(0, a.size()).filter(i -> a.get(i) < b.get(i)).count();
       return List.of(scoreA, scoreB);
       ```
-      虽然遍历两次，但代码更直观。
+      Although it traverses twice, the code is more intuitive.
 
-### 总结
+### Conclusion
 
-`IntStream.reduce` 是一个强大的工具，用于将流元素归约为单一结果。你的代码中使用 `reduce` 遍历索引流，累积 `a` 和 `b`
-的得分，结果存储在 `int[]` 中。它的三个参数（`identity`、`accumulator`、`combiner`）分别定义了初始状态、累积逻辑和并行合并逻辑。当前实现适合串行流，性能与
-`for` 循环相当，但可读性稍逊。
+`IntStream.reduce` is a powerful tool for reducing stream elements to a single result. In your code, `reduce` is used to traverse the index stream, accumulate scores for `a` and `b`, and store the result in `int[]`. Its three parameters (`identity`, `accumulator`, `combiner`) define the initial state, accumulation logic, and parallel merge logic respectively. The current implementation is suitable for serial streams, with performance comparable to `for` loops, but readability is slightly worse.
 
-如果优先可读性和简单性，建议使用双 Stream（`filter` 和 `count`）。如果需要单次遍历且接受稍复杂的逻辑，`reduce`
-是合适的选择。进一步优化可以提取逻辑或支持并行流，具体取决于你的需求。
+If readability and simplicity are prioritized, it is recommended to use dual Stream (`filter` and `count`). If single traversal is needed and slightly more complex logic is acceptable, `reduce` is a suitable choice. Further optimization can extract logic or support parallel streams, depending on your needs.
 
-如果你有其他疑问（例如并行流实现或性能测试），请告诉我，我可以深入探讨！
+If you have other questions (such as parallel stream implementation or performance testing), please let me know and I can explore in depth!

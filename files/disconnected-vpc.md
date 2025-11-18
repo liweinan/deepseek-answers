@@ -1,17 +1,19 @@
-# 以下是对“disconnected cluster”和“shared network”两种网络配置的比较，基于提供的AWS CloudFormation模板和脚本，重点分析它们在功能、架构和使用场景上的区别：
+# Comparison of "Disconnected Cluster" and "Shared Network" Network Configurations
+
+The following is a comparison of the "disconnected cluster" and "shared network" network configurations, based on the provided AWS CloudFormation templates and scripts, focusing on analyzing their differences in functionality, architecture, and usage scenarios:
 
 ---
 
-### 1. **总体目标与使用场景**
+### 1. **Overall Objectives and Use Cases**
 - **Disconnected Cluster**:
-    - 设计目标是为“断连”（disconnected）环境中的集群提供网络基础设施，通常用于安全性要求高的场景，例如需要限制外部网络访问的私有集群。
-    - 强调通过VPC端点（VPCEndpoints）提供对AWS服务的访问（如S3、EC2、EFS、ELB、STS），避免直接通过公网访问。
-    - 适用于需要高度隔离的私有化部署，常见于政府、金融机构或其他对数据主权和网络隔离有严格要求的环境。
+    - Designed to provide network infrastructure for clusters in "disconnected" environments, typically used in high-security scenarios that require restricting external network access to private clusters.
+    - Emphasizes providing access to AWS services (such as S3, EC2, EFS, ELB, STS) through VPC endpoints, avoiding direct public internet access.
+    - Suitable for highly isolated private deployments, commonly found in government, financial institutions, or other environments with strict requirements for data sovereignty and network isolation.
 
 - **Shared Network**:
-    - 设计目标是支持跨AWS账户共享VPC资源，允许一个账户创建VPC并通过AWS Resource Access Manager（RAM）将其子网共享给其他账户。
-    - 提供更灵活的网络配置，支持仅创建公共子网、额外的子网，以及通过NAT网关为私有子网提供受控的互联网访问。
-    - 适用于多账户架构（如企业级AWS组织），或需要在多个团队/项目之间共享网络资源的场景。
+    - Designed to support cross-AWS account sharing of VPC resources, allowing one account to create a VPC and share its subnets with other accounts through AWS Resource Access Manager (RAM).
+    - Provides more flexible network configuration, supporting creation of only public subnets, additional subnets, and controlled internet access for private subnets through NAT gateways.
+    - Suitable for multi-account architectures (such as enterprise-level AWS organizations), or scenarios requiring shared network resources across multiple teams/projects.
 
 ---
 
@@ -45,97 +47,97 @@
     - 适合完全断连的集群，强调内部通信和受控的AWS服务访问。
 
 #### **Shared Network**
-- **子网结构**：
-    - 每个AZ内创建公共子网，私有子网可选（由`OnlyPublicSubnets`控制）。
-    - 支持在同一AZ内创建额外子网（`AdditionalSubnetsCount`），增加灵活性。
-    - 子网CIDR划分为8个块，允许更细粒度的子网分配。
-- **路由**：
-    - 公共子网通过互联网网关访问外部。
-    - 私有子网通过NAT网关（部署在对应公共子网）访问互联网，每个AZ的私有子网有独立的NAT网关和路由表。
-- **VPC端点**：
-    - 仅支持S3端点（Gateway类型），连接到公共和私有路由表。
-    - 无其他服务（EC2、EFS等）的VPC端点支持。
-- **共享性**：
-    - 通过AWS RAM共享子网（`ResourceShareSubnets`），允许其他AWS账户使用VPC资源。
-    - 支持跨账户的资源管理，适合多租户或分担成本的场景。
+- **Subnet Structure**:
+    - Creates public subnets in each AZ, with private subnets optional (controlled by `OnlyPublicSubnets`).
+    - Supports creating additional subnets within the same AZ (`AdditionalSubnetsCount`), increasing flexibility.
+    - Subnet CIDR is divided into 8 blocks, allowing more granular subnet allocation.
+- **Routing**:
+    - Public subnets access external networks through internet gateway.
+    - Private subnets access the internet through NAT gateways (deployed in corresponding public subnets), with each AZ's private subnet having independent NAT gateways and route tables.
+- **VPC Endpoints**:
+    - Only supports S3 endpoint (Gateway type), connected to public and private route tables.
+    - No VPC endpoint support for other services (EC2, EFS, etc.).
+- **Sharing**:
+    - Shares subnets through AWS RAM (`ResourceShareSubnets`), allowing other AWS accounts to use VPC resources.
+    - Supports cross-account resource management, suitable for multi-tenant or cost-sharing scenarios.
 
 ---
 
-### 4. **脚本逻辑差异**
-- **Disconnected Cluster**：
-    - 脚本专注于单一账户内的VPC创建和配置。
-    - 硬编码参数（如`AvailabilityZoneCount`），直接通过命令行传递。
-    - 输出包括VPC ID、子网ID、路由表ID和AZ信息，存储在共享目录中。
-    - 无账户切换或共享逻辑。
+### 4. **Script Logic Differences**
+- **Disconnected Cluster**:
+    - Scripts focus on VPC creation and configuration within a single account.
+    - Uses hardcoded parameters (such as `AvailabilityZoneCount`), passed directly through command line.
+    - Outputs include VPC ID, subnet IDs, route table IDs, and AZ information, stored in shared directories.
+    - No account switching or sharing logic.
 
-- **Shared Network**：
-    - 支持双账户模式（`ENABLE_SHARED_VPC`），通过`.awscred_shared_account`切换到共享账户。
-    - 动态生成参数JSON（`vpc_params.json`），支持灵活配置（如`OnlyPublicSubnets`、`AllowedAvailabilityZoneList`）。
-    - 额外的输出（`SubnetsByAz1/2/3`）提供按AZ组织的子网信息，生成结构化的`vpc_info.json`。
-    - 包含错误检查（如AZ列表与数量匹配）。
-
----
-
-### 5. **输出差异**
-- **Disconnected Cluster**：
-    - 输出包括：
-        - `VpcId`：VPC ID。
-        - `PublicSubnetIds`：公共子网ID列表。
-        - `PrivateSubnetIds`：私有子网ID列表。
-        - `PublicRouteTableId`：公共路由表ID。
-        - `PrivateRouteTableIds`：私有路由表ID（按AZ组织）。
-        - `availability_zones`：AZ列表。
-    - 输出格式简单，专注于基本网络资源。
-
-- **Shared Network**：
-    - 输出更丰富，增加：
-        - `AvailabilityZones`：AZ列表。
-        - `SubnetsByAz1/2/3`：按AZ组织的子网信息（公共+私有，包含额外子网）。
-        - `vpc_info.json`：结构化JSON，包含VPC ID和按AZ组织的子网ID（公共/私有）。
-    - 输出支持跨账户共享和更复杂的子网管理。
+- **Shared Network**:
+    - Supports dual-account mode (`ENABLE_SHARED_VPC`), switching to shared account via `.awscred_shared_account`.
+    - Dynamically generates parameter JSON (`vpc_params.json`), supporting flexible configuration (such as `OnlyPublicSubnets`, `AllowedAvailabilityZoneList`).
+    - Additional outputs (`SubnetsByAz1/2/3`) provide subnet information organized by AZ, generating structured `vpc_info.json`.
+    - Includes error checking (such as AZ list matching count).
 
 ---
 
-### 6. **适用场景对比**
-- **Disconnected Cluster**：
-    - **优点**：
-        - 高隔离性，适合断连环境。
-        - 多个VPC端点支持，减少对公网依赖。
-        - 简单配置，适合单一账户的私有集群。
-    - **缺点**：
-        - 无NAT网关，私有子网无法访问外部资源（除非通过VPC端点）。
-        - 不支持子网共享，扩展性有限。
-    - **适用场景**：
-        - 私有化部署（如OpenShift on AWS在断连环境中）。
-        - 高安全性需求（如合规性要求限制公网访问）。
+### 5. **Output Differences**
+- **Disconnected Cluster**:
+    - Outputs include:
+        - `VpcId`: VPC ID.
+        - `PublicSubnetIds`: List of public subnet IDs.
+        - `PrivateSubnetIds`: List of private subnet IDs.
+        - `PublicRouteTableId`: Public route table ID.
+        - `PrivateRouteTableIds`: Private route table IDs (organized by AZ).
+        - `availability_zones`: AZ list.
+    - Simple output format, focused on basic network resources.
 
-- **Shared Network**：
-    - **优点**：
-        - 支持跨账户共享，适合多团队/项目协作。
-        - 灵活配置（仅公共子网、额外子网、指定AZ）。
-        - NAT网关支持，私有子网可控访问互联网。
-    - **缺点**：
-        - 仅支持S3端点，AWS服务访问受限。
-        - 配置复杂，需管理多账户凭证和RAM共享。
-    - **适用场景**：
-        - 多账户AWS架构（如企业级AWS组织）。
-        - 需要共享网络资源的场景（如开发/测试环境）。
-        - 需私有子网访问公网的混合部署。
+- **Shared Network**:
+    - Richer outputs, adding:
+        - `AvailabilityZones`: AZ list.
+        - `SubnetsByAz1/2/3`: Subnet information organized by AZ (public + private, including additional subnets).
+        - `vpc_info.json`: Structured JSON containing VPC ID and subnet IDs organized by AZ (public/private).
+    - Outputs support cross-account sharing and more complex subnet management.
 
 ---
 
-### 7. **总结**
-- **Disconnected Cluster** 专注于高隔离的断连环境，通过VPC端点提供AWS服务访问，适合安全性敏感的私有集群，但缺乏灵活性和扩展性。
-- **Shared Network** 强调跨账户共享和灵活配置，支持NAT网关和额外子网，适合多租户或需要互联网访问的场景，但VPC端点支持有限。
-- **选择建议**：
-    - 如果需要完全隔离的私有集群，选择 **Disconnected Cluster**。
-    - 如果需要跨账户共享或私有子网访问公网，选择 **Shared Network**。
+### 6. **Applicable Scenario Comparison**
+- **Disconnected Cluster**:
+    - **Advantages**:
+        - High isolation, suitable for disconnected environments.
+        - Multiple VPC endpoint support, reducing dependency on public internet.
+        - Simple configuration, suitable for single-account private clusters.
+    - **Disadvantages**:
+        - No NAT gateway, private subnets cannot access external resources (except through VPC endpoints).
+        - No subnet sharing support, limited scalability.
+    - **Applicable Scenarios**:
+        - Private deployments (such as OpenShift on AWS in disconnected environments).
+        - High security requirements (such as compliance requirements restricting public internet access).
 
-如需进一步分析特定配置或优化建议，请提供更多上下文！
+- **Shared Network**:
+    - **Advantages**:
+        - Supports cross-account sharing, suitable for multi-team/project collaboration.
+        - Flexible configuration (only public subnets, additional subnets, specified AZs).
+        - NAT gateway support, private subnets can access internet in a controlled manner.
+    - **Disadvantages**:
+        - Only supports S3 endpoint, limited AWS service access.
+        - Complex configuration, requires managing multi-account credentials and RAM sharing.
+    - **Applicable Scenarios**:
+        - Multi-account AWS architectures (such as enterprise-level AWS organizations).
+        - Scenarios requiring shared network resources (such as development/testing environments).
+        - Hybrid deployments requiring private subnet access to public internet.
 
 ---
 
-以下是对“disconnected cluster”和“shared network”两种网络配置在AWS CloudFormation模板和脚本中的具体配置区别的详细解释，重点分析模板参数、资源定义、条件逻辑、路由配置、VPC端点以及脚本逻辑的差异。内容将尽量简洁并直接对比关键点。
+### 7. **Summary**
+- **Disconnected Cluster** focuses on highly isolated disconnected environments, providing AWS service access through VPC endpoints, suitable for security-sensitive private clusters, but lacks flexibility and scalability.
+- **Shared Network** emphasizes cross-account sharing and flexible configuration, supporting NAT gateways and additional subnets, suitable for multi-tenant or internet-access scenarios, but with limited VPC endpoint support.
+- **Selection Recommendations**:
+    - If you need completely isolated private clusters, choose **Disconnected Cluster**.
+    - If you need cross-account sharing or private subnet access to public internet, choose **Shared Network**.
+
+For further analysis of specific configurations or optimization suggestions, please provide more context!
+
+---
+
+The following provides a detailed explanation of the specific configuration differences between the "disconnected cluster" and "shared network" network configurations in AWS CloudFormation templates and scripts, focusing on analyzing differences in template parameters, resource definitions, conditional logic, routing configuration, VPC endpoints, and script logic. The content will be as concise as possible and directly compare key points.
 
 ---
 
@@ -151,9 +153,9 @@
 | **ResourceSharePrincipals**  | 不支持。                                     | 支持指定共享账户ARN，默认空，用于RAM共享。  |
 | **AdditionalSubnetsCount**   | 不支持。                                     | 支持在同一AZ创建额外子网（0/1），默认0。    |
 
-**分析**：
-- **Shared Network** 提供更多参数（`OnlyPublicSubnets`、`AllowedAvailabilityZoneList`、`ResourceSharePrincipals`、`AdditionalSubnetsCount`），支持更灵活的配置，如仅公共子网、指定AZ和子网共享。
-- **Disconnected Cluster** 参数较简单，专注于标准VPC配置。
+**Analysis**:
+- **Shared Network** provides more parameters (`OnlyPublicSubnets`, `AllowedAvailabilityZoneList`, `ResourceSharePrincipals`, `AdditionalSubnetsCount`), supporting more flexible configurations such as public-only subnets, specified AZs, and subnet sharing.
+- **Disconnected Cluster** has simpler parameters, focused on standard VPC configuration.
 
 ---
 
@@ -167,9 +169,9 @@
 | **额外子网**                 | 不支持。                                     | 支持在AZ1创建额外公共/私有子网（`PublicSubnet1a`/`PrivateSubnet1a`）。 |
 | **AZ选择**                   | 自动选择（`Fn::GetAZs`）。                    | 支持指定AZ（`AllowedAvailabilityZoneList`）。 |
 
-**分析**：
-- **Disconnected Cluster** 子网结构固定（6块CIDR，3公共+3私有），无额外子网或AZ指定，适合标准化部署。
-- **Shared Network** 子网分配更灵活（8块CIDR），支持仅公共子网、额外子网和自定义AZ，适合复杂场景。
+**Analysis**:
+- **Disconnected Cluster** has fixed subnet structure (6 CIDR blocks, 3 public + 3 private), no additional subnets or AZ specification, suitable for standardized deployments.
+- **Shared Network** has more flexible subnet allocation (8 CIDR blocks), supports public-only subnets, additional subnets, and custom AZs, suitable for complex scenarios.
 
 ---
 
@@ -181,9 +183,9 @@
 | **NAT网关**                  | 不支持，私有子网无互联网访问。                | 每个AZ的私有子网关联1个NAT网关（`NAT`/`NAT1a`/`NAT2`/`NAT3`）。 |
 | **EIP**                      | 不支持。                                     | 每个NAT网关分配1个EIP（`EIP`/`EIP1a`/`EIP2`/`EIP3`）。 |
 
-**分析**：
-- **Disconnected Cluster** 私有子网无NAT网关，依赖VPC端点访问AWS服务，强调隔离性。
-- **Shared Network** 通过NAT网关为私有子网提供受控互联网访问，适合需要外部连接的场景。
+**Analysis**:
+- **Disconnected Cluster** private subnets have no NAT gateway, rely on VPC endpoints to access AWS services, emphasizing isolation.
+- **Shared Network** provides controlled internet access for private subnets through NAT gateways, suitable for scenarios requiring external connectivity.
 
 ---
 
@@ -194,9 +196,9 @@
 | **其他端点**                 | Interface类型：EC2、EFS、ELB、STS，部署在私有子网，使用安全组控制。 | 不支持。                                   |
 | **安全组**                   | 为Interface端点创建`EndpointSecurityGroup`，允许VPC CIDR内访问。 | 不支持（无Interface端点）。                |
 
-**分析**：
-- **Disconnected Cluster** 支持多种VPC端点（S3、EC2、EFS、ELB、STS），适合断连环境通过私有连接访问AWS服务。
-- **Shared Network** 仅支持S3端点，依赖NAT网关访问其他服务，隔离性较低。
+**Analysis**:
+- **Disconnected Cluster** supports multiple VPC endpoints (S3, EC2, EFS, ELB, STS), suitable for disconnected environments to access AWS services through private connections.
+- **Shared Network** only supports S3 endpoint, relies on NAT gateway to access other services, lower isolation.
 
 ---
 
@@ -212,9 +214,9 @@
 | **ShareSubnets**             | 不支持。                                     | 控制是否创建RAM资源共享。                  |
 | **DoAdditionalAz**           | 不支持。                                     | 控制AZ1额外子网创建。                      |
 
-**分析**：
-- **Shared Network** 条件逻辑更复杂，支持可选私有子网、指定AZ和资源共享，适应多样化需求。
-- **Disconnected Cluster** 条件逻辑简单，专注于固定子网和VPC端点配置。
+**Analysis**:
+- **Shared Network** has more complex conditional logic, supports optional private subnets, specified AZs, and resource sharing, adapting to diverse requirements.
+- **Disconnected Cluster** has simple conditional logic, focused on fixed subnets and VPC endpoint configuration.
 
 ---
 
@@ -224,9 +226,9 @@
 | **AWS RAM共享**              | 不支持。                                     | 支持（`ResourceShareSubnets`），共享公共/私有子网给指定账户。 |
 | **共享参数**                 | 无。                                         | `ResourceSharePrincipals`指定目标账户ARN。 |
 
-**分析**：
-- **Shared Network** 通过AWS RAM支持跨账户子网共享，适合多账户架构。
-- **Disconnected Cluster** 无共享机制，资源限于单一账户。
+**Analysis**:
+- **Shared Network** supports cross-account subnet sharing through AWS RAM, suitable for multi-account architectures.
+- **Disconnected Cluster** has no sharing mechanism, resources limited to single account.
 
 ---
 
@@ -239,9 +241,9 @@
 | **输出**                     | 基本输出（VPC ID、子网ID、路由表ID、AZ）。     | 额外输出`SubnetsByAz1/2/3`和`vpc_info.json`，结构化子网信息。 |
 | **AZ查询**                   | 固定查询子网AZ。                              | 动态查询可用AZ，限制`MAX_ZONES_COUNT`。     |
 
-**分析**：
-- **Shared Network** 脚本更复杂，支持双账户、动态参数和详细输出，适合多租户管理。
-- **Disconnected Cluster** 脚本简单，直接执行固定配置，适合单一场景。
+**Analysis**:
+- **Shared Network** scripts are more complex, support dual accounts, dynamic parameters, and detailed outputs, suitable for multi-tenant management.
+- **Disconnected Cluster** scripts are simple, directly execute fixed configurations, suitable for single scenarios.
 
 ---
 
@@ -257,9 +259,9 @@
 | **SubnetsByAz1/2/3**         | 不支持。                                     | 按AZ组织的子网信息（公共+私有）。          |
 | **vpc_info.json**            | 不支持。                                     | 结构化JSON，包含VPC ID和按AZ子网信息。     |
 
-**分析**：
-- **Shared Network** 输出更丰富，包含按AZ组织的子网信息和JSON格式，适合复杂管理。
-- **Disconnected Cluster** 输出简单，专注于基本资源信息。
+**Analysis**:
+- **Shared Network** outputs are richer, include subnet information organized by AZ and JSON format, suitable for complex management.
+- **Disconnected Cluster** outputs are simple, focused on basic resource information.
 
 ---
 
@@ -273,43 +275,43 @@
     - 提供NAT网关，私有子网可访问互联网，仅支持S3端点。
     - 双账户支持，脚本复杂，输出详细，适合多租户或混合场景。
 
-**建议**：
-- 如果需要高隔离的断连集群，选择 **Disconnected Cluster**。
-- 如果需要跨账户共享或私有子网访问公网，选择 **Shared Network**。
+**Recommendations**:
+- If you need highly isolated disconnected clusters, choose **Disconnected Cluster**.
+- If you need cross-account sharing or private subnet access to public internet, choose **Shared Network**.
 
-如需深入分析某部分（如子网CIDR分配或VPC端点配置），请进一步说明！
-
----
-
-在“disconnected cluster”配置中，通过特定的网络架构和配置实现无法访问互联网（Internet），从而确保高度隔离的“断连”环境。以下是详细的机制和实现方式，基于提供的AWS CloudFormation模板和脚本，解释如何阻止互联网访问：
+For in-depth analysis of specific parts (such as subnet CIDR allocation or VPC endpoint configuration), please provide further details!
 
 ---
 
-### 1. **私有子网无NAT网关**
-- **机制**：
-    - 在“disconnected cluster”配置中，私有子网（`PrivateSubnet`、`PrivateSubnet2`、`PrivateSubnet3`）的路由表（`PrivateRouteTable`、`PrivateRouteTable2`、`PrivateRouteTable3`）**不包含默认路由**（`0.0.0.0/0`）。
-    - 没有NAT网关（`AWS::EC2::NatGateway`）或弹性IP（`AWS::EC2::EIP`）资源，私有子网无法通过公共子网间接访问互联网。
-- **实现**：
-    - 模板中，私有路由表仅关联S3 VPC端点（Gateway类型），没有指向互联网网关或NAT网关的路由。
-    - 例如：
+In the "disconnected cluster" configuration, internet access is prevented through specific network architecture and configuration, ensuring a highly isolated "disconnected" environment. The following details the mechanisms and implementation methods, based on the provided AWS CloudFormation templates and scripts, explaining how internet access is blocked:
+
+---
+
+### 1. **Private Subnets Without NAT Gateway**
+- **Mechanism**:
+    - In the "disconnected cluster" configuration, the route tables for private subnets (`PrivateSubnet`, `PrivateSubnet2`, `PrivateSubnet3`) (`PrivateRouteTable`, `PrivateRouteTable2`, `PrivateRouteTable3`) **do not contain default routes** (`0.0.0.0/0`).
+    - No NAT gateway (`AWS::EC2::NatGateway`) or Elastic IP (`AWS::EC2::EIP`) resources, private subnets cannot access the internet indirectly through public subnets.
+- **Implementation**:
+    - In the template, private route tables only associate with S3 VPC endpoint (Gateway type), with no routes pointing to internet gateway or NAT gateway.
+    - For example:
       ```yaml
       PrivateRouteTable:
         Type: "AWS::EC2::RouteTable"
         Properties:
           VpcId: !Ref VPC
       ```
-      无`AWS::EC2::Route`资源定义`DestinationCidrBlock: 0.0.0.0/0`。
-- **效果**：
-    - 私有子网中的实例无法发起或接收来自互联网的流量，只能通过VPC端点访问特定的AWS服务。
+      No `AWS::EC2::Route` resource defines `DestinationCidrBlock: 0.0.0.0/0`.
+- **Effect**:
+    - Instances in private subnets cannot initiate or receive traffic from the internet, can only access specific AWS services through VPC endpoints.
 
 ---
 
-### 2. **公共子网受限访问**
-- **机制**：
-    - 公共子网（`PublicSubnet`、`PublicSubnet2`、`PublicSubnet3`）虽然通过互联网网关（`InternetGateway`）和默认路由（`0.0.0.0/0`）可以访问互联网，但“disconnected cluster”场景通常限制这些子网的使用。
-    - 集群的工作负载（如OpenShift节点）主要部署在私有子网，公共子网仅用于必要的基础设施（如负载均衡器或堡垒主机），且通过安全组严格控制流量。
-- **实现**：
-    - 公共路由表配置默认路由指向互联网网关：
+### 2. **Restricted Public Subnet Access**
+- **Mechanism**:
+    - Although public subnets (`PublicSubnet`, `PublicSubnet2`, `PublicSubnet3`) can access the internet through internet gateway (`InternetGateway`) and default route (`0.0.0.0/0`), the "disconnected cluster" scenario typically restricts the use of these subnets.
+    - Cluster workloads (such as OpenShift nodes) are mainly deployed in private subnets, public subnets are only used for necessary infrastructure (such as load balancers or bastion hosts), with traffic strictly controlled through security groups.
+- **Implementation**:
+    - Public route table configures default route pointing to internet gateway:
       ```yaml
       PublicRoute:
         Type: "AWS::EC2::Route"
@@ -319,21 +321,21 @@
           DestinationCidrBlock: 0.0.0.0/0
           GatewayId: !Ref InternetGateway
       ```
-    - 但私有子网不关联此路由表，且集群配置通常避免将关键组件部署在公共子网。
-- **效果**：
-    - 公共子网的互联网访问能力不影响私有子网的隔离，集群核心组件在私有子网中运行，无法访问互联网。
+    - But private subnets do not associate with this route table, and cluster configuration typically avoids deploying critical components in public subnets.
+- **Effect**:
+    - Public subnet internet access capability does not affect private subnet isolation, cluster core components run in private subnets and cannot access the internet.
 
 ---
 
-### 3. **VPC端点替代互联网访问**
-- **机制**：
-    - 通过VPC端点（`AWS::EC2::VPCEndpoint`）提供对AWS服务的私有访问，绕过互联网。
-    - 支持的服务包括：
-        - **S3**（Gateway类型）：通过`S3Endpoint`访问S3存储。
-        - **EC2、EFS、ELB、STS**（Interface类型）：通过`ec2Endpoint`、`efsEndpoint`、`elbEndpoint`、`stsEndpoint`访问。
-    - 这些端点在VPC内部解析DNS并直接路由到AWS服务，无需公网。
-- **实现**：
-    - S3端点关联到公共和私有路由表：
+### 3. **VPC Endpoints Replace Internet Access**
+- **Mechanism**:
+    - Provides private access to AWS services through VPC endpoints (`AWS::EC2::VPCEndpoint`), bypassing the internet.
+    - Supported services include:
+        - **S3** (Gateway type): Access S3 storage through `S3Endpoint`.
+        - **EC2, EFS, ELB, STS** (Interface type): Access through `ec2Endpoint`, `efsEndpoint`, `elbEndpoint`, `stsEndpoint`.
+    - These endpoints resolve DNS internally within the VPC and route directly to AWS services, no public internet needed.
+- **Implementation**:
+    - S3 endpoint associates with public and private route tables:
       ```yaml
       S3Endpoint:
         Type: AWS::EC2::VPCEndpoint
@@ -346,7 +348,7 @@
           ServiceName: !Join [ '', [ 'com.amazonaws.', !Ref 'AWS::Region', '.s3' ] ]
           VpcId: !Ref VPC
       ```
-    - Interface端点部署在私有子网，使用安全组（`EndpointSecurityGroup`）限制访问：
+    - Interface endpoints deploy in private subnets, using security groups (`EndpointSecurityGroup`) to restrict access:
       ```yaml
       ec2Endpoint:
         Type: AWS::EC2::VPCEndpoint
@@ -361,8 +363,8 @@
           ServiceName: !Join [ '', [ 'com.amazonaws.', !Ref 'AWS::Region', '.ec2' ] ]
           VpcId: !Ref VPC
       ```
-- **效果**：
-    - 集群通过VPC端点以私有方式访问AWS服务（如S3存储、EC2 API、EFS文件系统），无需互联网连接。
+- **Effect**:
+    - Cluster accesses AWS services privately through VPC endpoints (such as S3 storage, EC2 API, EFS file systems), no internet connection required.
 
 ---
 

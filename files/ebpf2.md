@@ -1,129 +1,129 @@
-# Linux Kernel项目中eBPF相关代码分析
+# Linux Kernel Project eBPF Related Code Analysis
 
-### 1. 核心eBPF实现文件
+### 1. Core eBPF Implementation Files
 
-#### 主要头文件
-- **`include/linux/bpf.h`** - eBPF核心头文件，定义了所有eBPF相关的数据结构、函数原型和宏
-- **`include/uapi/linux/bpf.h`** - 用户空间API头文件
-- **`include/linux/lsm/bpf.h`** - LSM (Linux Security Module) eBPF相关定义
-- **`include/net/netns/bpf.h`** - 网络命名空间eBPF相关定义
+#### Main Header Files
+- **`include/linux/bpf.h`** - eBPF core header file, defines all eBPF related data structures, function prototypes and macros
+- **`include/uapi/linux/bpf.h`** - Userspace API header file
+- **`include/linux/lsm/bpf.h`** - LSM (Linux Security Module) eBPF related definitions
+- **`include/net/netns/bpf.h`** - Network namespace eBPF related definitions
 
-#### 核心实现目录
-- **`kernel/bpf/`** - eBPF核心实现目录，包含以下重要文件：
+#### Core Implementation Directory
+- **`kernel/bpf/`** - eBPF core implementation directory, contains the following important files:
 
-**核心系统调用和程序管理：**
-- `kernel/bpf/syscall.c` (6198行) - eBPF系统调用实现
-- `kernel/bpf/core.c` (3195行) - eBPF核心功能实现
-- `kernel/bpf/helpers.c` (3465行) - eBPF辅助函数实现
+**Core System Calls and Program Management:**
+- `kernel/bpf/syscall.c` (6198 lines) - eBPF system call implementation
+- `kernel/bpf/core.c` (3195 lines) - eBPF core functionality implementation
+- `kernel/bpf/helpers.c` (3465 lines) - eBPF helper functions implementation
 
-**验证器：**
-- `kernel/bpf/verifier.c` (24207行) - eBPF程序验证器，确保程序安全性
+**Verifier:**
+- `kernel/bpf/verifier.c` (24207 lines) - eBPF program verifier, ensures program safety
 
-**映射类型实现：**
-- `kernel/bpf/hashtab.c` (2629行) - 哈希表映射实现
-- `kernel/bpf/arraymap.c` - 数组映射实现
-- `kernel/bpf/devmap.c` (1171行) - 设备映射实现
-- `kernel/bpf/cpumap.c` (815行) - CPU映射实现
-- `kernel/bpf/ringbuf.c` (802行) - 环形缓冲区实现
-- `kernel/bpf/stackmap.c` (763行) - 栈映射实现
+**Map Type Implementations:**
+- `kernel/bpf/hashtab.c` (2629 lines) - Hash table map implementation
+- `kernel/bpf/arraymap.c` - Array map implementation
+- `kernel/bpf/devmap.c` (1171 lines) - Device map implementation
+- `kernel/bpf/cpumap.c` (815 lines) - CPU map implementation
+- `kernel/bpf/ringbuf.c` (802 lines) - Ring buffer implementation
+- `kernel/bpf/stackmap.c` (763 lines) - Stack map implementation
 
-**BTF (BPF Type Format) 支持：**
-- `kernel/bpf/btf.c` (246KB) - BTF核心实现
-- `kernel/bpf/btf_iter.c` - BTF迭代器
+**BTF (BPF Type Format) Support:**
+- `kernel/bpf/btf.c` (246KB) - BTF core implementation
+- `kernel/bpf/btf_iter.c` - BTF iterator
 
-**其他重要组件：**
-- `kernel/bpf/trampoline.c` (1139行) - 跳板实现
-- `kernel/bpf/dispatcher.c` (172行) - 调度器实现
-- `kernel/bpf/offload.c` (879行) - 卸载支持
-- `kernel/bpf/token.c` (256行) - 令牌管理
+**Other Important Components:**
+- `kernel/bpf/trampoline.c` (1139 lines) - Trampoline implementation
+- `kernel/bpf/dispatcher.c` (172 lines) - Dispatcher implementation
+- `kernel/bpf/offload.c` (879 lines) - Offload support
+- `kernel/bpf/token.c` (256 lines) - Token management
 
-### 2. 网络相关eBPF实现
+### 2. Network Related eBPF Implementation
 
-#### 网络子系统集成
-- **`net/bpf/`** - 网络eBPF实现
-    - `net/bpf/test_run.c` (1769行) - 测试运行框架
-    - `net/bpf/bpf_dummy_struct_ops.c` (323行) - 虚拟结构体操作
+#### Network Subsystem Integration
+- **`net/bpf/`** - Network eBPF implementation
+    - `net/bpf/test_run.c` (1769 lines) - Test run framework
+    - `net/bpf/bpf_dummy_struct_ops.c` (323 lines) - Virtual struct operations
 
 #### 网络协议栈集成
 - **`net/core/`** - 核心网络功能中的eBPF集成
 - **`net/socket.c`** - 套接字层eBPF支持
 - **`net/filter/`** - 网络过滤器eBPF支持
 
-### 3. 文件系统eBPF支持
+### 3. File System eBPF Support
 
-- **`fs/bpf_fs_kfuncs.c`** - BPF文件系统内核函数实现
-    - 实现了文件系统相关的eBPF内核函数
-    - 支持文件操作、路径解析、扩展属性等
+- **`fs/bpf_fs_kfuncs.c`** - BPF filesystem kernel functions implementation
+    - Implements filesystem-related eBPF kernel functions
+    - Supports file operations, path resolution, extended attributes, etc.
 
-### 4. 工具和库
+### 4. Tools and Libraries
 
-#### 用户空间工具
-- **`tools/bpf/`** - eBPF工具集
-    - `tools/bpf/bpftool/` - 主要的eBPF管理工具
-    - `tools/bpf/bpf_dbg.c` (1399行) - eBPF调试器
-    - `tools/bpf/bpf_jit_disasm.c` (333行) - JIT反汇编器
+#### Userspace Tools
+- **`tools/bpf/`** - eBPF toolset
+    - `tools/bpf/bpftool/` - Main eBPF management tool
+    - `tools/bpf/bpf_dbg.c` (1399 lines) - eBPF debugger
+    - `tools/bpf/bpf_jit_disasm.c` (333 lines) - JIT disassembler
 
-#### 用户空间库
-- **`tools/lib/bpf/`** - libbpf库实现
-    - `tools/lib/bpf/libbpf.c` (14174行) - 主要库实现
-    - `tools/lib/bpf/libbpf.h` (1948行) - 库头文件
-    - `tools/lib/bpf/btf.c` (5833行) - BTF库实现
-    - `tools/lib/bpf/linker.c` (3115行) - 链接器实现
+#### Userspace Libraries
+- **`tools/lib/bpf/`** - libbpf library implementation
+    - `tools/lib/bpf/libbpf.c` (14174 lines) - Main library implementation
+    - `tools/lib/bpf/libbpf.h` (1948 lines) - Library header file
+    - `tools/lib/bpf/btf.c` (5833 lines) - BTF library implementation
+    - `tools/lib/bpf/linker.c` (3115 lines) - Linker implementation
 
-### 5. 文档
+### 5. Documentation
 
-- **`Documentation/bpf/`** - 完整的eBPF文档
-    - `Documentation/bpf/verifier.rst` (825行) - 验证器文档
-    - `Documentation/bpf/btf.rst` (1211行) - BTF文档
-    - `Documentation/bpf/kfuncs.rst` (696行) - 内核函数文档
-    - 各种映射类型和程序类型的详细文档
+- **`Documentation/bpf/`** - Complete eBPF documentation
+    - `Documentation/bpf/verifier.rst` (825 lines) - Verifier documentation
+    - `Documentation/bpf/btf.rst` (1211 lines) - BTF documentation
+    - `Documentation/bpf/kfuncs.rst` (696 lines) - Kernel functions documentation
+    - Detailed documentation for various map types and program types
 
-### 6. 测试和示例
+### 6. Testing and Examples
 
-- **`samples/bpf/`** - eBPF示例程序
-- **`tools/testing/selftests/bpf/`** - eBPF自测试套件
+- **`samples/bpf/`** - eBPF example programs
+- **`tools/testing/selftests/bpf/`** - eBPF self-test suite
 
-### 7. 架构特定实现
+### 7. Architecture-Specific Implementation
 
-- **`arch/x86/bpf/`** - x86架构特定的eBPF实现
-- **`arch/arm64/bpf/`** - ARM64架构特定的eBPF实现
-- 其他架构的eBPF JIT编译器实现
+- **`arch/x86/bpf/`** - x86 architecture-specific eBPF implementation
+- **`arch/arm64/bpf/`** - ARM64 architecture-specific eBPF implementation
+- eBPF JIT compiler implementations for other architectures
 
-### 8. 主要功能特性
+### 8. Main Functional Features
 
-#### 程序类型支持
-- 套接字过滤器 (Socket Filter)
+#### Program Type Support
+- Socket Filter
 - Kprobe/Kretprobe
 - Tracepoint
 - XDP (eXpress Data Path)
 - Cgroup
 - LSM (Linux Security Module)
-- 调度器扩展 (Sched Ext)
+- Scheduler Extensions (Sched Ext)
 
-#### 映射类型支持
-- 哈希表 (Hash)
-- 数组 (Array)
-- 环形缓冲区 (Ring Buffer)
-- 栈映射 (Stack Map)
-- 设备映射 (Device Map)
-- CPU映射 (CPU Map)
-- 套接字映射 (Socket Map)
+#### Map Type Support
+- Hash Table
+- Array
+- Ring Buffer
+- Stack Map
+- Device Map
+- CPU Map
+- Socket Map
 
-#### 安全特性
-- 程序验证器确保类型安全
-- 边界检查防止越界访问
-- 循环检测防止无限循环
-- 权限检查控制访问权限
+#### Security Features
+- Program verifier ensures type safety
+- Boundary checking prevents out-of-bounds access
+- Loop detection prevents infinite loops
+- Permission checking controls access rights
 
-### 9. 关键设计特点
+### 9. Key Design Characteristics
 
-1. **安全性优先** - 所有eBPF程序必须通过严格的验证器检查
-2. **高性能** - JIT编译将eBPF字节码编译为本地机器码
-3. **可扩展性** - 模块化设计支持新的程序类型和映射类型
-4. **用户友好** - 提供丰富的用户空间工具和库
-5. **内核集成** - 深度集成到Linux内核的各个子系统
+1. **Safety First** - All eBPF programs must pass strict verifier checks
+2. **High Performance** - JIT compilation converts eBPF bytecode to native machine code
+3. **Extensibility** - Modular design supports new program types and map types
+4. **User Friendly** - Provides rich userspace tools and libraries
+5. **Kernel Integration** - Deep integration into various Linux kernel subsystems
 
-这个eBPF实现是Linux内核中最复杂和功能最丰富的子系统之一，为内核提供了强大的可编程性和可扩展性，同时保持了严格的安全保证。
+This eBPF implementation is one of the most complex and feature-rich subsystems in the Linux kernel, providing powerful programmability and extensibility for the kernel while maintaining strict security guarantees.
 
 ---
 

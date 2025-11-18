@@ -1,6 +1,6 @@
 # Nested Hell
 
-Nested Hell (嵌套地狱) is a term in programming used to describe problems caused by overly nested structures in code. This situation typically occurs when:
+Nested Hell is a term in programming used to describe problems caused by overly nested structures in code. This situation typically occurs when:
 
 1. **Multiple layers of nesting**: Code has too many layers of if-else, for loops, try-catch, or other control structure nesting
 2. **Callback hell**: Especially in JavaScript, nesting of multiple asynchronous callback functions (also known as "Callback Hell")
@@ -48,513 +48,200 @@ In Java asynchronous programming, nested hell also exists, especially when deali
 
 ## 1. Traditional Callback Hell (Callback Hell)
 
+### Problem Example
 ```java
-// Nested callback example
-userService.getUser(userId, user -> {
-    orderService.getOrders(user, orders -> {
-        paymentService.getPayments(orders, payments -> {
-            notificationService.sendSummary(user, orders, payments, result -> {
-                // Process results...
-            });
-        });
-    });
-});
-```
-
-## 2. Nesting Issues in Reactor
-
-```java
-// Nesting in Reactor
-Mono<User> userMono = userRepository.findById(userId);
-userMono.flatMap(user -> {
-    return orderRepository.findByUserId(user.getId())
-        .flatMap(orders -> {
-            return paymentRepository.findByOrderIds(extractOrderIds(orders))
-                .flatMap(payments -> {
-                    return notificationService.sendSummary(user, orders, payments);
+// Nested callback hell
+fetchUserData(userId, new Callback<User>() {
+    @Override
+    public void onSuccess(User user) {
+        fetchUserOrders(user.getId(), new Callback<List<Order>>() {
+            @Override
+            public void onSuccess(List<Order> orders) {
+                fetchOrderDetails(orders.get(0).getId(), new Callback<OrderDetails>() {
+                    @Override
+                    public void onSuccess(OrderDetails details) {
+                        // Process order details
+                        System.out.println("Order details: " + details);
+                    }
+                    
+                    @Override
+                    public void onFailure(Throwable error) {
+                        System.err.println("Failed to fetch order details: " + error);
+                    }
                 });
+            }
+            
+            @Override
+            public void onFailure(Throwable error) {
+                System.err.println("Failed to fetch user orders: " + error);
+            }
         });
+    }
+    
+    @Override
+    public void onFailure(Throwable error) {
+        System.err.println("Failed to fetch user data: " + error);
+    }
 });
 ```
 
-## 3. Nesting Issues in Mutiny
-
+### Solution 1: Use CompletableFuture (Java 8+)
 ```java
-// Nesting in Mutiny
-Uni<User> userUni = userRepo.findByUserId(userId);
-userUni.onItem().transformToUni(user -> {
-    return orderRepo.findByUser(user)
-        .onItem().transformToUni(orders -> {
-            return paymentRepo.findByOrders(orders)
-                .onItem().transformToUni(payments -> {
-                    return notificationService.sendSummary(user, orders, payments);
-                });
-        });
+// Chain call using CompletableFuture
+CompletableFuture<User> userFuture = fetchUserDataAsync(userId);
+CompletableFuture<List<Order>> ordersFuture = userFuture.thenCompose(user -> 
+    fetchUserOrdersAsync(user.getId())
+);
+CompletableFuture<OrderDetails> detailsFuture = ordersFuture.thenCompose(orders -> 
+    fetchOrderDetailsAsync(orders.get(0).getId())
+);
+
+detailsFuture.thenAccept(details -> {
+    System.out.println("Order details: " + details);
+}).exceptionally(error -> {
+    System.err.println("Error: " + error);
+    return null;
 });
 ```
 
-## Solutions
+## 2. Reactive Programming Nested Hell (Using Reactor)
 
-### Using Reactor's Elegant Solution
-
+### Problem Example
 ```java
-// Using Reactor's fluent API
+// Nested reactive operations
 userRepository.findById(userId)
-    .flatMap(user -> orderRepository.findByUserId(user.getId()))
-    .flatMap(orders -> paymentRepository.findByOrderIds(extractOrderIds(orders)))
-    .flatMap(payments -> notificationService.sendSummary(user, orders, payments))
+    .flatMap(user -> {
+        return orderRepository.findByUserId(user.getId())
+            .flatMap(orders -> {
+                return orderDetailsRepository.findByOrderId(orders.get(0).getId())
+                    .flatMap(details -> {
+                        return processOrderDetails(details)
+                            .flatMap(result -> {
+                                return saveResult(result);
+                            });
+                    });
+            });
+    })
     .subscribe();
 ```
 
-### Using Mutiny's Elegant Solution
-
+### Solution: Use Reactive Chain Call
 ```java
-// Using Mutiny's chain calls
-userRepo.findByUserId(userId)
-    .onItem().transformToUni(user -> orderRepo.findByUser(user))
-    .onItem().transformToUni(orders -> paymentRepo.findByOrders(orders))
-    .onItem().transformToUni(payments -> notificationService.sendSummary(user, orders, payments))
-    .subscribe().with(...);
+// Flattened reactive chain
+userRepository.findById(userId)
+    .flatMap(user -> orderRepository.findByUserId(user.getId()))
+    .flatMap(orders -> orderDetailsRepository.findByOrderId(orders.get(0).getId()))
+    .flatMap(details -> processOrderDetails(details))
+    .flatMap(result -> saveResult(result))
+    .subscribe(
+        result -> System.out.println("Result: " + result),
+        error -> System.err.println("Error: " + error)
+    );
 ```
 
-### More Advanced Solutions
+## 3. Mutiny Framework Nested Hell (Quarkus Reactive)
 
-1. **Combination operators**:
-   ```java
-   // Reactor
-   Mono.zip(
-       userRepository.findById(userId),
-       orderRepository.findByUserId(userId),
-       paymentRepository.findByUserId(userId)
-   ).flatMap(tuple -> notificationService.sendSummary(tuple.getT1(), tuple.getT2(), tuple.getT3()));
-   
-   // Mutiny
-   Uni.combine().all()
-       .unis(userRepo.findByUserId(userId), 
-             orderRepo.findByUserId(userId),
-             paymentRepo.findByUserId(userId))
-       .asTuple()
-       .onItem().transformToUni(tuple -> 
-           notificationService.sendSummary(tuple.getItem1(), tuple.getItem2(), tuple.getItem3()));
-   ```
-
-2. **Use intermediate DTO**:
-   ```java
-   // Create an intermediate object to carry all data
-   userRepo.findByUserId(userId)
-       .onItem().transformToUni(user -> orderRepo.findByUser(user)
-           .onItem().transform(orders -> new UserData(user, orders)))
-       .onItem().transformToUni(userData -> paymentRepo.findByOrders(userData.orders())
-           .onItem().transform(payments -> userData.withPayments(payments)))
-       .onItem().transformToUni(enrichedData -> 
-           notificationService.sendSummary(enrichedData));
-   ```
-
-3. **Custom operators**:
-   ```java
-   // Create reusable operation chains
-   public static Uni<SummaryData> prepareUserSummary(String userId) {
-       return userRepo.findByUserId(userId)
-           .onItem().transformToUni(user -> orderRepo.findByUser(user))
-           .onItem().transformToUni(orders -> paymentRepo.findByOrders(orders))
-           .onItem().transform(payments -> new SummaryData(user, orders, payments));
-   }
-   ```
-
-## Best Practice Recommendations
-
-1. **Keep asynchronous operations flat**: Try to avoid deep nesting, use chain calls
-2. **Use zip/combine reasonably**: Execute in parallel when operations have no dependencies
-3. **Extract methods**: Split long chains into meaningful sub-methods
-4. **Consider context passing**: Use Tuple or custom DTO to pass data from multiple steps
-5. **Error handling**: Add error handling at appropriate levels, avoid handling at every step
-
-These patterns can help you avoid nested hell in Java reactive programming, especially when using libraries like Reactor and Mutiny.
-
----
-
-# True Asynchronous Nesting Solutions in Rust/Tokio
-
-## 1. Real Problem Scenarios (Multi-level Nesting)
-
-```rust
-// Real nested hell example
-async fn process_order() -> Result<(), Box<dyn Error>> {
-    let db = Database::connect().await?;
-    db.transaction(|tx| async move {
-        let user = User::find(&tx, user_id).await?;
-        if user.is_active() {
-            let order = Order::create(&tx, &user).await?;
-            let inventory = Inventory::check(&tx, &order).await?;
-            if inventory.available {
-                let payment = Payment::process(&tx, &order).await?;
-                if payment.success {
-                    Notification::send(&tx, &user, &order).await?;
-                    // More nesting...
-                }
-            }
-        }
-        Ok(())
-    }).await
-}
-```
-
-## 2. Real Solutions
-
-### Solution 1: Early Return Flattening
-
-```rust
-async fn process_order() -> Result<(), Box<dyn Error>> {
-    let db = Database::connect().await?;
-    db.transaction(|tx| async move {
-        let user = User::find(&tx, user_id).await?;
-        if !user.is_active() {
-            return Ok(()); // Early return
-        }
-        
-        let order = Order::create(&tx, &user).await?;
-        let inventory = Inventory::check(&tx, &order).await?;
-        if !inventory.available {
-            return Ok(());
-        }
-        
-        let payment = Payment::process(&tx, &order).await?;
-        if !payment.success {
-            return Ok(());
-        }
-        
-        Notification::send(&tx, &user, &order).await?;
-        Ok(())
-    }).await
-}
-```
-
-### Solution 2: Function Splitting
-
-```rust
-async fn process_payment(tx: &Transaction<'_>, user: &User, order: &Order) -> Result<(), Box<dyn Error>> {
-    let inventory = Inventory::check(tx, order).await?;
-    if !inventory.available {
-        return Ok(());
-    }
-    
-    let payment = Payment::process(tx, order).await?;
-    if payment.success {
-        Notification::send(tx, user, order).await?;
-    }
-    Ok(())
-}
-
-async fn process_order() -> Result<(), Box<dyn Error>> {
-    let db = Database::connect().await?;
-    db.transaction(|tx| async move {
-        let user = User::find(&tx, user_id).await?;
-        if user.is_active() {
-            let order = Order::create(&tx, &user).await?;
-            process_payment(&tx, &user, &order).await?;
-        }
-        Ok(())
-    }).await
-}
-```
-
-### Solution 3: Using `and_then` Combinator
-
-```rust
-use futures::future::TryFutureExt;
-
-async fn process_order() -> Result<(), Box<dyn Error>> {
-    Database::connect()
-        .and_then(|db| db.transaction(|tx| 
-            User::find(&tx, user_id)
-                .and_then(|user| {
-                    if !user.is_active() {
-                        return futures::future::ok(());
-                    }
-                    Order::create(&tx, &user)
-                        .and_then(|order| Inventory::check(&tx, &order))
-                        .and_then(|inventory| {
-                            if !inventory.available {
-                                return futures::future::ok(());
-                            }
-                            Payment::process(&tx, &order)
-                        })
-                        .and_then(|payment| {
-                            if payment.success {
-                                Notification::send(&tx, &user, &order)
-                            } else {
-                                futures::future::ok(())
-                            }
-                        })
-                })
-        ))
-        .await
-}
-```
-
-### Solution 4: Using Custom Error Handling and Context Object
-
-```rust
-struct ProcessingContext<'a> {
-    tx: &'a Transaction<'a>,
-    user: Option<User>,
-    order: Option<Order>,
-    payment: Option<Payment>
-}
-
-impl<'a> ProcessingContext<'a> {
-    async fn process(mut self) -> Result<(), Box<dyn Error>> {
-        self.user = Some(User::find(self.tx, user_id).await?);
-        if !self.user.as_ref().unwrap().is_active() {
-            return Ok(());
-        }
-        
-        self.order = Some(Order::create(self.tx, self.user.as_ref().unwrap()).await?);
-        let inventory = Inventory::check(self.tx, self.order.as_ref().unwrap()).await?;
-        if !inventory.available {
-            return Ok(());
-        }
-        
-        self.payment = Some(Payment::process(self.tx, self.order.as_ref().unwrap()).await?);
-        if self.payment.as_ref().unwrap().success {
-            Notification::send(self.tx, self.user.as_ref().unwrap(), self.order.as_ref().unwrap()).await?;
-        }
-        Ok(())
-    }
-}
-
-async fn process_order() -> Result<(), Box<dyn Error>> {
-    let db = Database::connect().await?;
-    db.transaction(|tx| async move {
-        ProcessingContext { tx, user: None, order: None, payment: None }
-            .process()
-            .await
-    }).await
-}
-```
-
-## 3. Key Differences Explained
-
-1. **Original Problem Code**:
-    - Multi-level nested if-else and await
-    - Deep indentation leads to poor readability
-    - Difficult to add new logic
-
-2. **Solution Code**:
-    - Use early returns to reduce nesting levels
-    - Split logic into small functions
-    - Use combinators to manage asynchronous flow
-    - Introduce context objects to manage state
-
-## 4. Tokio-Specific Recommendations
-
-1. For IO-intensive parallel operations, use `tokio::try_join!`:
-   ```rust
-   async fn load_data() -> Result<(Data1, Data2), Error> {
-       let (data1, data2) = tokio::try_join!(
-           fetch_data1(),
-           fetch_data2()
-       )?;
-       Ok((data1, data2))
-   }
-   ```
-
-2. Use `tokio::select!` to handle race conditions:
-   ```rust
-   async fn fetch_with_timeout() -> Result<Data, Error> {
-       tokio::select! {
-           data = fetch_data() => Ok(data?),
-           _ = tokio::time::sleep(Duration::from_secs(5)) => {
-               Err(Error::Timeout)
-           }
-       }
-   }
-   ```
-
-These patterns demonstrate truly effective methods for handling asynchronous nesting problems in Rust/Tokio, which are fundamentally different from the simple examples initially shown.
-
----
-
-# JavaScript Asynchronous Nesting Hell and Solutions
-
-Due to historical reasons and its single-threaded asynchronous nature, JavaScript is particularly prone to callback hell problems. Here are typical examples and modern solutions.
-
-## 1. Classic Callback Hell Example
-
-```javascript
-// Deep nested callback hell
-getUser(userId, function(user) {
-  getOrders(user.id, function(orders) {
-    getPayments(orders[0].id, function(payments) {
-      generateReport(user, orders, payments, function(report) {
-        sendReport(report, function(response) {
-          notifyUser(user.id, function() {
-            console.log('Whole process completed');
-          }, function(err) {
-            console.error('Notification failed', err);
-          });
-        }, function(err) {
-          console.error('Send report failed', err);
-        });
-      }, function(err) {
-        console.error('Generate report failed', err);
-      });
-    }, function(err) {
-      console.error('Get payments failed', err);
-    });
-  }, function(err) {
-    console.error('Get orders failed', err);
-  });
-}, function(err) {
-  console.error('Get user failed', err);
-});
-```
-
-## 2. Modern Solutions
-
-### Solution 1: Using Promise Chain Calls
-
-```javascript
-getUser(userId)
-  .then(user => getOrders(user.id))
-  .then(orders => getPayments(orders[0].id))
-  .then(payments => generateReport(payments))
-  .then(report => sendReport(report))
-  .then(() => notifyUser(userId))
-  .then(() => console.log('Whole process completed'))
-  .catch(err => console.error('Process error:', err));
-```
-
-### Solution 2: Using async/await Syntax
-
-```javascript
-async function processUserReport(userId) {
-  try {
-    const user = await getUser(userId);
-    const orders = await getOrders(user.id);
-    const payments = await getPayments(orders[0].id);
-    const report = await generateReport(user, orders, payments);
-    await sendReport(report);
-    await notifyUser(user.id);
-    console.log('Whole process completed');
-  } catch (err) {
-    console.error('Process error:', err);
-  }
-}
-```
-
-### Solution 3: Parallel Processing of Independent Tasks
-
-```javascript
-// Using Promise.all for parallel processing
-async function getUserDashboard(userId) {
-  try {
-    const [user, orders, notifications] = await Promise.all([
-      getUser(userId),
-      getOrders(userId),
-      getNotifications(userId)
-    ]);
-    
-    const dashboard = { user, orders, notifications };
-    return dashboard;
-  } catch (err) {
-    console.error('Load dashboard failed:', err);
-    throw err;
-  }
-}
-```
-
-### Solution 4: Using Intermediate Function Splitting
-
-```javascript
-async function getUserData(userId) {
-  const user = await getUser(userId);
-  const orders = await getOrders(user.id);
-  return { user, orders };
-}
-
-async function getPaymentData(orderId) {
-  const payments = await getPayments(orderId);
-  const report = await generateReport(payments);
-  return { payments, report };
-}
-
-async function fullProcess(userId) {
-  try {
-    const { user, orders } = await getUserData(userId);
-    const { report } = await getPaymentData(orders[0].id);
-    await sendReport(report);
-    await notifyUser(user.id);
-  } catch (err) {
-    console.error('Process error:', err);
-  }
-}
-```
-
-## 3. Advanced Patterns
-
-### Using async Library to Control Complex Flow
-
-```javascript
-const async = require('async');
-
-async.auto({
-  getUser: callback => getUser(userId, callback),
-  getOrders: ['getUser', (results, callback) => {
-    getOrders(results.getUser.id, callback);
-  }],
-  getPayments: ['getOrders', (results, callback) => {
-    getPayments(results.getOrders[0].id, callback);
-  }],
-  generateReport: ['getUser', 'getOrders', 'getPayments', (results, callback) => {
-    generateReport(results.getUser, results.getOrders, results.getPayments, callback);
-  }],
-  sendReport: ['generateReport', (results, callback) => {
-    sendReport(results.generateReport, callback);
-  }],
-  notifyUser: ['getUser', 'sendReport', (results, callback) => {
-    notifyUser(results.getUser.id, callback);
-  }]
-}, (err, results) => {
-  if (err) {
-    console.error('Process error:', err);
-  } else {
-    console.log('Whole process completed', results);
-  }
-});
-```
-
-### Using RxJS to Handle Complex Asynchronous Streams
-
-```javascript
-const { from } = require('rxjs');
-const { mergeMap, map, catchError } = require('rxjs/operators');
-
-from(getUser(userId))
-  .pipe(
-    mergeMap(user => from(getOrders(user.id)).pipe(
-      map(orders => ({ user, orders }))
-    )),
-    mergeMap(({ user, orders }) => from(getPayments(orders[0].id)).pipe(
-      map(payments => ({ user, orders, payments }))
-    )),
-    mergeMap(({ user, orders, payments }) => from(generateReport(user, orders, payments))),
-    mergeMap(report => from(sendReport(report))),
-    catchError(err => {
-      console.error('Process error:', err);
-      return throwError(err);
+### Problem Example
+```java
+// Nested Mutiny operations
+userService.findUserById(userId)
+    .onItem().transformToUni(user -> {
+        return orderService.findOrdersByUser(user.getId())
+            .onItem().transformToUni(orders -> {
+                return orderDetailsService.findDetailsByOrder(orders.get(0).getId())
+                    .onItem().transformToUni(details -> {
+                        return processOrderDetails(details)
+                            .onItem().transformToUni(result -> {
+                                return saveResult(result);
+                            });
+                    });
+            });
     })
-  )
-  .subscribe(() => console.log('Whole process completed'));
+    .subscribe().with(result -> {
+        System.out.println("Result: " + result);
+    });
 ```
 
-## 4. Best Practice Recommendations
+### Solution: Use Mutiny Chain Call
+```java
+// Flattened Mutiny chain
+userService.findUserById(userId)
+    .onItem().transformToUni(user -> orderService.findOrdersByUser(user.getId()))
+    .onItem().transformToUni(orders -> orderDetailsService.findDetailsByOrder(orders.get(0).getId()))
+    .onItem().transformToUni(details -> processOrderDetails(details))
+    .onItem().transformToUni(result -> saveResult(result))
+    .subscribe().with(
+        result -> System.out.println("Result: " + result),
+        failure -> System.err.println("Failed: " + failure)
+    );
+```
 
-1. **Prioritize async/await**: This is currently the clearest way to write asynchronous code
-2. **Split functions reasonably**: Avoid having a single function handle too much logic
-3. **Parallelize independent operations**: Use Promise.all to improve performance
-4. **Unified error handling**: Use try/catch or .catch() to handle errors centrally
-5. **Consider using asynchronous libraries**: For complex flows, async or RxJS can provide better control
-6. **Avoid mixing callbacks/Promises**: Keep code style consistent
+## 4. General Solutions and Best Practices
 
-These solutions demonstrate how to transform deeply nested JavaScript asynchronous code into more readable and maintainable forms.
+### 4.1 Method Extraction
+```java
+// Extract complex logic into separate methods
+public Uni<OrderDetails> getOrderDetails(Long userId) {
+    return userService.findUserById(userId)
+        .onItem().transformToUni(user -> orderService.findOrdersByUser(user.getId()))
+        .onItem().transformToUni(orders -> orderDetailsService.findDetailsByOrder(orders.get(0).getId()));
+}
+
+// Use the extracted method
+getOrderDetails(userId)
+    .onItem().transformToUni(details -> processOrderDetails(details))
+    .onItem().transformToUni(result -> saveResult(result))
+    .subscribe().with(
+        result -> System.out.println("Result: " + result),
+        failure -> System.err.println("Failed: " + failure)
+    );
+```
+
+### 4.2 Use Reactive Composition
+```java
+// Combine multiple reactive streams
+public Uni<Result> processUserOrder(Long userId) {
+    Uni<User> userUni = userService.findUserById(userId);
+    Uni<List<Order>> ordersUni = userUni
+        .onItem().transformToUni(user -> orderService.findOrdersByUser(user.getId()));
+    Uni<OrderDetails> detailsUni = ordersUni
+        .onItem().transformToUni(orders -> orderDetailsService.findDetailsByOrder(orders.get(0).getId()));
+    
+    return Uni.combine().all().unis(userUni, ordersUni, detailsUni)
+        .combinedWith((user, orders, details) -> {
+            // Process combined results
+            return new Result(user, orders, details);
+        });
+}
+```
+
+### 4.3 Error Handling Optimization
+```java
+// Centralized error handling
+userService.findUserById(userId)
+    .onItem().transformToUni(user -> orderService.findOrdersByUser(user.getId()))
+    .onItem().transformToUni(orders -> orderDetailsService.findDetailsByOrder(orders.get(0).getId()))
+    .onItem().transformToUni(details -> processOrderDetails(details))
+    .onItem().transformToUni(result -> saveResult(result))
+    .onFailure().recoverWithItem(throwable -> {
+        System.err.println("Operation failed: " + throwable.getMessage());
+        return new ErrorResult(throwable);
+    })
+    .subscribe().with(
+        result -> System.out.println("Final result: " + result),
+        failure -> System.err.println("Unhandled error: " + failure)
+    );
+```
+
+## 5. Summary
+
+Whether using traditional callbacks, CompletableFuture, Reactor, or Mutiny frameworks, the core idea to solve nested hell is:
+
+1. **Chain call**: Use the chain features provided by the framework to flatten nested structures
+2. **Method extraction**: Extract complex logic into independent methods
+3. **Reactive composition**: Use framework-provided combination operations to handle multiple streams
+4. **Proper error handling**: Avoid repetitive error handling code
+
+Choose the appropriate solution based on the specific framework and scenario. Modern reactive programming frameworks (like Reactor and Mutiny) provide rich operators to help developers write more concise and readable asynchronous code.
+
+If you have specific code examples or framework-related questions, I can provide more targeted suggestions!

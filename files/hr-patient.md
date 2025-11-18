@@ -1,79 +1,79 @@
-# React题 - Patient Medical Records
+# React Problem - Patient Medical Records
 
 - https://www.hackerrank.com/challenges/patient-medical-records
 - https://github.com/liweinan/play-react/tree/main/src/hackerrank/patient
 
-以下是您提供的医疗记录中涉及的医学单词及术语的解释，涵盖了诊断、生命体征和其他相关术语：
+Below is an explanation of the medical words and terms involved in the medical records you provided, covering diagnosis, vital signs, and other related terms:
 
-### 诊断（Diagnosis）
-1. **Pulmonary Embolism（肺栓塞）**
-    - 描述：一种严重的医疗状况，通常由血栓（血液凝块）阻塞肺动脉引起，导致肺部血流受阻。可能引发胸痛、呼吸困难、心率加快等症状。
-    - 严重程度（Severity）：记录中标记为4，表示严重，可能需要紧急治疗，如抗凝药物或手术。
-    - 相关观察：记录中多次出现，伴随高心率（pulse）和高呼吸频率（breathing rate），符合症状。
+### Diagnosis
+1. **Pulmonary Embolism**
+    - Description: A serious medical condition, usually caused by a blood clot (blood thrombus) blocking the pulmonary artery, leading to obstructed blood flow in the lungs. May cause symptoms such as chest pain, difficulty breathing, and increased heart rate.
+    - Severity: Marked as 4 in records, indicating severe, may require emergency treatment such as anticoagulant drugs or surgery.
+    - Related Observations: Appears multiple times in records, accompanied by high heart rate (pulse) and high breathing rate, consistent with symptoms.
 
-2. **Pleurisy（胸膜炎）**
-    - 描述：胸膜（覆盖肺部的膜）发炎，通常由感染、肺栓塞或其他肺部疾病引起。典型症状包括胸痛（尤其在深呼吸时）和呼吸困难。
-    - 严重程度（Severity）：记录中标记为3，表示中度严重，可能需要抗炎药或治疗潜在原因。
-    - 相关观察：常伴随较高的呼吸频率和轻度体温升高。
+2. **Pleurisy**
+    - Description: Inflammation of the pleura (membrane covering the lungs), usually caused by infection, pulmonary embolism, or other lung diseases. Typical symptoms include chest pain (especially during deep breathing) and difficulty breathing.
+    - Severity: Marked as 3 in records, indicating moderate severity, may require anti-inflammatory drugs or treatment of underlying causes.
+    - Related Observations: Often accompanied by higher breathing rate and mild body temperature elevation.
 
-3. **Common Cold（普通感冒）**
-    - 描述：由病毒引起的轻度上呼吸道感染，症状包括流鼻涕、咳嗽、喉咙痛和轻度发热。
-    - 严重程度（Severity）：记录中标记为1，表示轻微，通常无需特殊治疗，数天内可自愈。
-    - 相关观察：记录中感冒病例通常伴随体温升高（101-103°F）。
+3. **Common Cold**
+    - Description: Mild upper respiratory tract infection caused by viruses, symptoms include runny nose, cough, sore throat, and mild fever.
+    - Severity: Marked as 1 in records, indicating mild, usually requires no special treatment and can resolve within a few days.
+    - Related Observations: Cold cases in records are usually accompanied by elevated body temperature (101-103°F).
 
-### 生命体征（Vitals）
-1. **Blood Pressure Systole（收缩压）**
-    - 描述：心脏收缩时动脉内的压力，反映心脏泵血的强度。正常范围通常为90-120 mmHg。
-    - 记录观察：记录中的收缩压范围为75-100 mmHg，部分偏低，可能与患者病情（如肺栓塞导致的心血管压力）或个体差异有关。
+### Vital Signs
+1. **Blood Pressure Systole**
+    - Description: The pressure in arteries during heart contraction, reflecting the strength of heart pumping. Normal range is usually 90-120 mmHg.
+    - Record Observations: Systolic blood pressure in records ranges from 75-100 mmHg, some are low, possibly related to patient conditions (such as cardiovascular pressure caused by pulmonary embolism) or individual differences.
 
-2. **Blood Pressure Diastole（舒张压）**
-    - 描述：心脏舒张时动脉内的压力，反映血管的休息状态。正常范围通常为60-80 mmHg。
-    - 记录观察：记录中的舒张压较高（121-155 mmHg），表明可能存在高血压或与肺栓塞等疾病相关的循环系统压力。
+2. **Blood Pressure Diastole**
+    - Description: The pressure in arteries during heart relaxation, reflecting the resting state of blood vessels. Normal range is usually 60-80 mmHg.
+    - Record Observations: Diastolic blood pressure in records is high (121-155 mmHg), indicating possible hypertension or circulatory system pressure related to diseases like pulmonary embolism.
 
-3. **Pulse（脉搏/心率）**
-    - 描述：每分钟心跳次数，反映心脏活动。正常范围为60-100次/分钟。
-    - 记录观察：记录中脉搏偏高（91-140次/分钟），尤其在肺栓塞病例中（125-140次/分钟），可能因缺氧或心脏负荷增加。
+3. **Pulse**
+    - Description: Number of heartbeats per minute, reflecting heart activity. Normal range is 60-100 beats per minute.
+    - Record Observations: Pulse in records is high (91-140 beats per minute), especially in pulmonary embolism cases (125-140 beats per minute), possibly due to hypoxia or increased heart load.
 
-4. **Breathing Rate（呼吸频率）**
-    - 描述：每分钟呼吸次数，反映呼吸系统功能。正常范围为12-20次/分钟。
-    - 记录观察：记录中呼吸频率偏高（16-34次/分钟），尤其在肺栓塞（25-34次/分钟）和胸膜炎病例中，提示呼吸困难或肺功能受限。
+4. **Breathing Rate**
+    - Description: Number of breaths per minute, reflecting respiratory system function. Normal range is 12-20 breaths per minute.
+    - Record Observations: Breathing rate in records is high (16-34 breaths per minute), especially in pulmonary embolism (25-34 breaths per minute) and pleurisy cases, indicating breathing difficulty or limited lung function.
 
-5. **Body Temperature（体温）**
-    - 描述：反映身体核心温度，正常范围为97-99°F（36.1-37.2°C）。发热（>100.4°F）可能提示感染或炎症。
-    - 记录观察：记录中体温范围为97.1-103.8°F，感冒病例常伴发热（101-103.8°F），肺栓塞和胸膜炎病例体温变化较小。
+5. **Body Temperature**
+    - Description: Reflects body core temperature, normal range is 97-99°F (36.1-37.2°C). Fever (>100.4°F) may indicate infection or inflammation.
+    - Record Observations: Body temperature in records ranges from 97.1-103.8°F, cold cases often accompany fever (101-103.8°F), pulmonary embolism and pleurisy cases show smaller temperature changes.
 
-### 其他术语
-1. **Severity（严重程度）**
-    - 描述：用于评估疾病的严重性，记录中使用1到4的等级：
-        - 1：轻微（如普通感冒）。
-        - 3：中度（如胸膜炎）。
-        - 4：严重（如肺栓塞）。
-    - 作用：帮助医生判断治疗的紧急性和优先级。
+### Other Terms
+1. **Severity**
+    - Description: Used to assess the severity of diseases, using a scale of 1 to 4 in records:
+        - 1: Mild (such as common cold).
+        - 3: Moderate (such as pleurisy).
+        - 4: Severe (such as pulmonary embolism).
+    - Function: Helps doctors determine the urgency and priority of treatment.
 
-2. **Meta: Height（身高）**
-    - 描述：患者的身高，单位为厘米（cm）。记录中范围为157-174 cm。
-    - 作用：用于计算体质指数（BMI）或评估健康状况。
+2. **Meta: Height**
+    - Description: Patient's height, measured in centimeters (cm). Range in records is 157-174 cm.
+    - Function: Used to calculate Body Mass Index (BMI) or assess health status.
 
-3. **Meta: Weight（体重）**
-    - 描述：患者的体重，单位为磅（lbs）。记录中范围为102-196 lbs。
-    - 作用：结合身高评估BMI，监测体重变化可能反映健康状态或疾病进展。
+3. **Meta: Weight**
+    - Description: Patient's weight, measured in pounds (lbs). Range in records is 102-196 lbs.
+    - Function: Combined with height to assess BMI, monitoring weight changes may reflect health status or disease progression.
 
-4. **Timestamp（时间戳）**
-    - 描述：记录医疗数据的具体时间（以Unix时间戳格式，毫秒为单位）。
-    - 作用：用于追踪病情的时间线，判断疾病的进展或治疗效果。
+4. **Timestamp**
+    - Description: Records the specific time of medical data (in Unix timestamp format, milliseconds).
+    - Function: Used to track the timeline of illness, determine disease progression or treatment effectiveness.
 
-5. **UserDob（出生日期）**
-    - 描述：患者的出生日期，格式为“日-月-年”。
-    - 作用：用于计算患者年龄，评估与年龄相关的健康风险。
+5. **UserDob**
+    - Description: Patient's date of birth, format is "day-month-year".
+    - Function: Used to calculate patient age, assess age-related health risks.
 
-### 总结
-记录中涉及的医学术语主要围绕呼吸系统疾病（肺栓塞、胸膜炎）和轻症（感冒），以及生命体征的监测。肺栓塞和胸膜炎病例显示较高的心率、呼吸频率和血压，反映病情较重；感冒病例则以发热为主，症状较轻。这些术语和数据为医生提供了诊断和治疗的重要依据。
+### Summary
+The medical terms involved in the records mainly focus on respiratory system diseases (pulmonary embolism, pleurisy) and mild conditions (cold), as well as monitoring of vital signs. Pulmonary embolism and pleurisy cases show higher heart rate, breathing rate, and blood pressure, reflecting more severe conditions; cold cases are mainly characterized by fever with milder symptoms. These terms and data provide important basis for doctors' diagnosis and treatment.
 
-如果您需要进一步分析记录中的数据趋势或特定患者的病情，请告诉我！
+If you need further analysis of data trends in the records or specific patient conditions, please let me know!
 
 ---
 
-测试数据：
+Test Data:
 
 
 ```javascript

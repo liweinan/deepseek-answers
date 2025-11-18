@@ -36,31 +36,31 @@ The first method (using `Arrays.stream`) is the most concise and recommended for
 
 ---
 
-# 在 Java 中，初始化一个 `List` 并包含初始值有以下几种常用方法。以下以 `List<Integer>` 为例，展示如何初始化并包含初始值（如
+# In Java, there are several common methods to initialize a `List` and include initial values. Below using `List<Integer>` as an example, showing how to initialize and include initial values (such as
 
-`[0, 0]`）：
+`[0, 0]`)：
 
-### 1. **使用 `Arrays.asList`（适合固定初始值）**
+### 1. **Using `Arrays.asList` (suitable for fixed initial values)**
 
 ```java
 List<Integer> list = new ArrayList<>(Arrays.asList(0, 0));
 ```
 
-- `Arrays.asList(0, 0)` 创建一个固定长度的 `List`。
-- 包装在 `new ArrayList<>()` 中以创建可修改的 `List`（因为 `Arrays.asList` 返回的 `List` 是不可修改的）。
-- 结果：`list` 包含 `[0, 0]`。
+- `Arrays.asList(0, 0)` creates a fixed-length `List`.
+- Wrapped in `new ArrayList<>()` to create a modifiable `List` (because the `List` returned by `Arrays.asList` is unmodifiable).
+- Result: `list` contains `[0, 0]`.
 
-### 2. **使用 `List.of`（Java 9+，不可修改）**
+### 2. **Using `List.of` (Java 9+, unmodifiable)**
 
 ```java
 List<Integer> list = new ArrayList<>(List.of(0, 0));
 ```
 
-- `List.of(0, 0)` 创建一个不可修改的 `List`。
-- 包装在 `new ArrayList<>()` 中以创建可修改的 `List`。
-- 结果：`list` 包含 `[0, 0]`。
+- `List.of(0, 0)` creates an unmodifiable `List`.
+- Wrapped in `new ArrayList<>()` to create a modifiable `List`.
+- Result: `list` contains `[0, 0]`.
 
-### 3. **使用 `new ArrayList<>()` 并手动添加**
+### 3. **Using `new ArrayList<>()` and manually adding**
 
 ```java
 List<Integer> list = new ArrayList<>();
@@ -72,21 +72,21 @@ list.
 add(0);
 ```
 
-- 直接创建空 `ArrayList`，然后逐个添加初始值。
-- 结果：`list` 包含 `[0, 0]`。
+- Directly create an empty `ArrayList`, then add initial values one by one.
+- Result: `list` contains `[0, 0]`.
 
-### 4. **使用 `Stream`（适合动态初始值）**
+### 4. **Using `Stream` (suitable for dynamic initial values)**
 
 ```java
 List<Integer> list = Stream.of(0, 0)
         .collect(Collectors.toCollection(ArrayList::new));
 ```
 
-- `Stream.of(0, 0)` 创建包含指定值的流。
-- 收集到 `ArrayList` 中。
-- 结果：`list` 包含 `[0, 0]`。
+- `Stream.of(0, 0)` creates a stream containing specified values.
+- Collected into `ArrayList`.
+- Result: `list` contains `[0, 0]`.
 
-### 5. **使用匿名内部类（较少使用）**
+### 5. **Using anonymous inner class (rarely used)**
 
 ```java
 List<Integer> list = new ArrayList<>() {{
@@ -95,29 +95,29 @@ List<Integer> list = new ArrayList<>() {{
 }};
 ```
 
-- 使用双括号初始化，直接在构造时添加初始值。
-- 结果：`list` 包含 `[0, 0]`。
+- Using double brace initialization, directly add initial values during construction.
+- Result: `list` contains `[0, 0]`.
 
-### 注意事项
+### Notes
 
-- 如果需要一个**不可修改的 `List`**，可以直接使用 `Arrays.asList(0, 0)` 或 `List.of(0, 0)`，但不能对其进行添加或删除操作。
-- 如果需要**可修改的 `List`**，推荐使用方法 1 或 2，将 `Arrays.asList` 或 `List.of` 的结果包装在 `new ArrayList<>()` 中。
-- 方法 1（`Arrays.asList`）和方法 2（`List.of`）是最简洁且常用的方式。
+- If you need an **unmodifiable `List`**, you can directly use `Arrays.asList(0, 0)` or `List.of(0, 0)`, but you cannot add or remove elements from them.
+- If you need a **modifiable `List`**, it is recommended to use method 1 or 2, wrapping the result of `Arrays.asList` or `List.of` in `new ArrayList<>()`.
+- Method 1 (`Arrays.asList`) and method 2 (`List.of`) are the most concise and commonly used ways.
 
-**示例输出**：
+**Example Output**:
 
 ```java
 List<Integer> list = new ArrayList<>(Arrays.asList(0, 0));
 System.out.
 
-println(list); // 输出: [0, 0]
+println(list); // Output: [0, 0]
 ```
 
-根据你的需求（比如是否需要可修改的 `List`），选择合适的方法即可。
+Choose the appropriate method based on your needs (such as whether you need a modifiable `List`).
 
 ---
 
 List<Integer> list = Stream.of(0, 0)
-.collect(Collectors.toList()); // 使用 Collectors
-Collections.sort(list); // 使用 Collections
-System.out.println(list); // 输出: [0, 0]
+.collect(Collectors.toList()); // Using Collectors
+Collections.sort(list); // Using Collections
+System.out.println(list); // Output: [0, 0]

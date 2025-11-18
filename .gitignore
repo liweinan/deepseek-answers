@@ -56,5 +56,5 @@ env/
 ENV/
 
 # Log files
-*.logPROJECT_BRIEF.md
+*.log
 PROJECT_BRIEF.md

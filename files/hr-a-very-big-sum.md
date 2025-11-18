@@ -1,4 +1,4 @@
-# Java题 - A Very Big Sum
+# Java Problem - A Very Big Sum
 
 To solve the "A Very Big Sum" problem, you need to calculate the sum of elements in an array of potentially very large integers. Since the input integers can be large, the function should handle `long` values and return a `long` result. The task is straightforward: iterate through the list and compute the sum.
 

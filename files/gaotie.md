@@ -2,9 +2,9 @@
 
 高铁订票系统是一个复杂的实时交易系统，涉及多个关键算法和数据结构。以下是实现高铁订票系统所需的主要算法及其作用：
 
-## 1. 车次排班与路径规划算法
+## 1. Train Scheduling and Route Planning Algorithms
 
-### Dijkstra 或 A* 算法
+### Dijkstra or A* Algorithm
 - **用途**：计算高铁列车的最优行驶路径
 - **实现**：
   ```python

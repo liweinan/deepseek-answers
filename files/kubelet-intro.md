@@ -6,7 +6,7 @@ In Kubernetes, **kubelet** serves as the core agent component on worker nodes (W
 
 ### **1. Kubernetes API Server (Core Commander)**
 - **Main Interaction Method**:  
-  kube listens to Pod change events related to the current node in API Server (such as `Pod.spec.nodeName = current node`)
+  kubelet listens to Pod change events related to the current node in API Server (such as `Pod.spec.nodeName = current node`)
 - **Specific Responsibilities**:
   - Gets Pod definitions (`PodSpec`) scheduled to this node
   - Executes Pod creation, update, and deletion operations
