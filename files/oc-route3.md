@@ -1,7 +1,7 @@
-# Disconnected Cluster路由配置分析
+# Disconnected Cluster Routing Configuration Analysis
 
-### ✅ 已配置的路由
-在 `vpc-disconnected-template.yaml` 中，我发现了以下路由配置：
+### ✅ Configured Routes
+In `vpc-disconnected-template.yaml`, I found the following routing configuration:
 
 ```yaml
 # Route from private subnet to bastion host (for registry access)
@@ -15,34 +15,34 @@ PrivateToBastionRoute:
     Description: 'Route from private subnet to bastion host for registry access'
 ```
 
-### ❌ 问题分析
+### ❌ Problem Analysis
 
-1. **CloudFormation模板中的路由配置有问题**：
-    - 路由配置依赖于 `BastionInstance` 资源
-    - 但是在脚本中，bastion实例是通过单独的 `create_bastion_host` 函数创建的，**不在CloudFormation模板中**
-    - 这会导致路由创建失败，因为 `BastionInstance` 资源不存在
+1. **Routing configuration issues in CloudFormation template**:
+    - The routing configuration depends on the `BastionInstance` resource
+    - However, in the script, the bastion instance is created separately through the `create_bastion_host` function, **not in the CloudFormation template**
+    - This will cause route creation to fail because the `BastionInstance` resource does not exist
 
-2. **脚本中的bastion创建**：
-    - 在 `01-create-infrastructure-cloudformation.sh` 中，bastion实例是通过 `create_bastion_host` 函数单独创建的
-    - 这个函数在CloudFormation堆栈创建完成后才执行
+2. **Bastion creation in script**:
+    - In `01-create-infrastructure-cloudformation.sh`, the bastion instance is created separately through the `create_bastion_host` function
+    - This function executes after the CloudFormation stack creation is completed
 
-3. **缺少的路由配置**：
-    - 由于CloudFormation模板中的路由配置无效，bootstrap节点无法访问bastion主机
-    - 需要手动创建路由或修复CloudFormation模板
+3. **Missing routing configuration**:
+    - Due to invalid routing configuration in the CloudFormation template, bootstrap nodes cannot access the bastion host
+    - Routes need to be created manually or the CloudFormation template needs to be fixed
 
-### 🔧 解决方案
+### 🔧 Solutions
 
-有两种解决方案：
+There are two solutions:
 
-#### 方案1：修复CloudFormation模板（推荐）
-将bastion实例的创建移到CloudFormation模板中，或者移除路由配置的依赖关系。
+#### Option 1: Fix CloudFormation Template (Recommended)
+Move the bastion instance creation into the CloudFormation template, or remove the dependency relationship from the routing configuration.
 
-#### 方案2：使用现有的路由创建脚本
-使用 `create-bootstrap-bastion-route.sh` 脚本来手动创建路由。
+#### Option 2: Use Existing Route Creation Script
+Use the `create-bootstrap-bastion-route.sh` script to manually create the route.
 
-### 📋 建议的修复
+### 📋 Recommended Fix
 
-我建议修改CloudFormation模板，移除路由配置中的 `DependsOn: BastionInstance`，因为bastion实例不在模板中创建：
+I recommend modifying the CloudFormation template to remove `DependsOn: BastionInstance` from the routing configuration, since the bastion instance is not created in the template:
 
 ```yaml
 # Route from private subnet to bastion host (for registry access)
@@ -51,469 +51,468 @@ PrivateToBastionRoute:
   Properties:
     RouteTableId: !Ref PrivateRouteTable
     DestinationCidrBlock: !Ref PublicSubnetCidr
-    InstanceId: !Ref BastionInstance  # 这个引用会失败
+    InstanceId: !Ref BastionInstance  # This reference will fail
     Description: 'Route from private subnet to bastion host for registry access'
 ```
 
-**总结**：当前的CloudFormation模板确实包含了bootstrap访问bastion所需的路由配置，但由于bastion实例不在模板中创建，这个路由配置会失败。需要修复这个依赖关系问题。
+**Summary**: The current CloudFormation template does include the routing configuration needed for bootstrap to access bastion, but since the bastion instance is not created in the template, this routing configuration will fail. The dependency relationship issue needs to be fixed.
 
 ---
 
-这是一个很好的问题。让我分析一下移除依赖关系对disconnected cluster安装约定的影响。
+This is a good question. Let me analyze the impact of removing the dependency relationship on disconnected cluster installation conventions.
 
 Search files...
 Search files...
-基于我对代码库的深入分析，我可以明确回答你的问题：
+Based on my in-depth analysis of the codebase, I can clearly answer your question:
 
-## 移除依赖关系对Disconnected Cluster安装约定的影响分析
+## Impact Analysis of Removing Dependency Relationship on Disconnected Cluster Installation Conventions
 
-### ✅ **不会破坏安装约定**
+### ✅ **Will Not Break Installation Conventions**
 
-移除 `DependsOn: BastionInstance` 依赖关系**不会破坏disconnected cluster的安装约定**，原因如下：
+Removing `DependsOn: BastionInstance` dependency **will not break disconnected cluster installation conventions**, for the following reasons:
 
-### 1. **当前架构设计是正确的**
+### 1. **Current Architecture Design is Correct**
 
-从代码分析可以看出，disconnected cluster的正确架构是：
+From code analysis, the correct architecture for disconnected cluster is:
 
 ```
 Internet
     ↓
-Bastion Host (公网子网，有公网IP)
+Bastion Host (public subnet with public IP)
     ↓
-Private Subnets (集群节点，完全隔离，无互联网访问)
+Private Subnets (cluster nodes, completely isolated, no internet access)
     ↓
-镜像仓库 (在bastion host上，集群节点通过内网访问)
+Image Registry (on bastion host, cluster nodes access via internal network)
 ```
 
-### 2. **路由配置是必需的**
+### 2. **Routing Configuration is Required**
 
-从 `bootstrap-bastion-route-summary.md` 可以看出，bootstrap节点到bastion的路由是**必需的**：
+From `bootstrap-bastion-route-summary.md`, we can see that the route from bootstrap node to bastion is **required**:
 
 ```bash
-# 路由配置
+# Route configuration
 RouteTableId: rtb-07a2f54bf701220ec
 DestinationCidrBlock: 10.0.10.0/24  # Public subnet
 InstanceId: i-0ec1c936ca9d0953a      # Bastion instance
 ```
 
-### 3. **当前问题分析**
+### 3. **Current Problem Analysis**
 
-CloudFormation模板中的问题在于：
+The problem in the CloudFormation template is:
 
 ```yaml
 PrivateToBastionRoute:
   Type: AWS::EC2::Route
-  DependsOn: BastionInstance  # ❌ 这个依赖会失败
+  DependsOn: BastionInstance  # ❌ This dependency will fail
   Properties:
     RouteTableId: !Ref PrivateRouteTable
     DestinationCidrBlock: !Ref PublicSubnetCidr
-    InstanceId: !Ref BastionInstance  # ❌ BastionInstance不在模板中
+    InstanceId: !Ref BastionInstance  # ❌ BastionInstance is not in the template
 ```
 
-### 4. **正确的解决方案**
+### 4. **Correct Solutions**
 
-有两种方案，都不会破坏安装约定：
+There are two options, neither will break installation conventions:
 
-#### 方案A：修复CloudFormation模板（推荐）
+#### Option A: Fix CloudFormation Template (Recommended)
 ```yaml
-# 移除依赖关系，让路由在bastion创建后手动添加
+# Remove dependency relationship, let route be manually added after bastion creation
 PrivateToBastionRoute:
   Type: AWS::EC2::Route
-  # DependsOn: BastionInstance  # 移除这行
+  # DependsOn: BastionInstance  # Remove this line
   Properties:
     RouteTableId: !Ref PrivateRouteTable
     DestinationCidrBlock: !Ref PublicSubnetCidr
-    InstanceId: !Ref BastionInstance  # 这个引用会失败，但不会阻止模板创建
+    InstanceId: !Ref BastionInstance  # This reference will fail, but won't prevent template creation
 ```
 
-#### 方案B：使用现有的路由创建脚本
-使用 `create-bootstrap-bastion-route.sh` 脚本在bastion创建后手动添加路由。
+#### Option B: Use Existing Route Creation Script
+Use `create-bootstrap-bastion-route.sh` script to manually add the route after bastion creation.
 
-### 5. **为什么不会破坏约定**
+### 5. **Why It Won't Break Conventions**
 
-1. **网络隔离原则保持不变**：Private subnet仍然完全隔离，无互联网访问
-2. **Registry访问机制保持不变**：Bootstrap节点仍然通过bastion访问registry
-3. **安全架构保持不变**：所有安全组和网络ACL配置不变
-4. **VPC端点配置不变**：所有必需的AWS服务端点仍然存在
+1. **Network isolation principle remains unchanged**: Private subnet is still completely isolated with no internet access
+2. **Registry access mechanism remains unchanged**: Bootstrap node still accesses registry through bastion
+3. **Security architecture remains unchanged**: All security groups and network ACL configurations remain the same
+4. **VPC endpoint configuration remains unchanged**: All required AWS service endpoints still exist
 
-### 6. **实际影响**
+### 6. **Actual Impact**
 
-移除依赖关系的影响：
-- ✅ **正面影响**：CloudFormation堆栈可以成功创建
-- ✅ **正面影响**：基础设施创建流程更加稳定
-- ⚠️ **需要额外步骤**：需要手动或通过脚本创建路由
-- ❌ **无负面影响**：不会破坏disconnected cluster的核心架构
+Impact of removing dependency relationship:
+- ✅ **Positive impact**: CloudFormation stack can be successfully created
+- ✅ **Positive impact**: Infrastructure creation process becomes more stable
+- ⚠️ **Requires additional steps**: Need to manually create route or use script
+- ❌ **No negative impact**: Will not break core architecture of disconnected cluster
 
-### 7. **建议的修复方案**
+### 7. **Recommended Fix**
 
-我建议修改CloudFormation模板，移除有问题的路由配置，然后在脚本中添加路由创建步骤：
+I recommend modifying the CloudFormation template to remove the problematic routing configuration, then add route creation steps in the script:
 
 ```bash
-# 在01-create-infrastructure-cloudformation.sh中添加
+# Add in 01-create-infrastructure-cloudformation.sh
 create_cloudformation_stack "$CLUSTER_NAME" "$REGION" "$FINAL_VPC_CIDR" "$FINAL_PRIVATE_CIDR" "$FINAL_PUBLIC_CIDR" "$SNO_MODE" "$TEMPLATE_FILE" "$DRY_RUN"
 
-# 创建bastion主机
+# Create bastion host
 create_bastion_host "$CLUSTER_NAME" "$REGION" "$INSTANCE_TYPE" "$OUTPUT_DIR" "$FINAL_VPC_CIDR"
 
-# 创建bootstrap到bastion的路由
+# Create bootstrap to bastion route
 ./create-bootstrap-bastion-route.sh
 ```
 
-**总结**：移除依赖关系不会破坏disconnected cluster的安装约定，反而会让基础设施创建更加稳定和可靠。
+**Summary**: Removing the dependency relationship will not break disconnected cluster installation conventions; instead, it will make infrastructure creation more stable and reliable.
 
 ---
 
-我来详细解释为什么移除依赖关系后，private subnet仍然不会访问到internet，这是disconnected cluster的核心安全特性。
+Let me explain in detail why private subnet still won't have internet access after removing the dependency relationship, as this is the core security feature of disconnected cluster.
 
 Read file: ci-operator/disconnected-cluster/vpc-disconnected-template.yaml
 Read file: ci-operator/disconnected-cluster/01-create-infrastructure.sh
 Read file: ci-operator/disconnected-cluster/bootstrap-bastion-route-summary.md
-现在我来详细解释为什么移除依赖关系后，private subnet仍然不会访问到internet：
+Now let me explain in detail why private subnet still won't have internet access after removing the dependency relationship:
 
-## 🔒 Private Subnet 无法访问 Internet 的技术原理
+## 🔒 Technical Principle: Private Subnet Cannot Access Internet
 
-### 1. **路由表配置 - 核心安全机制**
+### 1. **Routing Table Configuration - Core Security Mechanism**
 
-#### Public Route Table (公网路由表)
+#### Public Route Table (Public Subnet)
 ```yaml
 PublicRoute:
   Type: AWS::EC2::Route
   Properties:
     RouteTableId: !Ref PublicRouteTable
-    DestinationCidrBlock: '0.0.0.0/0'  # 所有流量
-    GatewayId: !Ref InternetGateway     # 指向Internet Gateway
+    DestinationCidrBlock: '0.0.0.0/0'  # All traffic
+    GatewayId: !Ref InternetGateway     # Points to Internet Gateway
 ```
 
-#### Private Route Table (私有路由表)
+#### Private Route Table (Private Subnet)
 ```yaml
 PrivateRouteTable:
   Type: AWS::EC2::RouteTable
   Properties:
     VpcId: !Ref VPC
-    # ❌ 关键：没有 0.0.0.0/0 路由到 Internet Gateway
-    # ❌ 关键：没有 0.0.0.0/0 路由到 NAT Gateway
+    # ❌ Key: No 0.0.0.0/0 route to Internet Gateway
+    # ❌ Key: No 0.0.0.0/0 route to NAT Gateway
 ```
 
-**关键点**：Private subnet的路由表**没有** `0.0.0.0/0` 路由规则，这意味着：
-- 任何发往internet的流量都无法找到路由
-- 流量会被丢弃，无法到达internet
+**Key Point**: The private subnet's routing table **does not have** a `0.0.0.0/0` route rule, which means:
+- Any traffic destined for the internet cannot find a route
+- Traffic will be dropped and cannot reach the internet
 
-### 2. **Bootstrap到Bastion路由的作用范围**
+### 2. **Scope of Bootstrap to Bastion Route**
 
-当我们添加bootstrap到bastion的路由时：
+When we add the bootstrap to bastion route:
 
 ```yaml
 PrivateToBastionRoute:
   Type: AWS::EC2::Route
   Properties:
     RouteTableId: !Ref PrivateRouteTable
-    DestinationCidrBlock: !Ref PublicSubnetCidr  # 例如：10.0.10.0/24
+    DestinationCidrBlock: !Ref PublicSubnetCidr  # For example: 10.0.10.0/24
     InstanceId: !Ref BastionInstance
 ```
 
-这个路由**只影响特定目标**：
-- ✅ **目标**: `10.0.10.0/24` (public subnet)
-- ❌ **不影响**: `0.0.0.0/0` (internet)
+This route **only affects specific targets**:
+- ✅ **Target**: `10.0.10.0/24` (public subnet)
+- ❌ **Does not affect**: `0.0.0.0/0` (internet)
 
-### 3. **流量路由分析**
+### 3. **Traffic Routing Analysis**
 
-#### 场景1：Bootstrap节点访问Registry
+#### Scenario 1: Bootstrap Node Accesses Registry
 ```
 Bootstrap Node (10.0.100.x) 
-    ↓ 目标: 10.0.10.10:5000
-    ↓ 匹配路由: 10.0.10.0/24 → Bastion
-    ↓ 到达: Bastion Host (10.0.10.x)
-    ↓ 访问: Registry on Bastion
+    ↓ Destination: 10.0.10.10:5000
+    ↓ Matches route: 10.0.10.0/24 → Bastion
+    ↓ Reaches: Bastion Host (10.0.10.x)
+    ↓ Accesses: Registry on Bastion
 ```
 
-#### 场景2：Bootstrap节点尝试访问Internet
+#### Scenario 2: Bootstrap Node Attempts to Access Internet
 ```
 Bootstrap Node (10.0.100.x)
-    ↓ 目标: 8.8.8.8 (Google DNS)
-    ↓ 查找路由: 0.0.0.0/0
-    ↓ 结果: ❌ 无匹配路由
-    ↓ 结果: 流量被丢弃
+    ↓ Destination: 8.8.8.8 (Google DNS)
+    ↓ Looks up route: 0.0.0.0/0
+    ↓ Result: ❌ No matching route
+    ↓ Result: Traffic is dropped
 ```
 
-### 4. **网络隔离的技术实现**
+### 4. **Technical Implementation of Network Isolation**
 
-#### 4.1 路由表隔离
+#### 4.1 Route Table Isolation
 ```bash
-# Private subnet的路由表内容
+# Private subnet routing table content
 Destination        Gateway         Target
 10.0.100.0/24      local           ens5
-10.0.10.0/24       i-xxxxx         eni-xxxxx  # 只到bastion
-# ❌ 没有 0.0.0.0/0 路由
+10.0.10.0/24       i-xxxxx         eni-xxxxx  # Only to bastion
+# ❌ No 0.0.0.0/0 route
 ```
 
-#### 4.2 网络ACL隔离
+#### 4.2 Network ACL Isolation
 ```bash
-# Private subnet的Network ACL
-# 入站规则：只允许VPC内流量
-# 出站规则：只允许VPC内流量
+# Private subnet Network ACL
+# Inbound rules: Only allow VPC internal traffic
+# Outbound rules: Only allow VPC internal traffic
 ```
 
-#### 4.3 安全组隔离
+#### 4.3 Security Group Isolation
 ```bash
-# Private subnet的安全组
-# 只允许VPC内通信和VPC端点访问
-# 不允许任何internet访问
+# Private subnet security group
+# Only allows VPC internal communication and VPC endpoint access
+# Does not allow any internet access
 ```
 
-### 5. **VPC端点 vs Internet访问**
+### 5. **VPC Endpoints vs Internet Access**
 
-#### VPC端点访问（允许）
+#### VPC Endpoint Access (Allowed)
 ```bash
-# 通过VPC端点访问AWS服务
-# 流量路径：Private Subnet → VPC Endpoint → AWS Service
-# 不经过internet
+# Access AWS services through VPC endpoints
+# Traffic path: Private Subnet → VPC Endpoint → AWS Service
+# Does not go through internet
 ```
 
-#### Internet访问（阻止）
+#### Internet Access (Blocked)
 ```bash
-# 尝试访问internet
-# 流量路径：Private Subnet → ❌ 无路由 → 丢弃
+# Attempt to access internet
+# Traffic path: Private Subnet → ❌ No route → Dropped
 ```
 
-### 6. **实际验证**
+### 6. **Actual Verification**
 
-从代码中可以看到实际的网络配置：
+From the code, we can see the actual network configuration:
 
 ```bash
-# Bootstrap节点的路由表（来自日志）
+# Bootstrap node routing table (from logs)
 default via 10.0.100.1 dev ens5 proto dhcp src 10.0.100.247 metric 100 
 10.0.100.0/24 dev ens5 proto kernel scope link src 10.0.100.247 metric 100 
-# ❌ 没有默认路由到internet
+# ❌ No default route to internet
 ```
 
-### 7. **移除依赖关系的影响分析**
+### 7. **Impact Analysis of Removing Dependency Relationship**
 
-#### 移除前的问题
+#### Problem Before Removal
 ```yaml
 PrivateToBastionRoute:
-  DependsOn: BastionInstance  # ❌ 依赖不存在的资源
+  DependsOn: BastionInstance  # ❌ Dependency on non-existent resource
   Properties:
-    InstanceId: !Ref BastionInstance  # ❌ 引用失败
+    InstanceId: !Ref BastionInstance  # ❌ Reference fails
 ```
 
-#### 移除后的状态
+#### State After Removal
 ```yaml
 PrivateToBastionRoute:
-  # DependsOn: BastionInstance  # ✅ 移除依赖
+  # DependsOn: BastionInstance  # ✅ Dependency removed
   Properties:
-    InstanceId: !Ref BastionInstance  # ❌ 仍然引用失败，但不会阻止模板创建
+    InstanceId: !Ref BastionInstance  # ❌ Still fails to reference, but won't prevent template creation
 ```
 
-**关键点**：移除依赖关系后：
-- ✅ CloudFormation堆栈可以成功创建
-- ✅ Private subnet仍然没有internet访问
-- ⚠️ 需要手动创建bootstrap到bastion的路由
-- ❌ 不会影响网络隔离
+**Key Point**: Whether or not the dependency relationship is removed, **it will not affect**:
+- ✅ Private subnet's routing table configuration
+- ✅ The fact that `0.0.0.0/0` route is missing
+- ✅ Network isolation mechanism
 
-### 8. **安全架构保持不变**
+### 8. **Security Architecture Remains Unchanged**
 
 ```
 Internet
     ↓
 Internet Gateway
     ↓
-Public Subnet (Bastion) ← 有internet访问
+Public Subnet (Bastion) ← Has internet access
     ↓
-Private Subnet (Bootstrap/Worker) ← 无internet访问
+Private Subnet (Bootstrap/Worker) ← No internet access
     ↓
-VPC Endpoints ← 访问AWS服务
+VPC Endpoints ← Access AWS services
 ```
 
-### 9. **总结**
+### 9. **Summary**
 
-移除依赖关系**不会破坏网络隔离**，因为：
+Removing the dependency relationship **will not break network isolation**, because:
 
-1. **路由表配置不变**：Private subnet仍然没有 `0.0.0.0/0` 路由
-2. **网络ACL不变**：仍然阻止internet访问
-3. **安全组不变**：仍然只允许VPC内通信
-4. **VPC端点不变**：仍然提供AWS服务访问
-5. **Bootstrap到Bastion路由**：只影响特定目标，不影响internet访问
+1. **Routing table configuration unchanged**: Private subnet still has no `0.0.0.0/0` route
+2. **Network ACL unchanged**: Still blocks internet access
+3. **Security groups unchanged**: Still only allow VPC internal communication
+4. **VPC endpoints unchanged**: Still provide AWS service access
+5. **Bootstrap to Bastion route**: Only affects specific targets, does not affect internet access
 
-**结论**：Private subnet的网络隔离完全依赖于路由表配置，而不是依赖关系。移除依赖关系只是修复了CloudFormation模板的语法错误，不会影响核心的安全架构。
+**Conclusion**: Private subnet network isolation completely depends on routing table configuration, not dependency relationships. Removing the dependency relationship only fixes CloudFormation template syntax errors and will not affect core security architecture.
 
 ---
 
-我来详细解释这句话的含义，这是disconnected cluster网络隔离的核心机制。
+Let me explain in detail what this sentence means, as this is the core mechanism of disconnected cluster network isolation.
 
 Read file: ci-operator/disconnected-cluster/vpc-disconnected-template.yaml
 Read file: ci-operator/disconnected-cluster/01-create-infrastructure.sh
 Read file: ci-operator/disconnected-cluster/cluster-logs/log-bundle-20250704184034/bootstrap/network/ip-route.txt
-现在我来详细解释"路由表配置不变：Private subnet仍然没有 0.0.0.0/0 路由"这句话的含义：
+Now let me explain in detail what "Routing table configuration unchanged: Private subnet still has no 0.0.0.0/0 route" means:
 
-## 🔍 详细解释：0.0.0.0/0 路由的含义
+## 🔍 Detailed Explanation: Meaning of 0.0.0.0/0 Route
 
-### 1. **什么是 0.0.0.0/0 路由？**
+### 1. **What is 0.0.0.0/0 Route?**
 
-`0.0.0.0/0` 是网络路由中的**默认路由**（default route），表示：
-- **目标**：所有未知的网络地址
-- **作用**：当数据包的目标地址不匹配任何特定路由时，使用这个默认路由
-- **实际效果**：提供internet访问能力
+`0.0.0.0/0` is the **default route** in network routing, which means:
+- **Target**: All unknown network addresses
+- **Function**: When a data packet's destination address doesn't match any specific route, use this default route
+- **Actual Effect**: Provides internet access capability
 
-### 2. **路由表对比分析**
+### 2. **Routing Table Comparison Analysis**
 
-#### Public Subnet 路由表（有internet访问）
+#### Public Subnet Routing Table (Has Internet Access)
 ```yaml
 PublicRoute:
   Type: AWS::EC2::Route
   Properties:
     RouteTableId: !Ref PublicRouteTable
-    DestinationCidrBlock: '0.0.0.0/0'  # ✅ 默认路由
-    GatewayId: !Ref InternetGateway     # ✅ 指向Internet Gateway
+    DestinationCidrBlock: '0.0.0.0/0'  # ✅ Default route
+    GatewayId: !Ref InternetGateway     # ✅ Points to Internet Gateway
 ```
 
-**实际路由表内容**：
+**Actual routing table content**:
 ```bash
 Destination        Gateway         Target
 10.0.0.0/16        local           ens5
-0.0.0.0/0          igw-xxxxx       igw-xxxxx  # ✅ 默认路由到internet
+0.0.0.0/0          igw-xxxxx       igw-xxxxx  # ✅ Default route to internet
 ```
 
-#### Private Subnet 路由表（无internet访问）
+#### Private Subnet Routing Table (No Internet Access)
 ```yaml
 PrivateRouteTable:
   Type: AWS::EC2::RouteTable
   Properties:
     VpcId: !Ref VPC
-    # ❌ 没有 0.0.0.0/0 路由定义
+    # ❌ No 0.0.0.0/0 route definition
 ```
 
-**实际路由表内容**：
+**Actual routing table content**:
 ```bash
 Destination        Gateway         Target
 10.0.100.0/24      local           ens5
-10.0.10.0/24       i-xxxxx         eni-xxxxx  # 只到bastion
-# ❌ 没有 0.0.0.0/0 路由
+10.0.10.0/24       i-xxxxx         eni-xxxxx
+# ❌ No 0.0.0.0/0 route
 ```
 
-### 3. **从代码中验证**
+### 3. **Verification from Code**
 
-#### 3.1 CloudFormation模板中的关键差异
+#### 3.1 Key Differences in CloudFormation Template
 
-**Public Route Table**：
+**Public Route Table**:
 ```yaml
 PublicRoute:
   Type: AWS::EC2::Route
   Properties:
     RouteTableId: !Ref PublicRouteTable
-    DestinationCidrBlock: '0.0.0.0/0'  # ✅ 有默认路由
+    DestinationCidrBlock: '0.0.0.0/0'  # ✅ Has default route
     GatewayId: !Ref InternetGateway
 ```
 
-**Private Route Table**：
+**Private Route Table**:
 ```yaml
 PrivateRouteTable:
   Type: AWS::EC2::RouteTable
   Properties:
     VpcId: !Ref VPC
-    # ❌ 没有路由定义，只有路由表本身
+    # ❌ No route definition, only the route table itself
 ```
 
-#### 3.2 脚本中的明确注释
+#### 3.2 Explicit Comments in Script
 
-在 `01-create-infrastructure.sh` 中：
+In `01-create-infrastructure.sh`:
 ```bash
 # Private subnets have no internet access - truly disconnected
 # No route to internet (0.0.0.0/0) is added to private route table
 echo "   Private subnets configured with no internet access"
 ```
 
-**关键点**：脚本明确注释了**不添加** `0.0.0.0/0` 路由。
+**Key Point**: The script explicitly comments that **no** `0.0.0.0/0` route is added.
 
-### 4. **实际网络行为验证**
+### 4. **Actual Network Behavior Verification**
 
-#### 4.1 Bootstrap节点的实际路由表
-从日志文件中可以看到：
+#### 4.1 Bootstrap Node's Actual Routing Table
+From the log file, we can see:
 ```bash
 default via 10.0.100.1 dev ens5 proto dhcp src 10.0.100.247 metric 100 
 10.0.100.0/24 dev ens5 proto kernel scope link src 10.0.100.247 metric 100 
 ```
 
-**分析**：
-- `default via 10.0.100.1`：这是AWS VPC的默认网关，**不是internet网关**
-- `10.0.100.1`：是VPC内部分配的网关IP，只能路由VPC内流量
-- **没有** `0.0.0.0/0` 路由到internet
+**Analysis**:
+- `default via 10.0.100.1`: This is AWS VPC's default gateway, **not** an internet gateway
+- `10.0.100.1`: Is the gateway IP assigned internally by VPC, can only route VPC internal traffic
+- **No** `0.0.0.0/0` route to internet
 
-#### 4.2 流量测试场景
+#### 4.2 Traffic Test Scenarios
 
-**场景1：访问VPC内地址**
+**Scenario 1: Access VPC Internal Address**
 ```bash
-# Bootstrap节点访问bastion
+# Bootstrap node accesses bastion
 ping 10.0.10.10
-# 结果：✅ 成功（匹配 10.0.10.0/24 路由）
+# Result: ✅ Success (matches 10.0.10.0/24 route)
 ```
 
-**场景2：访问internet**
+**Scenario 2: Access Internet**
 ```bash
-# Bootstrap节点访问Google DNS
+# Bootstrap node accesses Google DNS
 ping 8.8.8.8
-# 结果：❌ 失败（没有 0.0.0.0/0 路由）
+# Result: ❌ Failure (no 0.0.0.0/0 route)
 ```
 
-### 5. **移除依赖关系的影响**
+### 5. **Impact of Removing Dependency Relationship**
 
-#### 5.1 移除前的状态
+#### 5.1 State Before Removal
 ```yaml
 PrivateToBastionRoute:
-  DependsOn: BastionInstance  # ❌ 依赖失败
+  DependsOn: BastionInstance  # ❌ Depends on non-existent resource
   Properties:
-    InstanceId: !Ref BastionInstance  # ❌ 引用失败
+    InstanceId: !Ref BastionInstance  # ❌ Reference fails
 ```
 
-#### 5.2 移除后的状态
+#### 5.2 State After Removal
 ```yaml
 PrivateToBastionRoute:
-  # DependsOn: BastionInstance  # ✅ 移除依赖
+  # DependsOn: BastionInstance  # ✅ Dependency removed
   Properties:
-    InstanceId: !Ref BastionInstance  # ❌ 仍然引用失败
+    InstanceId: !Ref BastionInstance  # ❌ Still fails to reference, but won't prevent template creation
 ```
 
-**关键点**：无论是否移除依赖关系，**都不会影响**：
-- ✅ Private subnet的路由表配置
-- ✅ 缺少 `0.0.0.0/0` 路由的事实
-- ✅ 网络隔离机制
+**Key Point**: Whether the dependency relationship is removed or not, **it will not affect**:
+- ✅ Private subnet's routing table configuration
+- ✅ The fact that `0.0.0.0/0` route is missing
+- ✅ Network isolation mechanism
 
-### 6. **网络隔离的技术原理**
+### 6. **Technical Principle of Network Isolation**
 
-#### 6.1 路由查找过程
-当Bootstrap节点尝试访问internet时：
+#### 6.1 Route Lookup Process
+When a Bootstrap node tries to access the internet:
 
 ```
-1. 目标地址：8.8.8.8
-2. 查找路由表：
-   - 10.0.100.0/24 → local ✅ 不匹配
-   - 10.0.10.0/24 → bastion ✅ 不匹配
-   - 0.0.0.0/0 → ❌ 不存在
-3. 结果：无匹配路由，数据包被丢弃
+1. Destination address: 8.8.8.8
+2. Look up routing table:
+   - 10.0.100.0/24 → local ✅ No match
+   - 10.0.10.0/24 → bastion ✅ No match
+   - 0.0.0.0/0 → ❌ Does not exist
+3. Result: No matching route, packet is dropped
 ```
 
-#### 6.2 与NAT Gateway的对比
-**有NAT Gateway的Private Subnet**：
+#### 6.2 Comparison with NAT Gateway
+**Private Subnet with NAT Gateway**:
 ```bash
 Destination        Gateway         Target
 10.0.100.0/24      local           ens5
-0.0.0.0/0          nat-xxxxx        nat-xxxxx  # ✅ 有默认路由
+0.0.0.0/0          nat-xxxxx        nat-xxxxx  # ✅ Has default route
 ```
 
-**我们的Disconnected Private Subnet**：
+**Our Disconnected Private Subnet**:
 ```bash
 Destination        Gateway         Target
 10.0.100.0/24      local           ens5
 10.0.10.0/24       i-xxxxx         eni-xxxxx
-# ❌ 没有 0.0.0.0/0 路由
+# ❌ No 0.0.0.0/0 route
 ```
 
-### 7. **总结**
+### 7. **Summary**
 
-"路由表配置不变：Private subnet仍然没有 0.0.0.0/0 路由" 这句话的含义是：
+"Routing table configuration unchanged: Private subnet still has no 0.0.0.0/0 route" means:
 
-1. **核心机制**：Private subnet的网络隔离完全依赖于**缺少默认路由**
-2. **技术实现**：CloudFormation模板和脚本都**故意不添加** `0.0.0.0/0` 路由
-3. **移除依赖的影响**：只影响bootstrap到bastion的特定路由，**不影响**默认路由的缺失
-4. **安全保证**：无论依赖关系如何，Private subnet都**无法访问internet**，因为缺少默认路由
+1. **Core Mechanism**: Private subnet network isolation completely depends on **missing default route**
+2. **Technical Implementation**: Both CloudFormation template and script **intentionally do not add** `0.0.0.0/0` route
+3. **Impact of Removing Dependency**: Only affects specific route from bootstrap to bastion, **does not affect** the absence of default route
+4. **Security Guarantee**: Regardless of dependency relationship, Private subnet **cannot access internet** because default route is missing
 
-这就是为什么移除依赖关系不会破坏disconnected cluster网络隔离的根本原因。
+This is the fundamental reason why removing the dependency relationship will not break disconnected cluster network isolation.

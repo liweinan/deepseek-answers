@@ -1,57 +1,57 @@
-# 在 Kubernetes 中，**OpenShift Route** 和 **Ingress Controller** 是相关但不同的概念，具体区别如下：
+# In Kubernetes, **OpenShift Route** and **Ingress Controller** are related but different concepts. The specific differences are as follows:
 
 ---
 
 ### 1. **OpenShift Route**
 
-- **作用**：  
-  OpenShift 的 `Route` 是专有资源（属于 OpenShift 的 API），用于将外部流量路由到集群内的服务（Service）。它是基于 HTTP/HTTPS 的
-  L7 路由，支持基于主机名、路径的规则，以及 TLS 终止等功能。
-- **特点**：
-    - OpenShift 特有（非原生 Kubernetes 功能）。
-    - 简单易用，直接通过 `oc create route` 命令或 YAML 定义。
-    - 依赖 OpenShift 的 **Ingress Controller**（默认基于 HAProxy）实现流量转发。
-    - 支持高级功能：加权负载均衡、TLS 终止、SNI 等。
+- **Purpose**:  
+  OpenShift's `Route` is a proprietary resource (belonging to OpenShift's API) used to route external traffic to services within the cluster. It is HTTP/HTTPS-based
+  L7 routing, supporting hostname and path-based rules, as well as TLS termination and other features.
+- **Features**:
+    - OpenShift-specific (not native Kubernetes functionality).
+    - Simple and easy to use, can be defined directly through `oc create route` command or YAML.
+    - Relies on OpenShift's **Ingress Controller** (default based on HAProxy) to implement traffic forwarding.
+    - Supports advanced features: weighted load balancing, TLS termination, SNI, etc.
 
 ---
 
 ### 2. **Ingress Controller**
 
-- **作用**：  
-  Ingress Controller 是 Kubernetes 的通用组件，负责实现 `Ingress` 资源定义的规则（L7 路由）。它可以是 Nginx、Traefik、HAProxy
-  等实现。
-    - 在 OpenShift 中，默认的 Ingress Controller 是基于 HAProxy 的，与 Route 共享同一套数据面。
-- **特点**：
-    - Kubernetes 原生概念（通过 `Ingress` 资源定义规则）。
-    - 需要手动部署和管理 Ingress Controller（如 Nginx Ingress Controller）。
-    - OpenShift 默认已集成一个 Ingress Controller（与 Route 共用）。
+- **Purpose**:  
+  Ingress Controller is a general component of Kubernetes, responsible for implementing rules defined by `Ingress` resources (L7 routing). It can be Nginx, Traefik, HAProxy
+  and other implementations.
+    - In OpenShift, the default Ingress Controller is based on HAProxy and shares the same data plane with Route.
+- **Features**:
+    - Native Kubernetes concept (rules defined through `Ingress` resources).
+    - Requires manual deployment and management of Ingress Controller (such as Nginx Ingress Controller).
+    - OpenShift has a default Ingress Controller integrated (shared with Route).
 
 ---
 
-### 关键区别
+### Key Differences
 
-| 特性        | OpenShift Route                             | Kubernetes Ingress                |
+| Feature        | OpenShift Route                             | Kubernetes Ingress                |
 |-----------|---------------------------------------------|-----------------------------------|
-| **所属平台**  | OpenShift 特有                                | Kubernetes 原生                     |
-| **资源类型**  | `Route`                                     | `Ingress`                         |
-| **底层实现**  | 默认由 OpenShift Ingress Controller（HAProxy）处理 | 需自行部署 Ingress Controller（如 Nginx） |
-| **功能丰富性** | 支持高级路由（如权重、TLS）                             | 功能依赖具体实现                          |
-| **使用场景**  | 推荐在 OpenShift 中使用                           | 跨平台通用                             |
+| **Platform**  | OpenShift-specific                                | Kubernetes native                     |
+| **Resource Type**  | `Route`                                     | `Ingress`                         |
+| **Underlying Implementation**  | Default handled by OpenShift Ingress Controller (HAProxy) | Need to deploy Ingress Controller (like Nginx) |
+| **Feature Richness** | Supports advanced routing (like weights, TLS)                             | Functionality depends on specific implementation                          |
+| **Use Cases**  | Recommended for use in OpenShift                           | Cross-platform universal                             |
 
 ---
 
-### 关系总结
+### Relationship Summary
 
-- OpenShift **Route** 是更高层次的抽象，简化了外部访问的配置。
-- OpenShift 默认的 **Ingress Controller** 是 Route 的底层实现（通过 HAProxy）。
-- 在 OpenShift 中，你可以选择使用 `Route`（更简单）或 `Ingress`（兼容 Kubernetes 标准），但 Route 是推荐方式。
+- OpenShift **Route** is a higher-level abstraction that simplifies external access configuration.
+- OpenShift's default **Ingress Controller** is the underlying implementation of Route (through HAProxy).
+- In OpenShift, you can choose to use `Route` (simpler) or `Ingress` (compatible with Kubernetes standard), but Route is the recommended way.
 
 ---
 
-### 示例
+### Examples
 
 ```yaml
-# OpenShift Route 示例
+# OpenShift Route Example
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
@@ -66,7 +66,7 @@ spec:
 ```
 
 ```yaml
-# Kubernetes Ingress 示例
+# Kubernetes Ingress Example
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -158,20 +158,20 @@ spec:
 
 Assuming user accesses `https://app.example.com`:
 
-1. **DNS 解析**：`app.example.com` 解析到 OpenShift Ingress Controller 的外部 IP（或云负载均衡器 IP）。
-2. **到达 Ingress Controller**：请求被 HAProxy Pod 接收。
-3. **路由匹配**：HAProxy 根据 `host` 和 `path` 匹配到对应的 `Route` 资源。
-4. **TLS 终止**：若配置为 `edge` 终止，HAProxy 解密请求，然后以 HTTP 转发到后端 Service。
-5. **服务转发**：请求被路由到 Service 背后的 Pod（通过 kube-proxy 或服务网格）。
+1. **DNS Resolution**: `app.example.com` resolves to OpenShift Ingress Controller's external IP (or cloud load balancer IP).
+2. **Reaches Ingress Controller**: Request is received by HAProxy Pod.
+3. **Route Matching**: HAProxy matches the corresponding `Route` resource based on `host` and `path`.
+4. **TLS Termination**: If configured as `edge` termination, HAProxy decrypts the request, then forwards it as HTTP to backend Service.
+5. **Service Forwarding**: Request is routed to Pod behind Service (through kube-proxy or service mesh).
 
 ---
 
-### 4. **关键实现细节**
+### 4. **Key Implementation Details**
 
-#### **(1) HAProxy 配置生成**
+#### **(1) HAProxy Configuration Generation**
 
-- 配置文件模板位于 Ingress Controller Pod 的 `/var/lib/haproxy/conf`。
-- 动态部分通过 OpenShift 的 **template router** 生成，例如：
+- Configuration file template is located in Ingress Controller Pod's `/var/lib/haproxy/conf`.
+- Dynamic parts are generated through OpenShift's **template router**, for example:
   ```haproxy
   frontend public
     bind *:443 ssl crt /etc/haproxy/certs/my-cert.pem
@@ -183,61 +183,61 @@ Assuming user accesses `https://app.example.com`:
     server pod2 10.128.0.2:8080 check
   ```
 
-#### **(2) TLS 证书管理**
+#### **(2) TLS Certificate Management**
 
-- **自动证书**：OpenShift 可自动为 Route 签发通配符证书（通过内置 CA）。
-- **自定义证书**：用户可通过 `tls.crt` 和 `tls.key` 创建 Secret 并挂载到 Ingress Controller。
+- **Automatic Certificate**: OpenShift can automatically issue wildcard certificates for Route (through built-in CA).
+- **Custom Certificate**: Users can create Secret through `tls.crt` and `tls.key` and mount it to Ingress Controller.
 
-#### **(3) 高可用性**
+#### **(3) High Availability**
 
-- **多副本部署**：Ingress Controller 通常以多个 Pod 运行，通过外部负载均衡器分发流量。
-- **健康检查**：HAProxy 监控后端 Pod 的健康状态，自动剔除不可用实例。
+- **Multi-replica Deployment**: Ingress Controller usually runs as multiple Pods, distributing traffic through external load balancer.
+- **Health Check**: HAProxy monitors health status of backend Pods, automatically removing unavailable instances.
 
-#### **(4) 扩展性**
+#### **(4) Scalability**
 
-- **自定义 Ingress Controller**：用户可以部署多个 Ingress Controller，分别处理不同的 Route。
-- **分片（Sharding）**：通过注解 `route.openshift.io/router-shard` 将 Route 分配到指定 Ingress Controller。
+- **Custom Ingress Controller**: Users can deploy multiple Ingress Controllers, handling different Routes respectively.
+- **Sharding**: Allocate Route to specified Ingress Controller through annotation `route.openshift.io/router-shard`.
 
 ---
 
-### 5. **调试与监控**
+### 5. **Debugging and Monitoring**
 
-#### **(1) 查看 Route 状态**
+#### **(1) View Route Status**
 
 ```bash
 oc get route -n <namespace>
 oc describe route/my-route
 ```
 
-#### **(2) 查看 Ingress Controller 日志**
+#### **(2) View Ingress Controller Logs**
 
 ```bash
 oc logs -n openshift-ingress deployments/router-default
 ```
 
-#### **(3) 监控指标**
+#### **(3) Monitoring Metrics**
 
-- HAProxy 暴露 Prometheus 指标（如请求速率、延迟、错误率）：
+- HAProxy exposes Prometheus metrics (like request rate, latency, error rate):
   ```bash
   oc get -n openshift-ingress-operator metrics
   ```
 
 ---
 
-### 6. **与其他组件的交互**
+### 6. **Interaction with Other Components**
 
-- **Service Mesh（如 Istio）**：若启用，Route 可能被 Service Mesh 的 VirtualService 替代。
-- **NetworkPolicy**：控制 Ingress Controller 到后端 Pod 的流量权限。
+- **Service Mesh (like Istio)**: If enabled, Route may be replaced by Service Mesh's VirtualService.
+- **NetworkPolicy**: Controls traffic permissions from Ingress Controller to backend Pods.
 
 ---
 
-### 总结
+### Summary
 
-OpenShift Route 的实现核心是 **Ingress Controller（HAProxy）** 的动态配置管理，通过以下流程协作：
+OpenShift Route implementation core is **Ingress Controller (HAProxy)** dynamic configuration management, collaborating through the following processes:
 
-1. **API 层**：用户定义 Route。
-2. **控制平面**：Ingress Operator 同步配置到 HAProxy。
-3. **数据平面**：HAProxy 处理实际流量路由。
-4. **网络层**：外部流量通过负载均衡器到达集群。
+1. **API Layer**: User defines Route.
+2. **Control Plane**: Ingress Operator syncs configuration to HAProxy.
+3. **Data Plane**: HAProxy handles actual traffic routing.
+4. **Network Layer**: External traffic reaches cluster through load balancer.
 
-这种设计平衡了灵活性和性能，同时隐藏了底层复杂度，为用户提供简单的声明式接口。
+This design balances flexibility and performance while hiding underlying complexity, providing users with simple declarative interfaces.
