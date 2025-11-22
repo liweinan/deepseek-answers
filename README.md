@@ -119,6 +119,7 @@ Here are the topics:
 - [What is a Fat Pointer?](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-fat.md)
 - [Structs in Rust](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-struct.md)
 - [`Cow` in Rust](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-cow.md)
+- [Rust的Unwrap](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-unwrap.md)
 
 ### Languages
 
