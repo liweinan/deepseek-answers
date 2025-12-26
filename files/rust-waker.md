@@ -929,3 +929,321 @@ impl Future for Sleep {
 
 你的例子是为了****教学目的****，展示了 waker 的基本工作原理。在实际使用中，tokio 等运行时会自动处理这些细节，你只需要使用 `tokio::time::sleep()` 等高级 API 即可。
 
+---
+
+# Waker 更新优化分析：你的例子 vs Rust 编译器生成的代码
+
+## 问题
+
+你的例子中每次 `poll()` 都调用 `cx.waker().clone()`，这是否不够高效？Rust 编译器实际生成的 future 是如何处理这块的？
+
+## 你的例子的实现
+
+```rust
+fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+    let mut state = self.shared_state.lock().unwrap();
+    
+    if state.completed {
+        Poll::Ready("异步操作完成！")
+    } else {
+        // ⚠️ 每次 poll 都 clone，即使 waker 没有改变
+        state.waker = Some(cx.waker().clone());
+        Poll::Pending
+    }
+}
+```
+
+### 问题分析
+
+1. **每次都 clone**：即使 `cx.waker()` 指向同一个任务，也会创建新的 `Waker` 实例
+2. **引用计数开销**：每次 clone 都会增加任务的引用计数（对于 tokio）
+3. **内存分配**：虽然 `Waker` 本身很小，但频繁 clone 仍有开销
+
+## 标准库提供的优化方法
+
+### 1. `will_wake()` - 检查是否需要更新
+
+**文件：`library/core/src/task/wake.rs` (第 478-484 行)**
+
+```rust
+impl Waker {
+    /// Returns `true` if this `Waker` and another `Waker` would awake the same task.
+    pub fn will_wake(&self, other: &Waker) -> bool {
+        // 通过比较 data 指针和 vtable 指针来判断
+        let RawWaker { data: a_data, vtable: a_vtable } = self.waker;
+        let RawWaker { data: b_data, vtable: b_vtable } = other.waker;
+        a_data == b_data && ptr::eq(a_vtable, b_vtable)
+    }
+}
+```
+
+### 2. `clone_from()` - 条件克隆
+
+**文件：`library/core/src/task/wake.rs` (第 660-664 行)**
+
+```rust
+impl Clone for Waker {
+    fn clone_from(&mut self, source: &Self) {
+        // ⭐ 只有在 waker 不同时才 clone
+        if !self.will_wake(source) {
+            *self = source.clone();
+        }
+        // 如果相同，直接返回，避免不必要的 clone
+    }
+}
+```
+
+## Tokio 的实际优化实现
+
+### 示例 1：ScheduledIo 的优化
+
+**文件：`tokio/src/runtime/io/scheduled_io.rs` (第 323-328 行)**
+
+```rust
+// Avoid cloning the waker if one is already stored that matches the
+// current task.
+match waker {
+    Some(waker) => waker.clone_from(cx.waker()),  // ⭐ 使用 clone_from
+    None => *waker = Some(cx.waker().clone()),
+}
+```
+
+**优化点：**
+- 如果已有 waker，使用 `clone_from()` 而不是直接 `clone()`
+- `clone_from()` 内部会检查 `will_wake()`，只在必要时才 clone
+
+### 示例 2：Waiter 的优化
+
+**文件：`tokio/src/runtime/io/scheduled_io.rs` (第 526 行)**
+
+```rust
+// Update the waker, if necessary.
+w.waker.as_mut().unwrap().clone_from(cx.waker());
+```
+
+### 示例 3：Defer 的优化
+
+**文件：`tokio/src/runtime/scheduler/defer.rs` (第 15-26 行)**
+
+```rust
+pub(crate) fn defer(&self, waker: &Waker) {
+    let mut deferred = self.deferred.borrow_mut();
+
+    // If the same task adds itself a bunch of times, then only add it once.
+    if let Some(last) = deferred.last() {
+        if last.will_wake(waker) {  // ⭐ 检查是否相同
+            return;  // 相同则直接返回，不添加
+        }
+    }
+
+    deferred.push(waker.clone());
+}
+```
+
+## 优化后的实现
+
+### 方法 1：使用 `clone_from()`
+
+```rust
+fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+    let mut state = self.shared_state.lock().unwrap();
+    
+    if state.completed {
+        Poll::Ready("异步操作完成！")
+    } else {
+        // ⭐ 优化：使用 clone_from，只在必要时才 clone
+        match &mut state.waker {
+            Some(waker) => waker.clone_from(cx.waker()),
+            None => state.waker = Some(cx.waker().clone()),
+        }
+        Poll::Pending
+    }
+}
+```
+
+### 方法 2：手动检查 `will_wake()`
+
+```rust
+fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+    let mut state = self.shared_state.lock().unwrap();
+    
+    if state.completed {
+        Poll::Ready("异步操作完成！")
+    } else {
+        // ⭐ 优化：只在 waker 改变时才更新
+        let needs_update = match &state.waker {
+            Some(waker) => !waker.will_wake(cx.waker()),
+            None => true,
+        };
+        
+        if needs_update {
+            state.waker = Some(cx.waker().clone());
+        }
+        
+        Poll::Pending
+    }
+}
+```
+
+## Rust 编译器生成的代码如何处理
+
+### 编译器生成的代码（简化版）
+
+```rust
+// async fn example() {
+//     let result = some_operation().await;
+//     result
+// }
+
+impl Future for ExampleFuture {
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<i32> {
+        match self.state {
+            0 => {
+                // 开始执行
+                self.some_op = Some(some_operation());
+                self.state = 1;
+            }
+            1 => {
+                // await 点：调用子 future 的 poll
+                let mut fut = self.some_op.as_mut().unwrap();
+                match fut.poll(cx) {  // ⭐ 直接传递 Context
+                    Poll::Ready(val) => {
+                        self.result = Some(val);
+                        self.state = 2;
+                    }
+                    Poll::Pending => {
+                        // ⭐ 子 future 已经保存了 waker
+                        // 子 future 内部会自己优化 waker 的更新
+                        return Poll::Pending;
+                    }
+                }
+            }
+            2 => Poll::Ready(self.result.unwrap()),
+            _ => unreachable!(),
+        }
+    }
+}
+```
+
+### 关键点
+
+1. **编译器不直接保存 waker**：编译器生成的代码不会在你的 future 中保存 waker
+2. **委托给子 future**：waker 的保存和优化由子 future（如 `some_operation()`）负责
+3. **子 future 负责优化**：每个子 future（如 tokio 的 I/O future、定时器 future）内部会使用 `clone_from()` 等优化
+
+### 实际例子：tokio::time::Sleep
+
+```rust
+// tokio::time::Sleep 的实现（简化版）
+impl Future for Sleep {
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<()> {
+        // ⭐ 将 waker 注册到定时器驱动
+        // 定时器驱动内部会使用 clone_from() 优化
+        self.entry.poll(cx.waker());
+        
+        if self.entry.is_elapsed() {
+            Poll::Ready(())
+        } else {
+            Poll::Pending
+        }
+    }
+}
+```
+
+定时器驱动内部（`tokio/src/runtime/time/entry.rs`）会使用 `AtomicWaker`，它内部会优化 waker 的更新。
+
+## 性能对比
+
+### 你的例子（未优化）
+
+```rust
+// 每次 poll 都 clone
+state.waker = Some(cx.waker().clone());
+```
+
+**开销：**
+- 每次 poll：1 次引用计数增加（atomic 操作）
+- 每次 poll：可能的堆分配（如果 waker 需要分配）
+- 即使 waker 相同也会执行
+
+### 优化后的实现
+
+```rust
+// 只在必要时 clone
+waker.clone_from(cx.waker());
+```
+
+**开销：**
+- 检查 `will_wake()`：2 次指针比较（非常快）
+- 只在 waker 不同时：1 次引用计数增加
+- 如果 waker 相同：几乎无开销
+
+### 性能提升
+
+- **相同 waker 的情况**：从 1 次 atomic 操作 → 2 次指针比较（约 100 倍提升）
+- **不同 waker 的情况**：开销相同（都需要 clone）
+
+## 实际场景分析
+
+### 场景 1：任务在同一线程
+
+```rust
+async fn example() {
+    let result1 = operation1().await;  // poll 1: clone waker
+    let result2 = operation2().await; // poll 2: waker 相同，使用 clone_from 避免 clone
+}
+```
+
+- 第一次 poll：需要 clone（没有旧的 waker）
+- 后续 poll：如果 waker 相同，`clone_from()` 会避免 clone
+
+### 场景 2：任务在不同线程间移动
+
+```rust
+// 任务可能在不同 worker 线程间移动
+// 每次移动后，waker 可能不同
+```
+
+- 如果任务移动：waker 不同，需要 clone（这是必要的）
+- 如果任务未移动：waker 相同，`clone_from()` 避免 clone
+
+## 总结
+
+### 你的例子的问题
+
+1. **每次都 clone**：即使 waker 没有改变
+2. **没有使用优化**：没有利用 `will_wake()` 和 `clone_from()`
+
+### Rust 编译器生成的代码
+
+1. **不直接保存 waker**：编译器生成的代码不保存 waker
+2. **委托给子 future**：由子 future 负责 waker 的保存和优化
+3. **子 future 优化**：tokio 等运行时的子 future 内部使用 `clone_from()` 优化
+
+### 最佳实践
+
+1. **使用 `clone_from()`**：而不是直接 `clone()`
+2. **检查 `will_wake()`**：在需要时手动检查
+3. **让运行时处理**：如果可能，让 tokio 等运行时处理 waker 的优化
+
+### 改进建议
+
+```rust
+// 优化后的实现
+fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+    let mut state = self.shared_state.lock().unwrap();
+    
+    if state.completed {
+        Poll::Ready("异步操作完成！")
+    } else {
+        // ⭐ 使用 clone_from 优化
+        match &mut state.waker {
+            Some(waker) => waker.clone_from(cx.waker()),
+            None => state.waker = Some(cx.waker().clone()),
+        }
+        Poll::Pending
+    }
+}
+```
+
+这样可以在 waker 相同时避免不必要的 clone，提升性能。
