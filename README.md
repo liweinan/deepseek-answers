@@ -120,6 +120,7 @@ Here are the topics:
 - [Structs in Rust](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-struct.md)
 - [`Cow` in Rust](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-cow.md)
 - [Rust的Unwrap](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-unwrap.md)
+- [Tokio Waker 注入机制分析](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-waker.md)
 
 ### Languages
 
