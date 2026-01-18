@@ -121,6 +121,7 @@ Here are the topics:
 - [`Cow` in Rust](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-cow.md)
 - [Rust的Unwrap](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-unwrap.md)
 - [Tokio Waker 注入机制分析](https://github.com/liweinan/deepseek-answers/blob/main/files/rust-waker.md)
+- [Go vs Rust vs Java Virtual Threads 并发模型深度对比](https://github.com/liweinan/deepseek-answers/blob/main/files/go-rust-java.md)
 
 ### Languages
 
