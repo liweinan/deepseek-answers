@@ -6,7 +6,7 @@
 
 这段话**基本准确**，但需要更细致的分析。本文档基于 Tokio 的实现，深入对比三种主流并发模型：**Go Goroutines**、**Rust Async (Tokio)** 和 **Java Virtual Threads (Project Loom)**。
 
-**自学阅读建议**：先分别读 §2 Go 核心实现、§3 Rust 核心实现、§4 Java Virtual Threads 核心实现（核心 struct 与设计思路）；再读 §5 横向对比、§6 总结与参考资料。文中的源码路径与行号以 Go 主线为准，可克隆 [golang/go](https://github.com/golang/go) 后按符号名搜索校订。
+**自学阅读建议**：先分别读 §2 Go 核心实现、§3 Rust 核心实现、§4 Java Virtual Threads 核心实现（核心 struct 与设计思路）；再读 §5 横向对比、§6 总结与参考资料。Go 源码以 [golang/go](https://github.com/golang/go) 主线为准，Java 以 [openjdk/loom](https://github.com/openjdk/loom) 为准，可克隆后按符号名搜索校订。
 
 ## 1. 核心差异概览
 
@@ -592,17 +592,238 @@ async fn main() {
 
 ## 4. Java Virtual Threads 核心实现
 
+以下基于 OpenJDK Loom 源码（[openjdk/loom](https://github.com/openjdk/loom)），路径以 `loom/src/java.base/share/classes` 为根。
+
 ### 4.1 设计理念
 
-Java Virtual Threads（虚拟线程）是 Java 19 引入、Java 21 稳定的特性，提供类似 Go goroutines 的轻量级并发，兼容传统 Thread API。核心：**虚拟线程**（用户态、栈在堆上）、**Carrier Threads**（平台线程承载）、阻塞时**自动卸载**。
+Java Virtual Threads（虚拟线程）是 Java 19 引入、Java 21 稳定的特性，提供类似 Go goroutines 的轻量级并发，兼容传统 Thread API。核心：**虚拟线程**（用户态、栈由 Continuation 管理在堆上）、**Carrier Threads**（平台线程承载）、阻塞时**自动卸载**（Continuation.yield）。
 
-### 4.2 架构与核心概念
+### 4.2 核心结构与调度
 
-**Virtual Thread (VT)**：轻量级执行单元，状态 NEW/RUNNABLE/BLOCKED/WAITING/TERMINATED。**Carrier Thread**：执行 VT 的 OS 线程，默认由 **ForkJoinPool** 提供（数量 = CPU 核心数）。调度：**挂载**（VT 绑定到 carrier）/ **卸载**（阻塞时让出 carrier）。与 Executor 关系：`Executors.newVirtualThreadPerTaskExecutor()` 每任务一 VT，不池化 VT；CPU 密集用 `ThreadPoolExecutor`（平台线程）。设计要点：VT 不应被池化、用 Semaphore 限流、避免在 VT 内用 `synchronized`（会 pin 住 carrier）。
+VirtualThread 是 JVM 调度的线程，不直接对应 OS 线程。下面给出 Loom 源码中的核心类与字段，便于自学时对照。
 
-### 4.3 优势与局限
+#### 4.2.1 VirtualThread 类核心字段（节选）
 
-**优势**：API 简单（类似 Thread）、迁移成本低、I/O 密集优秀、调试与 JVM 工具完善。**局限**：无 CPU 抢占、`synchronized` 导致 pinning、JVM/GC 开销、carrier 配置选项有限。
+**文件：`java.base/share/classes/java/lang/VirtualThread.java`（约第 68-215 行）**
+
+```java
+/**
+ * A thread that is scheduled by the Java virtual machine rather than the operating system.
+ */
+final class VirtualThread extends BaseVirtualThread {
+    private static final ContinuationScope VTHREAD_SCOPE = new ContinuationScope("VirtualThreads");
+
+    private static final VirtualThreadScheduler BUILTIN_SCHEDULER;
+    private static final VirtualThreadScheduler DEFAULT_SCHEDULER;
+    // ...
+
+    // ⭐ scheduler and continuation
+    private final VirtualThreadScheduler scheduler;
+    private final Continuation cont;
+    private final VirtualThreadTask runContinuation;
+
+    // ⭐ virtual thread state, accessed by VM
+    private volatile int state;
+
+    // parking / blocking / yield 相关
+    private volatile boolean parkPermit;
+    private volatile boolean blockPermit;
+    // ...
+
+    // ⭐ carrier thread when mounted, accessed by VM
+    private volatile Thread carrierThread;
+
+    // termination when joining
+    private volatile CountDownLatch termination;
+    // ...
+}
+```
+
+#### 4.2.2 VirtualThread 状态常量
+
+**文件：`java.base/share/classes/java/lang/VirtualThread.java`（约第 156-184 行）**
+
+```java
+    private static final int NEW      = 0;
+    private static final int STARTED  = 1;
+    private static final int RUNNING  = 2;     // runnable-mounted
+
+    // untimed and timed parking
+    private static final int PARKING       = 3;
+    private static final int PARKED        = 4;     // unmounted
+    private static final int PINNED        = 5;     // mounted（cont.yield 失败，固定在 carrier）
+    private static final int TIMED_PARKING = 6;
+    private static final int TIMED_PARKED  = 7;     // unmounted
+    private static final int TIMED_PINNED  = 8;     // mounted
+    private static final int UNPARKED      = 9;     // unmounted but runnable
+
+    // Thread.yield
+    private static final int YIELDING = 10;
+    private static final int YIELDED  = 11;         // unmounted but runnable
+
+    // monitor enter
+    private static final int BLOCKING  = 12;
+    private static final int BLOCKED   = 13;        // unmounted
+    private static final int UNBLOCKED = 14;         // unmounted but runnable
+
+    // monitor wait / timed-wait
+    private static final int WAITING       = 15;
+    private static final int WAIT          = 16;
+    private static final int TIMED_WAITING = 17;
+    private static final int TIMED_WAIT    = 18;
+
+    private static final int TERMINATED = 99;       // final state
+```
+
+**与调度流程的对应关系**：NEW → STARTED → RUNNING（挂载到 carrier）；RUNNING → PARKING → PARKED（yield 成功，已卸载）或 PINNED（yield 失败，留在 carrier）；RUNNING → BLOCKING → BLOCKED（monitor 阻塞，卸载）；RUNNING → YIELDING → YIELDED（Thread.yield 成功）；终态 TERMINATED。
+
+#### 4.2.3 VThreadContinuation 与 runContinuation()
+
+**文件：`java.base/share/classes/java/lang/VirtualThread.java`（约第 358-429 行）**
+
+```java
+    /** The continuation that a virtual thread executes. */
+    private static class VThreadContinuation extends Continuation {
+        VThreadContinuation(VirtualThread vthread, Runnable task) {
+            super(VTHREAD_SCOPE, wrap(vthread, task));
+        }
+        @Override
+        protected void onPinned(Continuation.Pinned reason) { }
+        // wrap 内调用 vthread.run(task)
+    }
+
+    /**
+     * Runs or continues execution on the current thread. The virtual thread is mounted
+     * on the current thread before the task runs or continues. It unmounts when the
+     * task completes or yields.
+     */
+    @ChangesCurrentThread
+    private void runContinuation() {
+        if (Thread.currentThread().isVirtual()) {
+            throw new WrongThreadException();
+        }
+        // set state to RUNNING（从 STARTED/UNPARKED/UNBLOCKED/YIELDED 转换）
+        // ...
+        mount();
+        try {
+            cont.run();   // ⭐ 执行或恢复 Continuation
+        } finally {
+            unmount();
+            if (cont.isDone()) {
+                afterDone();
+            } else {
+                afterYield();   // ⭐ 调用 scheduler.onContinue(runContinuation)
+            }
+        }
+    }
+```
+
+挂载/卸载在 `runContinuation()` 内完成：`mount()` → `cont.run()` → `unmount()`；yield 时 `cont.yield()` 成功则卸载，`afterYield()` 将 runContinuation 再次提交给 scheduler。
+
+#### 4.2.4 Continuation 与 Pinned
+
+**文件：`java.base/share/classes/jdk/internal/vm/Continuation.java`（约第 40-62 行）**
+
+```java
+/**
+ * A one-shot delimited continuation.
+ */
+public class Continuation {
+    private final Runnable target;
+    private final ContinuationScope scope;
+    // StackChunk tail 等栈相关字段
+    // ...
+
+    /** Reason for pinning（无法卸载的原因） */
+    public enum Pinned {
+        /** Native frame on stack */ NATIVE,
+        /** In critical section */   CRITICAL_SECTION,
+        /** Exception (OOME/SOE) */  EXCEPTION
+    }
+}
+```
+
+虚拟线程的栈由 Continuation 保存/恢复；`run()` 执行到 yield 时挂起，再次 `run()` 从挂起点继续。若栈上有 native 帧、在 critical section（如 synchronized）或异常，则 Pinned，无法卸载，只能在当前 carrier 上阻塞。
+
+#### 4.2.5 CarrierThread
+
+**文件：`java.base/share/classes/jdk/internal/misc/CarrierThread.java`（约第 36-60 行）**
+
+```java
+/**
+ * A ForkJoinWorkerThread that can be used as a carrier thread.
+ */
+public class CarrierThread extends ForkJoinWorkerThread {
+    // compensating state for blocking
+    private int compensating;
+    private long compensateValue;
+
+    public CarrierThread(ForkJoinPool pool) {
+        super(CARRIER_THREADGROUP, pool, true);
+        // ...
+    }
+
+    /** Mark the start of a blocking operation. */
+    public boolean beginBlocking() {
+        // Continuation.pin(); 然后 FJP.tryCompensate 启动或激活备用线程
+        compensateValue = ForkJoinPools.beginCompensatedBlock(getPool());
+        // ...
+    }
+    // endBlocking() 对应 endCompensatedBlock
+}
+```
+
+Built-in 调度器下的 carrier 即 FJP 的 worker 线程；`beginBlocking()` / `endBlocking()` 通过 FJP 的 compensated block 在 VT 阻塞时临时增加 worker，避免饿死。
+
+#### 4.2.6 BuiltinForkJoinPoolScheduler
+
+**文件：`java.base/share/classes/java/lang/VirtualThread.java`（约第 1538-1605 行）**
+
+```java
+    private static VirtualThreadScheduler createBuiltinScheduler(boolean wrapped) {
+        int parallelism = Runtime.getRuntime().availableProcessors();  // 可配 jdk.virtualThreadScheduler.parallelism
+        int maxPoolSize = Integer.max(parallelism, 256);               // 可配 jdk.virtualThreadScheduler.maxPoolSize
+        int minRunnable = Integer.max(parallelism / 2, 1);             // 可配 jdk.virtualThreadScheduler.minRunnable
+        // ...
+        return new BuiltinForkJoinPoolScheduler(parallelism, maxPoolSize, minRunnable, wrapped);
+    }
+
+    /** The built-in ForkJoinPool scheduler. */
+    private static class BuiltinForkJoinPoolScheduler
+            extends ForkJoinPool implements VirtualThreadScheduler {
+
+        BuiltinForkJoinPoolScheduler(int parallelism, int maxPoolSize, int minRunnable, boolean wrapped) {
+            ForkJoinWorkerThreadFactory factory = wrapped
+                    ? ForkJoinPool.defaultForkJoinWorkerThreadFactory
+                    : CarrierThread::new;   // ⭐ worker 即 carrier
+            boolean asyncMode = true;       // FIFO
+            super(parallelism, factory, handler, asyncMode,
+                    0, maxPoolSize, minRunnable, pool -> true, 30L, SECONDS);
+        }
+
+        @Override
+        public void onStart(VirtualThreadTask task) {
+            adaptAndExecute(task);   // execute(ForkJoinTask.adapt(task))
+        }
+
+        @Override
+        public void onContinue(VirtualThreadTask task) {
+            adaptAndExecute(task);
+        }
+    }
+```
+
+onStart/onContinue 均将 runContinuation 作为 FJP 任务提交；FJP 的 worker 由 CarrierThread 担任，工作窃取与本地队列与 Go 的 P 本地队列在概念上类似。
+
+**创建与执行流程（高层）**：`Thread.ofVirtual().start(task)` → 创建 VirtualThread（scheduler、Continuation 包装 task）→ `start()` → `scheduler.onStart(runContinuation)` → FJP 某 worker 执行 `runContinuation.run()` → `mount()` → `cont.run()` 执行用户 task；阻塞时 `cont.yield()` 卸载，`afterYield()` 里 `scheduler.onContinue(runContinuation)` 再次入队；其他 worker 或本 worker 之后取到后再次 `runContinuation()` → `unmount()` 已由上次 yield 完成，再次 `cont.run()` 继续。
+
+### 4.3 与 Executor、线程池的关系
+
+`Executors.newVirtualThreadPerTaskExecutor()` 为每个 `submit` 的任务创建新的 VirtualThread，不池化 VT；carrier 池由 built-in 的 ForkJoinPool 提供（即上述 scheduler）。CPU 密集型应使用平台线程池（如 `ThreadPoolExecutor`），避免长时间占用 carrier。设计要点：VT 不池化、用 Semaphore 限流、避免在 VT 内使用 `synchronized`（会 pin，无法卸载）。
+
+### 4.4 优势与局限
+
+**优势**：API 与 Thread 一致、迁移成本低、I/O 密集场景下自动卸载、JFR/调试器支持好。**局限**：无 CPU 抢占（纯协作式）、`synchronized`/native 导致 pinning、依赖 JVM/GC、carrier 数量与策略可通过系统属性有限配置（如 `jdk.virtualThreadScheduler.parallelism`）。
 
 ## 5. 横向对比
 
@@ -659,6 +880,25 @@ async fn main() {
 //! something similar.
 ```
 
+#### Java：Virtual Thread 创建
+
+```java
+// 方式 1：Thread.ofVirtual()
+Thread vt = Thread.ofVirtual().name("worker-", 0).start(() -> {
+    process();
+});
+
+// 方式 2：Executors（每任务一 VT）
+try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    for (int i = 0; i < 1000; i++) {
+        final int id = i;
+        executor.submit(() -> process(id));
+    }
+}
+```
+
+**特点**：API 与平台线程一致；VT 由 JVM 调度，阻塞时自动卸载，不占用 OS 线程；默认 carrier 池为 ForkJoinPool（parallelism = CPU 核心数）。
+
 #### 调度机制对比
 
 #### Go：抢占式调度（部分）
@@ -708,12 +948,13 @@ async fn long_running_task() {
 
 **关键差异：**
 
-| 特性 | Go | Rust (Tokio) |
-|------|-----|--------------|
-| **调度方式** | 抢占式（函数调用点） | 协作式（await 点） |
-| **阻塞风险** | 低（runtime 会抢占） | 高（必须主动 yield） |
-| **性能开销** | 抢占检查有开销 | 零开销（只在 await 点切换） |
-| **可预测性** | 较低（抢占时机不确定） | 高（只在明确 await 点切换） |
+| 特性 | Go | Rust (Tokio) | Java Virtual Threads |
+|------|-----|--------------|------------------------|
+| **调度方式** | 抢占式（函数调用点） | 协作式（await 点） | 协作式（阻塞时卸载） |
+| **抢占点** | 函数调用 + 异步信号 | 仅 await | 无 CPU 抢占；仅 I/O/锁/ park 时让出 |
+| **阻塞风险** | 低（runtime 会抢占） | 高（必须主动 yield） | I/O 阻塞自动卸载；CPU 密集会占满 carrier |
+| **性能开销** | 抢占检查有开销 | 零开销（只在 await 点切换） | 阻塞时 yield 有切换开销 |
+| **可预测性** | 较低（抢占时机不确定） | 高（只在明确 await 点切换） | 高（仅在阻塞/ park 点切换） |
 
 #### 数据所有权
 
@@ -758,12 +999,12 @@ async fn main() {
 
 **关键差异：**
 
-| 特性 | Go | Rust |
-|------|-----|------|
-| **内存管理** | GC 自动管理 | 编译时检查，零运行时开销 |
-| **数据竞争** | 运行时检测（race detector） | 编译时防止 |
-| **所有权** | 隐式（GC 管理） | 显式（编译时检查） |
-| **性能** | GC 暂停可能影响性能 | 零 GC 开销 |
+| 特性 | Go | Rust | Java Virtual Threads |
+|------|-----|------|------------------------|
+| **内存管理** | GC 自动管理 | 编译时检查，零运行时开销 | GC 自动管理 |
+| **数据竞争** | 运行时检测（race detector） | 编译时防止 | 运行时可能发生（需同步） |
+| **所有权** | 隐式（GC 管理） | 显式（编译时检查） | 隐式（GC 管理） |
+| **性能** | GC 暂停可能影响性能 | 零 GC 开销 | GC 暂停可能影响性能 |
 
 ### 5.2 运行时可见性对比
 
@@ -836,6 +1077,13 @@ impl Builder {
 - 调度器策略（可以自定义）
 - IO driver 的行为
 
+#### Java：部分可见
+
+**Virtual Thread 的调度对用户部分可见：**
+
+- **可见**：`Thread.ofVirtual()` / `Executors.newVirtualThreadPerTaskExecutor()`；可通过系统属性配置 carrier 池：`jdk.virtualThreadScheduler.parallelism`、`jdk.virtualThreadScheduler.maxPoolSize`、`jdk.virtualThreadScheduler.minRunnable`；`VirtualThreadSchedulerMXBean` 可观测调度器；JFR 有 VirtualThread 相关事件。
+- **不可见**：具体在哪个 carrier 上执行、FJP 工作窃取细节、挂载/卸载时机由 JVM 决定；自定义 scheduler 需实现 `VirtualThreadScheduler` 接口（Loom 支持）。
+
 ### 5.3 实际场景对比
 
 #### 场景 1：简单并发任务
@@ -889,6 +1137,24 @@ async fn main() {
 - ✅ 可以控制运行时配置
 - ✅ 编译时保证安全性
 
+#### Java 实现
+
+```java
+try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    List<Future<?>> futures = new ArrayList<>();
+    for (int i = 0; i < 1000; i++) {
+        final int id = i;
+        futures.add(executor.submit(() -> process(id)));
+    }
+    for (Future<?> f : futures) f.get();
+}
+```
+
+**特点：**
+- ✅ API 与 Thread/Executor 一致，迁移成本低
+- ✅ 每任务一 VT，阻塞时自动卸载
+- ⚠️ CPU 密集时无抢占，会占满 carrier
+
 #### 场景 2：网络服务器
 
 #### Go 实现
@@ -936,6 +1202,27 @@ async fn main() {
 - 可以自定义调度策略
 - 编译时保证内存安全
 
+#### Java 实现
+
+```java
+try (var executor = Executors.newVirtualThreadPerTaskExecutor();
+     var server = ServerSocket.open(8080)) {
+    while (true) {
+        Socket conn = server.accept();
+        executor.submit(() -> {
+            try (conn) {
+                handleConnection(conn);
+            }
+        });
+    }
+}
+```
+
+**Java 的优势：**
+- ✅ 代码与平台线程写法一致
+- ✅ I/O 阻塞时 VT 自动卸载，不占用 OS 线程
+- ✅ 可创建大量 VT 处理并发连接
+
 #### 场景 3：CPU 密集型任务
 
 #### Go 实现
@@ -955,6 +1242,21 @@ func main() {
     // 其他 goroutine 仍能运行
 }
 ```
+
+#### Java 实现
+
+```java
+// ⚠️ VT 无 CPU 抢占，CPU 密集会占满 carrier，应使用平台线程池
+ExecutorService cpuExecutor = Executors.newFixedThreadPool(
+    Runtime.getRuntime().availableProcessors());
+cpuExecutor.submit(() -> cpuIntensiveTask());
+cpuExecutor.submit(() -> cpuIntensiveTask());
+// 或：Thread.ofPlatform().start(() -> cpuIntensiveTask());
+```
+
+**Java 的局限：**
+- ⚠️ Virtual Thread 无抢占，长时间 CPU 循环会阻塞 carrier
+- ✅ CPU 密集应使用 `Executors.newFixedThreadPool` 或 `Thread.ofPlatform()`
 
 **Go 的优势：**
 - 抢占式调度保证公平性
@@ -991,33 +1293,31 @@ async fn main() {
 
 #### 任务创建开销
 
-| 操作 | Go | Rust (Tokio) |
-|------|-----|--------------|
-| **创建任务** | ~200-300ns | ~100-200ns |
-| **任务切换** | ~100-200ns | ~50-100ns |
-| **内存开销** | ~2KB/goroutine | ~200-300B/task |
-
-**Rust 的优势：**
-- 任务更轻量
-- 切换开销更低（协作式）
+| 操作 | Go | Rust (Tokio) | Java Virtual Threads |
+|------|-----|--------------|------------------------|
+| **创建任务** | ~200-300ns | ~100-200ns | ~几百 ns |
+| **任务切换** | ~100-200ns | ~50-100ns | 阻塞时卸载/挂载，数百 ns 级 |
+| **内存开销** | ~2KB/goroutine | ~200-300B/task | 栈在堆上，几 KB 级 |
 
 #### 运行时开销
 
-| 特性 | Go | Rust |
-|------|-----|------|
-| **二进制大小** | +2-5MB (runtime) | 可选，可为零 |
-| **内存占用** | GC 需要额外内存 | 无 GC 开销 |
-| **延迟** | GC 暂停可能影响 | 无 GC 暂停 |
+| 特性 | Go | Rust | Java Virtual Threads |
+|------|-----|------|------------------------|
+| **二进制/运行时** | +2-5MB (runtime) | 可选，可为零 | JVM 开销（较大） |
+| **内存占用** | GC 需要额外内存 | 无 GC 开销 | GC 需要额外内存 |
+| **延迟** | GC 暂停可能影响 | 无 GC 暂停 | GC 暂停可能影响 |
 
 #### 实际性能
 
 **网络 IO 密集型：**
 - Go：优秀（netpoller 优化好）
 - Rust：优秀（epoll/kqueue 直接使用）
+- Java VT：优秀（阻塞时自动卸载，大量 VT 多路复用少量 carrier）
 
 **CPU 密集型：**
 - Go：良好（抢占式调度保证公平）
-- Rust：需要特殊处理（使用 `spawn_blocking`）
+- Rust：需特殊处理（使用 `spawn_blocking`）
+- Java VT：不推荐用 VT（无抢占）；应使用平台线程池
 
 ### 5.5 调试和问题排查
 
@@ -1051,6 +1351,16 @@ async fn main() {
 - 可以查看运行时的源代码
 - 可以自定义调度器来调试
 - 编译时错误帮助提前发现问题
+
+#### Java：JVM 工具与 JFR
+
+**调试与观测：**
+- JFR（Java Flight Recorder）有 VirtualThreadStart/End、VirtualThreadPark 等事件
+- 调试器中 VT 显示为普通线程，栈追踪完整
+- `VirtualThreadSchedulerMXBean` 可观测 carrier 池与调度器
+- 线程转储（jstack）会列出虚拟线程
+
+**局限：** carrier 调度细节由 JVM 决定，pinning 时需结合栈与锁分析。
 
 ## 6. 总结与参考资料
 
@@ -1115,6 +1425,7 @@ async fn main() {
 - [Go Runtime Hacking Guide](https://go.dev/src/runtime/HACKING.md)
 - [Rust 异步编程指南](https://rust-lang.github.io/async-book/)
 - [Java Virtual Threads (Project Loom)](https://openjdk.org/jeps/444)
+- [OpenJDK Loom 源码](https://github.com/openjdk/loom)（`java.base/share/classes/java/lang/VirtualThread.java`、`jdk/internal/vm/Continuation.java`、`jdk/internal/misc/CarrierThread.java`）
 - [Inside Java: Virtual Threads](https://inside.java/2023/10/30/sip086/)
 
 ---
