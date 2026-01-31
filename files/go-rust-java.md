@@ -598,6 +598,177 @@ async fn main() {
 
 Java Virtual Threads（虚拟线程）是 Java 19 引入、Java 21 稳定的特性，提供类似 Go goroutines 的轻量级并发，兼容传统 Thread API。核心：**虚拟线程**（用户态、栈由 Continuation 管理在堆上）、**Carrier Threads**（平台线程承载）、阻塞时**自动卸载**（Continuation.yield）。
 
+#### VT、Thread、Executor、Scheduler 的核心关系
+
+与 Go 的 GMP 类似，Java 虚拟线程模型也有清晰的层次与绑定关系：
+
+**执行关系：VT ↔ Scheduler ↔ Carrier (Platform Thread)**
+
+```
+Java Virtual Threads 模型
+│
+├─ 用户层：ExecutorService / Thread API
+│  ├─ Executors.newVirtualThreadPerTaskExecutor() → 每 submit 一个任务，创建一个 VT
+│  ├─ Thread.ofVirtual().start(task) → 直接创建一个 VT 并调度
+│  └─ 不池化 VT；VT 是轻量级，按任务创建即可
+│
+├─ VT 层：Virtual Thread (VT)
+│  ├─ 轻量级执行单元，栈在堆上（Continuation）
+│  ├─ 绑定一个 VirtualThreadScheduler（创建时指定，默认 built-in）
+│  ├─ 挂载时绑定一个 Carrier（Platform Thread），即 carrierThread 字段
+│  └─ 状态：NEW → STARTED → RUNNING（挂载）/ PARKED（卸载）/ BLOCKED（卸载）/ TERMINATED
+│
+├─ 调度层：VirtualThreadScheduler
+│  ├─ 接口：onStart(VirtualThreadTask)、onContinue(VirtualThreadTask)
+│  ├─ Built-in 实现：ForkJoinPool（BuiltinForkJoinPoolScheduler）
+│  │   ├─ Worker 线程 = CarrierThread（即 Carrier）
+│  │   ├─ parallelism = CPU 核心数（默认），可配 jdk.virtualThreadScheduler.parallelism
+│  │   └─ onStart/onContinue 将 VT 的 runContinuation 作为 FJP 任务提交
+│  └─ 可替换为自定义 Scheduler（实现 VirtualThreadScheduler）
+│
+└─ Carrier 层：Platform Thread (Carrier)
+   ├─ 执行 VT 时 = CarrierThread（FJP 的 worker）
+   ├─ 一个 Carrier 同时只执行一个 VT（mount 后 cur VT 即该 VT）
+   ├─ 一个 VT 挂载时只在一个 Carrier 上；卸载后可由任意 Carrier 再次挂载
+   └─ VT 阻塞时 yield 卸载，Carrier 去执行其他 VT 的 runContinuation
+```
+
+**关键约束：**
+
+1. **Executor 与 VT 的关系：按任务创建，不池化**
+   - **ExecutorService（newVirtualThreadPerTaskExecutor）**：每次 `submit(task)` 创建一个新的 VT，执行完即结束，不重用 VT。
+   - **Thread.ofVirtual().start(task)**：同样创建一个 VT，交给默认 Scheduler 调度。
+   - VT 创建成本低，设计上不池化；需要限流时用 Semaphore 等，而不是减少 VT 数量。
+
+2. **VT 与 Scheduler 的关系：一对一绑定**
+   - 每个 VT 在构造时绑定一个 **VirtualThreadScheduler**（可为 null，表示用默认 built-in）。
+   - VT 的 `start()` 调用 `scheduler.onStart(runContinuation)`；阻塞后恢复调用 `scheduler.onContinue(runContinuation)`。
+   - 默认 Scheduler 是单个全局 ForkJoinPool 实例（built-in），所有使用默认 Scheduler 的 VT 共享同一 FJP。
+
+3. **Scheduler 与 Carrier（Platform Thread）的关系：一对多管理**
+   - Built-in Scheduler（ForkJoinPool）拥有若干 **CarrierThread**（worker），数量由 parallelism/maxPoolSize 等决定。
+   - Scheduler 把 VT 的 runContinuation 作为任务提交到 FJP；FJP 的 worker（Carrier）从队列取任务执行，即挂载并运行某个 VT。
+   - 与 Go 的 P 管理多个 G 类似：一个 FJP 管理多个 VT 任务，一个 Carrier 同时只执行一个 VT。
+
+4. **VT 与 Carrier 的关系：挂载时一对一，可迁移**
+   - **挂载（mount）**：某 Carrier 执行某 VT 的 `runContinuation()` 时，该 VT 的 `carrierThread` 指向该 Carrier，VT 状态为 RUNNING/PINNED 等（mounted）。
+   - **卸载（unmount）**：VT 阻塞时 `cont.yield()` 成功，VT 与 Carrier 解绑，`carrierThread` 清空，VT 状态变为 PARKED/BLOCKED 等（unmounted）；runContinuation 再次被 onContinue 提交后，可能被**任意** Carrier 取到并挂载。
+   - 因此：**一个 VT 同一时刻至多在一个 Carrier 上**；**一个 Carrier 同一时刻至多执行一个 VT**；VT 在不同时刻可由不同 Carrier 执行（迁移）。
+
+**数量关系：**
+
+| 角色 | 数量 | 说明 |
+|------|------|------|
+| **VT** | 无上限 | 按任务创建，可成千上万 |
+| **Scheduler（built-in）** | 通常 1 个 | 全局默认 ForkJoinPool，可配自定义 Scheduler |
+| **Carrier（FJP worker）** | parallelism（默认 = CPU 核心数） | 可配 jdk.virtualThreadScheduler.parallelism、maxPoolSize |
+| **Platform Thread（非 carrier）** | 用户创建 | 若用 Thread.ofPlatform() 或传统线程池，与 VT 的 carrier 池独立 |
+
+**与 Go GMP 的类比（便于对照）：**
+
+| Go | Java Virtual Threads |
+|----|----------------------|
+| G（goroutine） | VT（Virtual Thread） |
+| P（逻辑处理器，本地队列） | Scheduler（FJP）+ FJP 的每个 worker 的本地队列 |
+| M（OS 线程） | Carrier（Platform Thread，即 CarrierThread） |
+| G 在 P 的 runq 中排队，M 绑定 P 后取 G 执行 | VT 的 runContinuation 在 FJP 队列中，Carrier 取任务执行即挂载 VT |
+| G 阻塞时 M 可释放 P，P 被其他 M 接管 | VT 阻塞时卸载，runContinuation 再次入队，可被其他 Carrier 挂载 |
+
+#### VT 与 Continuation 的关系；Continuation 的设计思路
+
+**VT 与 Continuation 的关系**
+
+- **VT 持有一个 Continuation**：每个 VirtualThread 在构造时创建一个 **VThreadContinuation**（继承 `Continuation`），其 `target` 是包装了用户 task 的 Runnable；VT 的 `cont` 字段即该实例。
+- **VT 的“栈”由 Continuation 管理**：平台线程的栈在 OS 管理的栈上；虚拟线程没有自己的 OS 栈，执行时的栈帧在 **Continuation 的栈** 上。该栈在 **yield 时被保存到堆**（`StackChunk` 链表），再次 **run 时从堆恢复**，因此才有“栈在堆上”的说法。
+- **执行与挂起**：Carrier 执行 VT 时调用 `runContinuation()` → `mount()` → `cont.run()`。`cont.run()` 要么首次执行 `target.run()`（用户代码），要么从上次 yield 点恢复。用户代码中发生阻塞（如 LockSupport.park、阻塞 I/O、monitor 进入）时，会调用 **Continuation.yield(scope)**；yield 将当前栈保存到堆并返回到 run() 的调用者，VT 随之卸载，Carrier 可去执行其他 VT。之后 scheduler 再次把该 VT 的 runContinuation 提交给某个 Carrier，再次 `cont.run()` 时从 yield 点继续执行。
+- **小结**：VT 是“线程”的抽象（Thread API、状态、调度）；Continuation 是“可挂起/恢复的执行体”，负责保存与恢复 VT 的栈与执行点。**VT = Thread 语义 + Continuation 实现**。
+
+**Continuation 的设计思路**
+
+Loom 的 Continuation 是 **one-shot delimited continuation**（单次、有界延续）：
+
+1. **Delimited（有界）**：延续有明确边界，由 **ContinuationScope** 界定。`Continuation(scope, target)` 表示“在 scope 内执行 target”；`yield(scope)` 表示“挂起到 scope 边界”。Virtual Thread 使用全局的 `VTHREAD_SCOPE`，因此 VT 的 yield 就是挂起整个 VT 的执行点。
+
+2. **One-shot（单次）**：每个 Continuation 实例只支持“运行到结束”或“yield 后再 run 一次恢复”。不能对同一实例多次 run 到多次 yield；VT 的多次挂起/恢复是通过多次调用 run（每次 run 可能内部 yield 再被 scheduler 再次提交 run）实现的。
+
+3. **栈在堆上（StackChunk）**：执行时 Continuation 的栈帧在 JVM 管理的 **StackChunk** 链上（堆上对象）。yield 时当前栈被完整保存到这些 chunk；恢复时从 chunk 恢复栈，再继续执行。这样 VT 的栈不占用 Carrier 的 OS 栈，可以存在任意多个 VT，且切换成本与栈大小相关而非固定 OS 栈大小。
+
+   **什么是「栈在堆上」**：传统平台线程的「栈」是 OS 为每条线程预留的一块连续内存（栈段），用于存放调用栈——即方法调用链上的栈帧（局部变量、返回地址等）。「栈在堆上」指：虚拟线程没有自己的 OS 栈段，其调用栈数据存放在 **Java 堆** 里，用 `StackChunk` 等对象串成链表。挂载到 Carrier 时，JVM 可把栈帧拷到 Carrier 的 OS 栈上执行；阻塞/yield 时再拷回堆上的 StackChunk。这样每条 VT 不占一块固定的 OS 栈（通常 1MB 级），才能支持数十万级 VT；且 yield 时整栈可完整保存与恢复，实现 continuation。
+
+   **与 Go 的相似性**：这种「栈在堆上」的设计与 **Go 的 goroutine 更接近**。Go 的 G 的栈也是 **堆上分配**（`stack stack` 指向 [lo, hi]，初始约 2KB、可分段增长），不占用 OS 线程的栈段，因此才能有大量 goroutine。二者都是「有栈」轻量级单元、栈在堆上、由运行时管理。Rust 的 async 任务则是 **栈无关（stackless）** 状态机：没有独立的调用栈，只在 `await` 点把局部变量放进状态机，不涉及「栈在堆上」或整栈拷贝，与 Java/Go 的栈式设计不同。
+
+4. **Pinned**：当栈上有 **native 帧**、线程在 **critical section**（如持有 synchronized）或处于**异常**等状态时，JVM 无法安全地把栈拷贝到堆，此时 **yield 会失败**，Continuation 处于 Pinned 状态，VT 无法卸载，只能占用当前 Carrier 直到可 yield。因此 VT 内应避免 synchronized，改用 ReentrantLock 等，以便在阻塞时正常 yield 卸载。
+
+**源码对应（节选）**
+
+**文件：`jdk/internal/vm/Continuation.java`（约第 40-134 行）**
+
+```java
+/**
+ * A one-shot delimited continuation.
+ */
+public class Continuation {
+    private final Runnable target;           // ⭐ 延续体：首次 run 时执行
+    private final ContinuationScope scope;   // ⭐ 有界范围，yield(scope) 时挂起到此边界
+    private Continuation parent;
+    private Continuation child;
+
+    private StackChunk tail;                 // ⭐ yield 后栈帧保存在堆上的 chunk 链表
+    private boolean done;                    // ⭐ 是否已执行完毕
+    private volatile boolean mounted;         // 是否正挂在某条线程上
+    private Object yieldInfo;                // yield 时携带的信息
+
+    public Continuation(ContinuationScope scope, Runnable target) {
+        this.scope = scope;
+        this.target = target;
+    }
+
+    /**
+     * Mounts and runs the continuation body. If suspended, continues from the last suspend point.
+     */
+    public final void run() {
+        // mount；设置当前线程的 continuation；若未启动则执行 target，否则从上次 yield 点恢复
+        // enterSpecial 为 native，内部会执行 target 或恢复栈后返回
+        // 若发生 yield，栈被保存到 StackChunk，控制权返回到 run() 的调用者
+    }
+}
+```
+
+**文件：`java/lang/VirtualThread.java`（VThreadContinuation）**
+
+```java
+    private static class VThreadContinuation extends Continuation {
+        VThreadContinuation(VirtualThread vthread, Runnable task) {
+            super(VTHREAD_SCOPE, wrap(vthread, task));  // ⭐ scope 固定为 VT 的 scope，target 为包装了 task 的 Runnable
+        }
+        @Override
+        protected void onPinned(Continuation.Pinned reason) { }  // yield 失败（Pinned）时的回调
+    }
+```
+
+因此：**VT 的“轻量级”和“栈在堆上”** 都来自 Continuation：栈用堆上的 StackChunk 表示，yield 时保存、run 时恢复，从而可在少量 Carrier 上多路复用大量 VT。
+
+#### Java Continuation 与 Rust 协程的对比
+
+Loom 文档和 Foojay 等文章里把 Continuation 称为 **delimited continuation** 或 **coroutine**；Rust 里 `async fn` 被编译器变换成的也是 **coroutine**（状态机）。两者都实现“挂起—恢复”，但实现方式不同，对比如下。
+
+| 维度 | Java Continuation (Loom) | Rust 协程（async/await 状态机） |
+|------|---------------------------|----------------------------------|
+| **实现方式** | **栈式（stackful）**：yield 时把**完整调用栈**保存到堆（StackChunk），恢复时从堆还原栈 | **栈无关（stackless）**：编译器把 `async fn` 变成**状态机**，每个 `await` 点对应一个状态，只保存该点需要的**局部变量**，不保存整栈 |
+| **挂起点** | 任意阻塞点（JDK 在阻塞处插入 yield）：LockSupport.park、阻塞 I/O、Object.wait 等 | 仅 **`await` 点**：必须显式写 `await`，只有这些点会挂起并保存状态 |
+| **栈从哪来** | VT 的栈在堆上（Continuation 的 StackChunk），挂载时帧可拷贝到 Carrier 栈，卸载时拷回堆 | 无“VT 自己的栈”：状态机本身在堆或栈上，执行时用**当前线程栈**，挂起时只保留状态机里的字段 |
+| **与线程 API** | VT 是 `Thread` 的一种实现，沿用 `Thread` API；阻塞式代码可直接在 VT 里跑，由 JVM 在阻塞点 yield | 必须用 `async fn` + `await`，阻塞式代码不能直接写在 async 里，否则会占住线程；需“async 一路”或 `spawn_blocking` |
+| **调度** | VT 阻塞 → yield Continuation → runContinuation 再次入队 → 任意 Carrier 可执行 | Future 在 `await` 返回 `Poll::Pending` → 运行时把 task 挂起 → 其他 task 被调度；恢复时从状态机当前状态继续 |
+| **共性** | 都可挂起并在之后恢复；都用于在少量 OS 线程上多路复用大量逻辑任务（M:N） | 同上 |
+
+**简要结论**：
+
+- **概念上**：都是“可挂起、可恢复的执行体”，都算广义的 **coroutine**，也都用来做轻量级并发。
+- **实现上**：Java 是 **栈式 continuation**（栈在堆上、任意阻塞点可挂起），Rust 是 **栈无关协程**（状态机、仅 await 点挂起）。Java 更接近“传统”的 fiber/有栈协程；Rust 更接近 generator/无栈协程，零成本抽象、无整栈拷贝。
+- **使用体验**：Java VT 允许在虚拟线程里写阻塞式代码，由 JVM 在阻塞点自动 yield；Rust 必须在 async 里写非阻塞 + await，或把阻塞丢到 `spawn_blocking`。
+
+更多 Loom/Continuation 的直观介绍可参考：[*The Basis of Virtual Threads: Continuations* (foojay.io)](https://foojay.io/today/the-basis-of-virtual-threads-continuations/)。
+
 ### 4.2 核心结构与调度
 
 VirtualThread 是 JVM 调度的线程，不直接对应 OS 线程。下面给出 Loom 源码中的核心类与字段，便于自学时对照。
@@ -1427,6 +1598,7 @@ async fn main() {
 - [Java Virtual Threads (Project Loom)](https://openjdk.org/jeps/444)
 - [OpenJDK Loom 源码](https://github.com/openjdk/loom)（`java.base/share/classes/java/lang/VirtualThread.java`、`jdk/internal/vm/Continuation.java`、`jdk/internal/misc/CarrierThread.java`）
 - [Inside Java: Virtual Threads](https://inside.java/2023/10/30/sip086/)
+- [The Basis of Virtual Threads: Continuations (foojay.io)](https://foojay.io/today/the-basis-of-virtual-threads-continuations/)
 
 ---
 
