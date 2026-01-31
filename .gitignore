@@ -18,6 +18,10 @@ PROJECT_BRIEF.md
 # translation_log.md
 # language_analysis_results.txt
 
+# Cursor / IDE
+.cursorindexingignore
+.specstory/
+
 # IDE and editor files
 .vscode/
 .idea/
