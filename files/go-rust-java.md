@@ -840,6 +840,44 @@ Loom 文档和 Foojay 等文章里把 Continuation 称为 **delimited continuati
   - **运行载体**：Java VT 的 `runContinuation` 由 `VirtualThreadScheduler`（默认 FJP）调度到 Carrier 线程；Rust 的 `Future` 由运行时（如 Tokio）的 executor 轮询 `poll`，无“Carrier”概念，只有 worker 线程执行 task。  
   - **API 形态**：Loom 暴露 `Thread` API（`VirtualThread`）；Rust 暴露 `Future` + `Context`/`Waker`，无内置“虚拟线程”类型。
 
+#### VT、Continuation、FJP 等相关类列表（基于 JDK 源码）
+
+以下基于本地 JDK 源码（`src/java.base`、`src/jdk.management`）列举与 VT、Continuation、FJP、task、VThreadContinuation 等相关的 **class / interface**，便于按符号名搜索阅读。
+
+| 类型 | 全限定名 | 源码路径（相对 `jdk/src`） | 说明 |
+|------|----------|----------------------------|------|
+| **VT 与 Thread 层** | | | |
+| class | `java.lang.VirtualThread` | `java.base/.../java/lang/VirtualThread.java` | 虚拟线程，extends BaseVirtualThread；持有一个 Continuation（`cont`）和一个 Runnable（`runContinuation`），scheduler 为 `Executor`（默认 `ForkJoinPool`）。 |
+| class | `java.lang.BaseVirtualThread` | `java.base/.../java/lang/BaseVirtualThread.java` | 虚拟线程基类，abstract sealed extends Thread；permits VirtualThread, ThreadBuilders.BoundVirtualThread。 |
+| class | `java.lang.ThreadBuilders.VirtualThreadBuilder` | `java.base/.../java/lang/ThreadBuilders.java` | `Thread.Builder.OfVirtual` 实现；创建未启动的 VT（`unstarted`/`start`）。 |
+| class | `java.lang.ThreadBuilders.BoundVirtualThread` | 同上 | 无 VM continuation 支持时的“虚拟线程”实现，绑定到一条平台线程。 |
+| class | `java.lang.ThreadBuilders.VirtualThreadFactory` | 同上 | `ThreadFactory`，`newThread` 时调用 `newVirtualThread(scheduler, name, characteristics, task)`。 |
+| **Continuation 层** | | | |
+| class | `jdk.internal.vm.Continuation` | `java.base/.../jdk/internal/vm/Continuation.java` | 单次、有界延续（one-shot delimited continuation）；`run()` 执行/恢复，yield 时栈写回堆。 |
+| class | `jdk.internal.vm.ContinuationScope` | `java.base/.../jdk/internal/vm/ContinuationScope.java` | 界定 continuation 的 scope；VT 使用 `VTHREAD_SCOPE`。 |
+| class | `java.lang.VirtualThread.VThreadContinuation` | `java.base/.../java/lang/VirtualThread.java`（内部类） | extends Continuation；构造时 `super(VTHREAD_SCOPE, wrap(vthread, task))`；`onPinned` 空实现。 |
+| class | `jdk.internal.vm.StackChunk` | `java.base/.../jdk/internal/vm/StackChunk.java` | 堆上栈块；Continuation 的栈帧链。 |
+| class | `jdk.internal.vm.ContinuationSupport` | `java.base/.../jdk/internal/vm/ContinuationSupport.java` | 静态方法 `isSupported()` / `ensureSupported()`，检测 VM 是否支持 continuation。 |
+| **Scheduler / FJP / task 层** | | | |
+| interface | `java.util.concurrent.Executor` | `java.base/.../java/util/concurrent/Executor.java` | VT 的 scheduler 类型；默认实现为 `ForkJoinPool`。 |
+| class | `java.util.concurrent.ForkJoinPool` | `java.base/.../java/util/concurrent/ForkJoinPool.java` | 默认 scheduler；worker 由 `CarrierThread` 担任；`WorkQueue` 存 ForkJoinTask（runContinuation 经 `ForkJoinTask.adapt(runContinuation)` 入队）。 |
+| class | `java.util.concurrent.ForkJoinPool.WorkQueue` | 同上（内部类） | 任务队列；`owner` 为 ForkJoinWorkerThread 或 null（submission 队列）；`array` 存 ForkJoinTask。 |
+| class | `java.util.concurrent.ForkJoinTask<V>` | `java.base/.../java/util/concurrent/ForkJoinTask.java` | 抽象任务；`ForkJoinTask.adapt(Runnable)` 把 runContinuation 包装成 FJP 任务。 |
+| class | `java.util.concurrent.ForkJoinWorkerThread` | `java.base/.../java/util/concurrent/ForkJoinWorkerThread.java` | FJP 的 worker 线程；CarrierThread 继承此类。 |
+| class | `jdk.internal.misc.CarrierThread` | `java.base/.../jdk/internal/misc/CarrierThread.java` | extends ForkJoinWorkerThread；执行 VT 的 runContinuation 时即为 Carrier；`beginBlocking`/`endBlocking` 调 FJP 的补偿接口。 |
+| class | `jdk.internal.misc.CarrierThread.ForkJoinPools` | 同上（内部类） | 静态方法 `beginCompensatedBlock`/`endCompensatedBlock` 的桥接（通过 JavaUtilConcurrentFJPAccess 调用 FJP）。 |
+| **Carrier / ThreadLocal** | | | |
+| class | `jdk.internal.misc.CarrierThreadLocal<T>` | `java.base/.../jdk/internal/misc/CarrierThreadLocal.java` | ThreadLocal 变体，绑定到当前线程的 carrier。 |
+| **事件 / JFR** | | | |
+| class | `jdk.internal.event.VirtualThreadStartEvent` | `java.base/.../jdk/internal/event/VirtualThreadStartEvent.java` | JFR 内部事件。 |
+| class | `jdk.internal.event.VirtualThreadEndEvent` | `java.base/.../jdk/internal/event/VirtualThreadEndEvent.java` | 同上。 |
+| class | `jdk.internal.event.VirtualThreadSubmitFailedEvent` | `java.base/.../jdk/internal/event/VirtualThreadSubmitFailedEvent.java` | 同上。 |
+| **Management** | | | |
+| interface | `jdk.management.VirtualThreadSchedulerMXBean` | `jdk.management/.../jdk/management/VirtualThreadSchedulerMXBean.java` | MXBean，观测 VT 调度器（carrier 数、队列等）。 |
+| class | `com.sun.management.internal.VirtualThreadSchedulerImpls` | `jdk.management/.../com/sun/management/internal/VirtualThreadSchedulerImpls.java` | MXBean 实现；内部有 `VirtualThreadSchedulerImpl` 等。 |
+
+**关系简述**：`VirtualThread` 持有 `Continuation cont`（实际类型 `VThreadContinuation`）和 `Runnable runContinuation`（方法引用 `this::runContinuation`）。调度器类型为 `Executor`，默认是单个 `ForkJoinPool`（`VirtualThread.createDefaultScheduler()`），其 worker 工厂为 `CarrierThread::new`。入队的是 `runContinuation`（包装成 `ForkJoinTask`），不是 `Continuation` 对象本身。`StackChunk` 用于 Continuation 的“栈在堆上”；`ContinuationSupport` 用于检测 VM 是否支持 continuation。
+
 ### 4.2 核心结构与调度
 
 VirtualThread 是 JVM 调度的线程，不直接对应 OS 线程。下面给出 Loom 源码中的核心类与字段，便于自学时对照。
