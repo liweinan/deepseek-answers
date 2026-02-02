@@ -697,6 +697,8 @@ Loom 的 Continuation 是 **one-shot delimited continuation**（单次、有界�
 
    **与 Go 的相似性**：这种「栈在堆上」的设计与 **Go 的 goroutine 更接近**。Go 的 G 的栈也是 **堆上分配**（`stack stack` 指向 [lo, hi]，初始约 2KB、可分段增长），不占用 OS 线程的栈段，因此才能有大量 goroutine。二者都是「有栈」轻量级单元、栈在堆上、由运行时管理。Rust 的 async 任务则是 **栈无关（stackless）** 状态机：没有独立的调用栈，只在 `await` 点把局部变量放进状态机，不涉及「栈在堆上」或整栈拷贝，与 Java/Go 的栈式设计不同。
 
+   **为何 Rust 不做「栈在堆上」**：Rust 无 GC、无 VM。「栈在堆上」的价值在于：需要大量「有栈」轻量级单元时，由 VM/运行时和 GC 管理堆上的栈块（StackChunk / 栈段），避免每条任务占一块 OS 栈。Rust 既没有 VM/GC 去统一管理这些堆上栈块，也选择了另一条路——**栈无关协程**：每个 task 没有自己的调用栈，只有状态机里按 `await` 点保存的局部变量，因此根本没有「每条 task 一条栈」要放到堆上的问题。用状态机即可实现大量轻量任务，零成本、无整栈拷贝；在这种设计下「栈在堆上」既用不上，也不是目标。
+
 4. **Pinned**：当栈上有 **native 帧**、线程在 **critical section**（如持有 synchronized）或处于**异常**等状态时，JVM 无法安全地把栈拷贝到堆，此时 **yield 会失败**，Continuation 处于 Pinned 状态，VT 无法卸载，只能占用当前 Carrier 直到可 yield。因此 VT 内应避免 synchronized，改用 ReentrantLock 等，以便在阻塞时正常 yield 卸载。
 
 **源码对应（节选）**
@@ -768,6 +770,38 @@ Loom 文档和 Foojay 等文章里把 Continuation 称为 **delimited continuati
 - **使用体验**：Java VT 允许在虚拟线程里写阻塞式代码，由 JVM 在阻塞点自动 yield；Rust 必须在 async 里写非阻塞 + await，或把阻塞丢到 `spawn_blocking`。
 
 更多 Loom/Continuation 的直观介绍可参考：[*The Basis of Virtual Threads: Continuations* (foojay.io)](https://foojay.io/today/the-basis-of-virtual-threads-continuations/)。
+
+#### 基于 loom / rust 源码的对照（jdk、loom、rust 仓库）
+
+以下对照基于本地仓库：`loom`（Project Loom）、`rust`（Rust 编译器 + 标准库）。
+
+**Java（Loom）— 栈式 continuation**
+
+| 层级 | 源码位置（loom） | 设计要点 |
+|------|------------------|----------|
+| 用户可见 | `java.lang.Thread`（`Thread.ofVirtual().start(task)`） | VT 是 `Thread` 子类，API 与平台线程一致。 |
+| 调度单位 | `java/lang/VirtualThread.java` | `VirtualThread` 持有一个 `Continuation cont` 和一个 `VirtualThreadTask runContinuation`；scheduler 调度的是 `runContinuation`（`onStart`/`onContinue`）。 |
+| 执行体 | `jdk/internal/vm/Continuation.java` | `Continuation(ContinuationScope scope, Runnable target)`：**one-shot delimited continuation**；`scope` 界定 yield 边界，`target` 为延续体。栈帧保存在堆上 `StackChunk tail`；`run()` 内 mount → 执行/恢复 → 若 yield 则栈写回 StackChunk，控制权返回调用者；`isDone()` 为 true 时延续结束。 |
+| VT 与 Continuation 绑定 | `VirtualThread.java` 内 `VThreadContinuation`、`runContinuation()` | `VThreadContinuation` 继承 `Continuation`，`super(VTHREAD_SCOPE, wrap(vthread, task))`。Carrier 执行 `runContinuation()` → `mount()` → `cont.run()` → `unmount()`；若 `cont.isDone()` 则 `afterDone()`，否则 `afterYield()` 里 `scheduler.onContinue(runContinuation)` 再次入队。 |
+| 栈存储 | `Continuation` 的 `StackChunk tail`、JVM 内部 | 栈在堆上；yield 时整栈保存到 StackChunk 链，恢复时从堆还原；Pinned 时无法 yield（native 帧、critical section、异常）。 |
+
+**Rust — 栈无关协程（状态机）**
+
+| 层级 | 源码位置（rust） | 设计要点 |
+|------|------------------|----------|
+| 用户可见 | `async fn` + `.await`，`Future` trait | 无“虚拟线程”抽象；异步计算用 `Future`，`poll` 驱动。 |
+| 编译器变换 | `compiler/rustc_mir_transform/src/coroutine.rs` | 将 **coroutine**（含 `async fn`）变换为**状态机**：`return x` → `CoroutineState::Complete(x)` 或 `Poll::Ready(x)`，`yield`/`await` → `CoroutineState::Yielded(y)` 或 `Poll::Pending`。跨挂起点存活的 MIR 局部变量被提升为状态机结构体字段；状态机布局为 `upvars... | state | mir_locals...`。 |
+| 状态机布局 | 同上（注释与实现） | 硬编码状态：0 未 resume、1 完成、2 poisoned；其余状态对应各挂起点。`Coroutine::resume` / `Future::poll` 实现为基于状态的 switch：未 resume 则从头执行，否则从上一挂起点继续。 |
+| 无栈 | 无 StackChunk 等价物 | 无每条 task 的“调用栈”；执行时用当前 OS 线程栈，挂起时只保留状态机内字段，无整栈拷贝。 |
+
+**异同小结（对应源码）**
+
+- **同**：都实现“挂起—恢复”、M:N 调度；Loom 的 Continuation 与 Rust 的 coroutine 在概念上都是可挂起执行体。
+- **异（实现）**：  
+  - **栈 vs 状态机**：Java 用 `Continuation` + `StackChunk` 保存/恢复**完整栈**（`loom/.../Continuation.java`）；Rust 用编译器生成的状态机，只保存**跨 await 存活的局部变量**（`rust/.../coroutine.rs`）。  
+  - **挂起点**：Java 由 JVM 在任意阻塞点插入 yield（对用户透明）；Rust 仅在 `await` 点挂起，由编译器在 MIR 里插入状态与 `Poll::Pending`。  
+  - **运行载体**：Java VT 的 `runContinuation` 由 `VirtualThreadScheduler`（默认 FJP）调度到 Carrier 线程；Rust 的 `Future` 由运行时（如 Tokio）的 executor 轮询 `poll`，无“Carrier”概念，只有 worker 线程执行 task。  
+  - **API 形态**：Loom 暴露 `Thread` API（`VirtualThread`）；Rust 暴露 `Future` + `Context`/`Waker`，无内置“虚拟线程”类型。
 
 ### 4.2 核心结构与调度
 
