@@ -6,7 +6,7 @@
 
 这段话**基本准确**，但需要更细致的分析。本文档基于 Tokio 的实现，深入对比三种主流并发模型：**Go Goroutines**、**Rust Async (Tokio)** 和 **Java Virtual Threads (Project Loom)**。
 
-**自学阅读建议**：先分别读 §2 Go 核心实现、§3 Rust 核心实现、§4 Java Virtual Threads 核心实现（核心 struct 与设计思路）；再读 §5 横向对比、§6 总结与参考资料。Go 源码以 [golang/go](https://github.com/golang/go) 主线为准，Java 以 [openjdk/loom](https://github.com/openjdk/loom) 为准，可克隆后按符号名搜索校订。
+**自学阅读建议**：先分别读 §2 Go 核心实现、§3 Rust 核心实现、§4 Java Virtual Threads 核心实现（核心 struct 与设计思路）；再读 §5 横向对比、§6 总结与参考资料。Go 源码以 [golang/go](https://github.com/golang/go) 主线为准；Java 以 JDK 主线（如 [openjdk/jdk](https://github.com/openjdk/jdk)）为准——Virtual Threads 与 Loom 已并入主线，源码在 `java.base` 等模块（如 `java/lang/VirtualThread.java`、`jdk/internal/vm/Continuation.java`、`jdk/internal/misc/CarrierThread.java`）。若查 Loom 开发历史可参考 [openjdk/loom](https://github.com/openjdk/loom)。可克隆后按符号名搜索校订。
 
 ## 1. 核心差异概览
 
@@ -592,7 +592,7 @@ async fn main() {
 
 ## 4. Java Virtual Threads 核心实现
 
-以下基于 OpenJDK Loom 源码（[openjdk/loom](https://github.com/openjdk/loom)），路径以 `loom/src/java.base/share/classes` 为根。
+以下基于 JDK 主线源码（[openjdk/jdk](https://github.com/openjdk/jdk)；Virtual Threads / Loom 已并入），路径以 `java.base/share/classes` 为根。
 
 ### 4.1 设计理念
 
@@ -674,6 +674,43 @@ Java Virtual Threads 模型
 | G 在 P 的 runq 中排队，M 绑定 P 后取 G 执行 | VT 的 runContinuation 在 FJP 队列中，Carrier 取任务执行即挂载 VT |
 | G 阻塞时 M 可释放 P，P 被其他 M 接管 | VT 阻塞时卸载，runContinuation 再次入队，可被其他 Carrier 挂载 |
 
+#### Continuation 可迁移性、与 VT/Thread 关系、与 GMP 对照
+
+**1. Continuation 可以转移到不同的工作线程吗？如何实现？**
+
+可以。同一 Continuation（即同一 VT 的执行体）在不同时刻可以由**不同的 Carrier（平台线程）**执行。
+
+**实现方式**：
+
+- **栈在堆上**：Continuation 的栈帧保存在堆上的 `StackChunk` 链中，不依赖任何特定线程的 OS 栈。yield 时栈写回 StackChunk，unmount 后该 Continuation 与当前 Carrier 完全解绑。
+- **任务入队**：VT 阻塞时 `cont.yield()` 成功 → `afterYield()` 里调用 `scheduler.onContinue(runContinuation)`，把 **runContinuation**（包装了“继续跑这个 VT”的 Runnable）提交给 Scheduler（默认即 ForkJoinPool）。
+- **任意 Carrier 取任务**：FJP 的任意 worker（Carrier）从全局或本地队列取到该 runContinuation 后，在自己的线程上执行 `runContinuation()` → `mount()` → `cont.run()`，即在该 Carrier 上挂载并恢复该 Continuation。因此**恢复时不必回到原来的线程**，迁移由“谁取到任务谁执行”自然完成。
+
+**2. Continuation 和 VT、Thread 的关系**
+
+| 关系 | 说明 |
+|------|------|
+| **Continuation 与 VT** | **一对一**。每个 VirtualThread 在构造时创建一个 **VThreadContinuation**（`cont` 字段），且不再替换；VT 的整个生命周期内只有这一个 Continuation，负责该 VT 的栈与执行点保存/恢复。 |
+| **Continuation 与 Thread（平台线程）** | **无固定绑定**。同一时刻一个 Continuation 至多 **mount 在一条** Carrier 上（即“正在某条 Thread 上执行”）；yield 后 unmount，不再绑定任何 Thread。之后 runContinuation 被再次执行时，可能被**任意**一条 Carrier 取到，因此 Continuation 与 Thread 是多对多、按执行时刻动态绑定。 |
+| **VT 与 Thread** | 同上：挂载时 VT 与当前 Carrier 一对一；卸载后 VT 不占任何线程；再次被调度时可由任意 Carrier 挂载。 |
+
+**3. 与 GMP 的异同**
+
+| 维度 | Go GMP | Java VT + Continuation |
+|------|--------|-------------------------|
+| **轻量级执行体** | G（goroutine），栈在堆上 [stack.lo, stack.hi] | VT，栈由 Continuation 的 StackChunk 管理在堆上 |
+| **可迁移性** | G 阻塞后从 runq 被取出时，可由任意绑定了 P 的 M 执行，不要求同一 M | Continuation 恢复时由任意取到 runContinuation 的 Carrier 执行，不要求同一 Carrier |
+| **调度单位** | G 本身在 P 的 runq 中排队 | **runContinuation**（Runnable）在 FJP 队列中排队；执行 runContinuation 即挂载对应 VT |
+| **逻辑处理器** | P 显式存在，持有 runq、mcache，数量 = GOMAXPROCS | 无单独 P 类型：**run queue 有**，在 FJP 每个 worker（Carrier）的**本地任务队列**及 FJP 的**提交队列**中；概念上 (Carrier + 其本地队列) 等价于一个 P，未再抽象成独立类型 |
+| **OS 线程** | M，必须绑定 P 才能运行 G | Carrier（Platform Thread），执行 runContinuation 时挂载 VT |
+| **绑定关系** | G 不固定属于哪个 M；G 在 P 的 runq 上，M 绑定 P 后从 P 取 G | VT 不固定属于哪个 Carrier；runContinuation 在 FJP 队列上，Carrier 取任务即挂载 VT |
+| **栈的归属** | G 的栈在堆上，属 G 自身 | Continuation 的栈在堆上（StackChunk），属 Continuation/VT，与 Carrier 无关 |
+| **差异小结** | 三层结构 G–P–M 显式；P 负责队列与资源（mcache）；抢占式调度 | 两层抽象 VT–Carrier + Scheduler（FJP）；无显式 P 是因为复用 **FJP 的线程池设计**（worker + 本地队列 + 提交队列），队列与 worker 由 FJP 统一；协作式 yield（+ 可选的 preempt） |
+
+**共性**：都是 M:N 调度、栈在堆上、执行体可在不同 OS 线程间迁移；调度单位（G / runContinuation）入队后由任意空闲 worker 取走执行。
+
+**为何无显式 P、如何管理大量 VT**：Java 没有单独定义 P 类型，是因为直接复用了 **ForkJoinPool** 的模型。FJP 本身就是“每条 worker 一个本地队列 + work stealing + 提交队列”的线程池；Loom 只把“任务”定为 runContinuation、把“worker”定为 Carrier。因此 **run queue 是有的**：每个 Carrier 的本地任务队列 + FJP 的提交队列（external submission queue）。大量 VT ⇒ 大量 runContinuation 任务 ⇒ 通过 onStart/onContinue 进入 FJP 的本地队列或提交队列 ⇒ 被有限个 Carrier 取走（本地取或窃取）并执行，从而管理大量 VT 而无须再抽象一层 P。
+
 #### VT 与 Continuation 的关系；Continuation 的设计思路
 
 **VT 与 Continuation 的关系**
@@ -681,7 +718,7 @@ Java Virtual Threads 模型
 - **VT 持有一个 Continuation**：每个 VirtualThread 在构造时创建一个 **VThreadContinuation**（继承 `Continuation`），其 `target` 是包装了用户 task 的 Runnable；VT 的 `cont` 字段即该实例。
 - **VT 的“栈”由 Continuation 管理**：平台线程的栈在 OS 管理的栈上；虚拟线程没有自己的 OS 栈，执行时的栈帧在 **Continuation 的栈** 上。该栈在 **yield 时被保存到堆**（`StackChunk` 链表），再次 **run 时从堆恢复**，因此才有“栈在堆上”的说法。
 - **执行与挂起**：Carrier 执行 VT 时调用 `runContinuation()` → `mount()` → `cont.run()`。`cont.run()` 要么首次执行 `target.run()`（用户代码），要么从上次 yield 点恢复。用户代码中发生阻塞（如 LockSupport.park、阻塞 I/O、monitor 进入）时，会调用 **Continuation.yield(scope)**；yield 将当前栈保存到堆并返回到 run() 的调用者，VT 随之卸载，Carrier 可去执行其他 VT。之后 scheduler 再次把该 VT 的 runContinuation 提交给某个 Carrier，再次 `cont.run()` 时从 yield 点继续执行。
-- **小结**：VT 是“线程”的抽象（Thread API、状态、调度）；Continuation 是“可挂起/恢复的执行体”，负责保存与恢复 VT 的栈与执行点。**VT = Thread 语义 + Continuation 实现**。
+- **小结**：VT 是“线程”的抽象（Thread API、状态、调度）；Continuation 是“可挂起/恢复的执行体”，负责保存与恢复 VT 的栈与执行点。**VT = Thread 语义 + Continuation 实现**。入队到调度器的是 **runContinuation**（Runnable）而非 Continuation 对象本身，详见 §4.2.5「Continuation 与 runContinuation」。
 
 **Continuation 的设计思路**
 
@@ -948,7 +985,7 @@ public class Continuation {
 }
 ```
 
-虚拟线程的栈由 Continuation 保存/恢复；`run()` 执行到 yield 时挂起，再次 `run()` 从挂起点继续。若栈上有 native 帧、在 critical section（如 synchronized）或异常，则 Pinned，无法卸载，只能在当前 carrier 上阻塞。
+虚拟线程的栈由 Continuation 保存/恢复；`run()` 执行到 yield 时挂起，再次 `run()` 从挂起点继续。若栈上有 native 帧、在 critical section（如 synchronized）或异常，则 Pinned，无法卸载，只能在当前 carrier 上阻塞。「栈在堆上」及与 Go/Rust 的对比见 §4.1「Continuation 的设计思路」。
 
 #### 4.2.5 CarrierThread
 
@@ -979,6 +1016,281 @@ public class CarrierThread extends ForkJoinWorkerThread {
 ```
 
 Built-in 调度器下的 carrier 即 FJP 的 worker 线程；`beginBlocking()` / `endBlocking()` 通过 FJP 的 compensated block 在 VT 阻塞时临时增加 worker，避免饿死。
+
+#### 4.2.5.1 ForkJoinPool 简介（与 VT 调度相关）
+
+Virtual Thread 的默认 Scheduler 是 **ForkJoinPool** 的子类；下面按**核心结构**从代码出发说明 FJP 如何管理任务与 worker，以及 VT 的 runContinuation 如何入队、被 Carrier 取走。源码：jdk `java.base/share/classes/java/util/concurrent/ForkJoinPool.java`、`ForkJoinWorkerThread.java`。
+
+**1. ForkJoinPool 核心字段**
+
+**文件：`ForkJoinPool.java`（约第 1592–1608 行）**
+
+```java
+public class ForkJoinPool extends AbstractExecutorService {
+    final ForkJoinWorkerThreadFactory factory;   // 创建 worker 的工厂（VT 下 = CarrierThread::new）
+    WorkQueue[] queues;                           // ⭐ 主注册表：所有 WorkQueue，奇数下标=worker 队列，偶数=submission 队列
+    volatile long runState;                       // 版本化状态 + 锁位（SHUTDOWN/STOP/TERMINATED 等）
+    volatile long ctl;                            // ⭐ 主控制：高 32 位 RC/TC（released/total worker 数），低 32 位为等待 worker 的 Treiber 栈顶（poolIndex）
+    int parallelism;                              // 目标并行度（默认 = 可用处理器数）
+    final long config;                            // 静态配置（asyncMode 等）
+    // ...
+}
+```
+
+**要点**：**queues** 是 FJP 的“run queue”载体：每个元素是一个 **WorkQueue**，**奇数下标**对应某条 worker 的本地队列，**偶数下标**对应 submission 队列（外部提交）。**ctl** 打包了“已释放 worker 数、总 worker 数、空闲 worker 栈顶”，用于决定何时创建/唤醒 worker；worker 取不到任务时会入栈到 ctl，有任务提交时通过 **signalWork** 从栈顶唤醒。**parallelism** 为目标 worker 数；**factory** 创建 `ForkJoinWorkerThread`（VT 下为 `CarrierThread`）。
+
+**2. WorkQueue：任务队列与窃取**
+
+**文件：`ForkJoinPool.java`（约第 1140–1196 行）**
+
+```java
+    static final class WorkQueue {
+        final ForkJoinWorkerThread owner;  // ⭐ 若非 null，表示该队列属于某条 worker（本地队列）；null 表示 shared/submission 队列
+        ForkJoinTask<?>[] array;           // ⭐ 任务数组，环形缓冲，容量为 2 的幂
+        int base;                          // poll（窃取）端：下一个要取的位置
+        int top;                           // push 端：下一个要放的位置（仅 owner 或持锁时写）
+        volatile int phase;                // 版本 + 状态（含队列在 queues 中的 id）；submission 队列用 phase 做 spinlock
+        // stackPred, source, nsteals, parking 等用于 ctl 栈、窃取统计、park 等
+    }
+```
+
+**要点**：**owner != null** 表示这是某条 **ForkJoinWorkerThread** 的**本地队列**：只有该线程可 **push/pop**（从 top 端）；其他 worker 可 **poll**（从 base 端窃取）。**owner == null** 表示 **submission 队列**，外部提交时通过哈希选到一个 WorkQueue，持 **phase** 锁后 push。**array** 是环形队列：push 用 `array[(top++) & (length-1)]`，poll 用 CAS 取 `array[base % length]` 再递增 base。同一 WorkQueue 类既做 worker 本地队列，也做 submission 队列，区别只在 owner 是否为空以及是否用 phase 加锁。
+
+**3. ForkJoinWorkerThread 与 pool/workQueue**
+
+**文件：`ForkJoinWorkerThread.java`（约第 58–68 行）**
+
+```java
+public class ForkJoinWorkerThread extends Thread {
+    final ForkJoinPool pool;                // 所属池
+    final ForkJoinPool.WorkQueue workQueue; // ⭐ 本线程专属的 WorkQueue（构造时 new WorkQueue(this, ...)）
+    // 构造时：this.workQueue = new ForkJoinPool.WorkQueue(this, 0, (int)pool.config, clearThreadLocals);
+}
+```
+
+**要点**：每条 worker 线程对应一个 **WorkQueue**，且 **workQueue.owner == this**。线程启动后在 **runWorker** 循环里：先取本队 **nextLocalTask()**（asyncMode 时 FIFO 即 poll，否则 pop），没有则 **scan** 其他队列窃取（poll）；取到任务就 **runTask**。VT 的 Carrier 即 **CarrierThread extends ForkJoinWorkerThread**，因此每条 Carrier 有一个 WorkQueue，runContinuation 作为 ForkJoinTask 进入某个 WorkQueue 的 array，被某条 Carrier 取到后执行。
+
+**array 中的 task 与 CarrierThread、VT 的关系**
+
+| 角色 | 含义 |
+|------|------|
+| **array 里的元素** | **ForkJoinTask**（或 adapt 后的 Runnable）。在 VT 的 built-in scheduler 下，入队的是 **ForkJoinTask.adapt(runContinuation)**，即“执行某条 VT 的 runContinuation”这一动作被包装成一个 ForkJoinTask。 |
+| **CarrierThread** | 从 **WorkQueue.array**（本队或窃取来的队）里**取** task 的线程。取到后在本线程上调用 **task.run()**；对 VT 来说，task.run() 即 **runContinuation.run()**，进而 **mount() → cont.run()**，即**挂载该 VT 并执行/恢复其 Continuation**。因此：**执行 array 里某个 task 的那条线程，在那次执行期间就是该 VT 的 Carrier**。 |
+| **VT** | 每条 VT 有一个 **runContinuation**（Runnable）。runContinuation 被提交到 FJP 时，会变成 array 里的一个 **ForkJoinTask**。**一个 task 在 array 里 = “某条 VT 的一次可运行机会”**：被某条 CarrierThread 取到并 run 后，要么 VT 跑完（cont.isDone()），要么 yield（cont.yield()），yield 后 runContinuation 再次被 onContinue 提交，又会变成 array 里的一个新 task，可能被同一条或另一条 Carrier 取到。 |
+
+**小结**：**task : CarrierThread : VT** = **调度单位（一次“跑某 VT”） : 执行者（从 array 取 task 并 run 的线程） : 被挂载的逻辑线程（runContinuation 所属的 VT）**。array 里不存 VT 本身，存的是“执行某 VT 的 runContinuation”的 ForkJoinTask；CarrierThread 是消费这些 task 的 worker；执行某个 task 时，当前 CarrierThread 挂载该 task 对应的 VT，执行完或 yield 后解绑。
+
+**与 Go GMP 的类比**
+
+| Go GMP | Java VT + FJP |
+|--------|----------------|
+| **G（goroutine）** | **可运行单位**：Go 里 P 的 runq 里存的是 **G** 本身（goroutine 结构体）；Java 里 WorkQueue.array 里存的是 **ForkJoinTask**（= 一次“跑某 VT 的 runContinuation”）。即：Go 的“可运行单位”= G；Java 的“可运行单位”= task，**不**直接存 VT。 |
+| **M（OS 线程）** | **CarrierThread**：从 runq/array **取** G/task 并执行的 OS 线程。M 绑定 P 后从 P.runq 取 G 执行；CarrierThread 从本队或窃取的 WorkQueue.array 取 task 执行。 |
+| **P（逻辑处理器，runq）** | **(CarrierThread + WorkQueue)**：P 持有 runq（存 G）；CarrierThread 持有一个 WorkQueue，其 **array** 存 task。M 必须绑 P 才能取 G；CarrierThread 从自己的 workQueue.array 或别人队列窃取取 task。 |
+| **runq 里的东西** | Go：**G**（goroutine）= 可运行单位，也是“逻辑执行体”（一个 G 对应一条用户态协程）。Java：**task**（ForkJoinTask）= 可运行单位；**VT** = 逻辑执行体，不放进 array，task 被执行时才挂载 VT。同一 VT 可对应多次入队的 task（每次 yield 后一次）。 |
+
+**对应关系小结**：**G ≈ 可运行单位**，Go 里 G 既是调度单位也是逻辑执行体；Java 把“调度单位”和“逻辑执行体”拆开——**task = 调度单位**（进 array），**VT = 逻辑执行体**（task.run() 时挂载）。**M ≈ CarrierThread**，**P ≈ (CarrierThread + WorkQueue)**，**P.runq / WorkQueue.array** 都存“可运行单位”（Go 存 G，Java 存 task）。
+
+**task 如何转移到其他 CarrierThread**
+
+runContinuation 经 onContinue 再次入队后，**不一定**还由刚才的 Carrier 执行，可能被**别的** Carrier 取走。有两种机制：
+
+| 方式 | 说明 |
+|------|------|
+| **1. 提交到共享队列（externalSubmit）** | VT 在 **Thread.yield()** 或部分场景下，若当前 Carrier 的本地队列**为空**，会调用 **externalSubmitRunContinuation()**（loom `VirtualThread.java` 约第 728–730 行）：把 task 提交到 FJP 的 **external submission 队列**，而不是当前 Carrier 的本地队列。这样 task 不在“当前 Carrier 的 workQueue.array”里，而是进入 FJP 的 submission 队列；**任意**一条空闲或正在 scan 的 Carrier 都可能从 submission 队列取到该 task，从而**由别的 Carrier 执行**。 |
+| **2. 工作窃取（work stealing）** | 即使 task 被放进**当前** Carrier 的本地队列（如 **lazySubmitRunContinuation()** 在 park/unblock 后、或 **submitRunContinuation()** 经 poolSubmit 且 internal=true），FJP 的 **runWorker** 循环里，**其他** Carrier 会做 **scan**，从别的 WorkQueue 的 **base** 端 **poll（窃取）**。因此 Carrier B 可以从 Carrier A 的 workQueue.array 里**窃取**到这条 task 并执行。即：task 先进入某条 Carrier 的队列，**转移**到另一条 Carrier 是通过“另一条 Carrier 窃取该 task”完成的。 |
+
+**小结**：task 不会在代码里被“显式转移”到某条 Carrier；**谁执行它，谁就是当时的 Carrier**。转移方式只有两种：(1) 入队时**不**进当前 Carrier 的本地队列，而是进 **submission 队列**，由任意 Carrier 取到；(2) 进当前 Carrier 的本地队列，但被**其他** Carrier 通过 **work stealing（poll）** 窃取并执行。
+
+**FJP 里直接存什么：VT、task、Carrier、queue**
+
+FJP **不**单独存 VT，**不**单独存 Carrier 列表；**直接存**的只有 **WorkQueue 数组**和其中的 **task**。队列就在 FJP 里。
+
+**文件：`java.base/share/classes/java/util/concurrent/ForkJoinPool.java`（约第 1599 行）、WorkQueue（约第 1140–1158 行）**
+
+```java
+public class ForkJoinPool extends AbstractExecutorService {
+    // ...
+    WorkQueue[] queues;   // ⭐ 队列容器：FJP 直接持有；奇数下标=worker 本地队列，偶数=submission 队列
+    // 无 VirtualThread[]、无 CarrierThread[] / ForkJoinWorkerThread[]
+}
+
+static final class WorkQueue {
+    final ForkJoinWorkerThread owner;  // ⭐ 若非 null，该队列属于某条 worker（= Carrier）；FJP 通过 queues[i].owner 间接“持有”该线程
+    ForkJoinTask<?>[] array;           // ⭐ 任务数组：FJP 里直接存的 task 都在这里
+    int base;
+    int top;
+    volatile int phase;
+    // ...
+}
+```
+
+| 对象 | FJP 里怎么存 |
+|------|----------------|
+| **VT（VirtualThread）** | **不直接存**。FJP 没有 VT 的列表或字段。只存 **ForkJoinTask**（在 WorkQueue.array 里）；task = ForkJoinTask.adapt(runContinuation)，runContinuation 内部引用 VT（run 时调 vthread.runContinuation()）。VT 仅被 task 间接引用。 |
+| **task（ForkJoinTask）** | **直接存**。在 **WorkQueue.array**（`ForkJoinTask<?>[] array`）里，每条任务是一个 ForkJoinTask（或 adapt 后的 Runnable）。 |
+| **CarrierThread** | **不单独存**。FJP 没有 CarrierThread[] 或类似字段。Carrier = ForkJoinWorkerThread，由 **factory** 创建；创建后经 **registerWorker** 在 **queues[]** 里占一个 WorkQueue，且 **WorkQueue.owner = 该线程**。FJP 对 Carrier 的“持有”是通过 **queues[i].owner**（i 为奇数时为某条 ForkJoinWorkerThread）间接实现的。 |
+| **queue（队列）** | **在 FJP 里**。FJP 有字段 **WorkQueue[] queues**（约第 1599 行），即“队列”的容器；每个元素是一个 **WorkQueue**。真正排队的是 **WorkQueue.array**；WorkQueue 还带 **owner**（某条 ForkJoinWorkerThread 或 null）、**phase** 等。worker 本地队列 = queues[奇数下标]，submission 队列 = queues[偶数下标]。 |
+
+**小结**：FJP 里**直接保存**的只有 **task**（在 WorkQueue.array 里）和 **queues**（WorkQueue 数组）；**不直接保存** VT（VT 只被 task 里的 runContinuation 引用）、**不直接保存** CarrierThread 列表（Carrier 通过各 WorkQueue 的 **owner** 间接存在）。**queue 存在 FJP 里** = FJP 持有 **queues**，通过 **queues[i].owner** 对应到某条 ForkJoinWorkerThread（Carrier），通过 **queues[i].array** 存 task。
+
+**4. 与 VT 的关系（小结）**
+
+| 概念 | FJP 中的对应 |
+|------|----------------|
+| run queue | **queues[i]**：WorkQueue 数组；worker 本地队列（奇数 i）+ submission 队列（偶数 i） |
+| 调度单位 | **ForkJoinTask**（runContinuation 被 adapt 成 ForkJoinTask 入队） |
+| 执行者 | **ForkJoinWorkerThread**（VT 下 = CarrierThread），每条持有一个 **WorkQueue** |
+| 取任务 | 先本队 **nextLocalTask()**，再 **scan** 窃取其他队列的 **poll** |
+| 入队方式 | **execute** / **externalSubmit** / **lazySubmit** → 进入某 WorkQueue.array 或 submission 队列 |
+
+无显式 P：**P 的角色由 (ForkJoinWorkerThread + 其 WorkQueue) 承担**——队列与“执行上下文”都在 worker 上，FJP 只维护 **queues** 和 **ctl**，不单独再抽象一层 P。
+
+**ForkJoinPool 与 VT 的关系（并非为 VT 而造）**
+
+ForkJoinPool **并不是为 VT 而存在的**。FJP 在 **Java 7**（JSR 166）就引入，用于 **fork/join 并行**：递归任务拆分、work-stealing、`RecursiveTask`、parallel stream 等，与 Virtual Thread 无关。**Virtual Threads（Loom）** 是后来才有的；设计默认 scheduler 时**复用了**已有的 FJP，因为其结构刚好合用：每条 worker 一个本地队列、work stealing、submission 队列、以及可选的 **asyncMode FIFO**（适合“事件式、不 join”的任务），于是用 FJP 作为“跑 runContinuation 的线程池”，没有再单独造一个 P 型调度器。因此：**FJP 是为 fork/join 并行设计的通用线程池；VT 是“借” FJP 当默认 scheduler**。VT 也可以使用自定义的 `VirtualThreadScheduler`（不基于 FJP）。
+
+#### ForkJoinPool 为支持 VT 所做的适配（jdk 源码）
+
+VT 以 FJP 为默认 scheduler 后，FJP 本身需要少量**适配**，才能正确与 Carrier、VT 配合。以下基于 jdk `java.base/share/classes/java/util/concurrent/ForkJoinPool.java`、`ForkJoinWorkerThread.java` 及 `jdk/internal/misc/CarrierThread.java` 说明。
+
+**1. 用 currentCarrierThread 替代 currentThread 判断“当前 worker”**
+
+当一条 **CarrierThread** 正在执行 VT 的 runContinuation 时，VT 内部若调用 `Thread.currentThread()`，得到的是 **VT**，而不是底层的 Carrier（ForkJoinWorkerThread）。FJP 在决定“当前是否是本池的 worker、任务是否应进该 worker 的本地队列”时，必须看**实际执行代码的 OS 线程**，即 **Carrier**。因此 FJP 和 ForkJoinWorkerThread 在关键路径上使用 **JLA.currentCarrierThread()**（JavaLangAccess），而不是 `Thread.currentThread()`。
+
+- **ForkJoinPool.poolSubmit**（约第 2556–2567 行）：提交任务时，若 `(t = JLA.currentCarrierThread()) instanceof ForkJoinWorkerThread` 且该 worker 属于本池，则 **internal = true**，任务 **push 到该 worker 的 workQueue**；否则走 submission 队列。这样当 **VT 在 Carrier 上运行并提交 runContinuation**（如 onContinue）时，currentCarrierThread() 返回 Carrier，任务会进**当前 Carrier 的本地队列**，避免误进 submission 队列或别的 worker 队列。
+- **ForkJoinWorkerThread.hasKnownQueuedWork()**（约第 214–224 行）：内部用 `Thread c = JLA.currentCarrierThread()` 判断当前是否是 FJP 的 worker；若当前是 VT，则 c 为承载它的 Carrier，从而能正确看到该 Carrier 的 workQueue 是否有待执行任务。供需要“当前 worker 是否还有队里任务”的启发式使用。
+
+**2. beginCompensatedBlock / endCompensatedBlock 与 CarrierThread 的配合**
+
+当 VT **pinning** 在 Carrier 上（如进入 synchronized、native 调用）并发生**阻塞**时，该 Carrier 会被占住，无法再去执行其他 VT 的 task。FJP 已有的 **compensation** 机制（为阻塞的 worker 临时增加或唤醒一条备用 worker）被 VT 复用。
+
+- **ForkJoinPool**（约第 3926–3940 行）：提供 **beginCompensatedBlock()** / **endCompensatedBlock(long)**。begin 内部循环调用 **tryCompensate(ctl)** 直到成功，尝试创建或唤醒一条备用 worker；end 用返回值把 ctl 的 released count 调回去。FJP 在静态初始化时通过 **JavaUtilConcurrentFJPAccess** 把这两个方法暴露给 `jdk.internal`（约第 3988–3996 行）。
+- **CarrierThread**（`jdk/internal/misc/CarrierThread.java`，约第 70–101 行）：在 **beginBlocking()** 里先 **Continuation.pin()**（避免补偿过程中被 preempt），然后调用 **ForkJoinPools.beginCompensatedBlock(getPool())**，把返回值存到 **compensateValue**；**endBlocking()** 里若处于 COMPENSATING 则调用 **ForkJoinPools.endCompensatedBlock(getPool(), compensateValue)**。这样 VT 在 Carrier 上发生“需要阻塞”的情况时，FJP 会多出一条 worker 来消化队列里的其他 task，避免池子卡死。
+
+**3. Worker 必须为平台线程**
+
+FJP 注释（约第 877–878 行）明确：*Worker Threads cannot be VirtualThreads, as enforced by requiring ForkJoinWorkerThreads in factories.* 即 FJP 的 worker 必须是 **ForkJoinWorkerThread**（平台线程），工厂不能返回 VT。这样 runWorker、从队列取 task、runTask 等都在 OS 线程上执行；VT 只作为“被执行的逻辑”（runContinuation 包装的 task），由 Carrier 挂载执行。
+
+**小结**：FJP 为支持 VT 所做的适配主要是 **(1) 用 currentCarrierThread 在“VT 挂在 Carrier 上”时仍能正确识别当前 worker，从而正确选择本地队列 vs submission 队列；(2) 通过 begin/endCompensatedBlock 暴露补偿接口，供 CarrierThread 在 VT 阻塞时调用，避免池内可用 worker 不足；(3) 约定 worker 只能是平台线程。**FJP 核心的队列、窃取、ctl 等并未为 VT 重写，VT 是“复用 + 少量适配”。**
+
+**为支持 VT 做改造的类与 ForkJoinTask 未改造**
+
+| 类 | 为支持 VT 的改动 | 核心方法/字段（jdk 源码） |
+|------|------------------|----------------------------|
+| **ForkJoinPool** | poolSubmit 用 **JLA.currentCarrierThread()** 判断是否本池 worker；提供 **beginCompensatedBlock / endCompensatedBlock** 并通过 JavaUtilConcurrentFJPAccess 暴露 | 见下 poolSubmit、beginCompensatedBlock |
+| **ForkJoinWorkerThread** | hasKnownQueuedWork() 用 **JLA.currentCarrierThread()**，在 VT 里也能拿到承载它的 Carrier 及其 workQueue | 见下 hasKnownQueuedWork |
+| **CarrierThread**（jdk.internal.misc） | 继承 ForkJoinWorkerThread；beginBlocking()/endBlocking() 调 FJP 的 beginCompensatedBlock/endCompensatedBlock | 见下 beginBlocking、endBlocking |
+| **ForkJoinTask** | **未做 VT 专项改造**。仍用 **Thread.currentThread()**（getPool()、inForkJoinPool()、tryUnfork()、getQueuedTaskCount() 等）。VT 里调这些会得到 VT，返回 null/false。提交 runContinuation 时是 **Carrier** 调 execute，走 ForkJoinPool.poolSubmit，那里用 currentCarrierThread 已够用 | getPool() / inForkJoinPool() 等仍为 `Thread.currentThread() instanceof ForkJoinWorkerThread` |
+
+**文件：`ForkJoinPool.java`（约第 2556–2567 行、3926–3940 行）**
+
+```java
+    private void poolSubmit(boolean signalIfEmpty, ForkJoinTask<?> task) {
+        Thread t; ForkJoinWorkerThread wt; WorkQueue q; boolean internal;
+        if (((t = JLA.currentCarrierThread()) instanceof ForkJoinWorkerThread) &&
+            (wt = (ForkJoinWorkerThread)t).pool == this) {
+            internal = true;
+            q = wt.workQueue;
+        }
+        else {
+            internal = false;
+            q = submissionQueue(ThreadLocalRandom.getProbe());
+        }
+        q.push(task, signalIfEmpty ? this : null, internal);
+    }
+
+    final long beginCompensatedBlock() {
+        int c;
+        do {} while ((c = tryCompensate(ctl)) < 0);
+        return (c == 0) ? 0L : RC_UNIT;
+    }
+    void endCompensatedBlock(long post) {
+        if (post > 0L) {
+            getAndAddCtl(post);
+        }
+    }
+```
+
+**文件：`ForkJoinWorkerThread.java`（约第 213–224 行）**
+
+```java
+    static boolean hasKnownQueuedWork() {
+        ForkJoinWorkerThread wt; ForkJoinPool.WorkQueue q, sq;
+        ForkJoinPool p; ForkJoinPool.WorkQueue[] qs; int i;
+        Thread c = JLA.currentCarrierThread();   // ⭐ 用 Carrier，不用 currentThread()
+        return ((c instanceof ForkJoinWorkerThread) &&
+                (p = (wt = (ForkJoinWorkerThread)c).pool) != null &&
+                (q = wt.workQueue) != null &&
+                (i = q.source) >= 0 &&
+                (((qs = p.queues) != null && qs.length > i && ...) || q.top - q.base > 0));
+    }
+```
+
+**文件：`jdk/internal/misc/CarrierThread.java`（约第 70–101 行）**
+
+```java
+    public boolean beginBlocking() {
+        if (compensating == NOT_COMPENSATING) {
+            Continuation.pin();
+            try {
+                compensating = COMPENSATE_IN_PROGRESS;
+                compensateValue = ForkJoinPools.beginCompensatedBlock(getPool());
+                compensating = COMPENSATING;
+                return true;
+            } finally {
+                Continuation.unpin();
+            }
+        }
+        return false;
+    }
+    public void endBlocking() {
+        if (compensating == COMPENSATING) {
+            ForkJoinPools.endCompensatedBlock(getPool(), compensateValue);
+            compensating = NOT_COMPENSATING;
+            compensateValue = 0;
+        }
+    }
+```
+
+**Continuation 与 runContinuation：入队的是 Runnable 不是 Continuation**
+
+- **Continuation**（类）：Loom 新增的类（`jdk.internal.vm.Continuation`），表示可挂起/恢复的执行体，栈在 StackChunk 上。VT 内部持有一个 **cont**（VThreadContinuation），**不会交给 FJP**。
+- **runContinuation**（入队的那个东西）：是 **Runnable**（或 **VirtualThreadTask**），不是 Continuation 类本身。含义是“执行某条 VT 的 `runContinuation()`”的**动作**。**ForkJoinTask.adapt(...)** 接受的是 **Runnable**，所以被 adapt 的是这条 **Runnable**，不是 Continuation 实例。FJP 里只存 **ForkJoinTask**，该 task 包装的是这条 Runnable；**不存 Continuation**。
+
+**文件：`java.base/share/classes/java/lang/VirtualThread.java`（loom，约第 104–108 行、296–320 行）**
+
+```java
+final class VirtualThread extends BaseVirtualThread {
+    private final Continuation cont;              // ⭐ VT 持有的 Continuation（Loom 新增类），不交给 FJP
+    private final VirtualThreadTask runContinuation;  // ⭐ 入队的是这个：Runnable/VirtualThreadTask，run() 时调 runContinuation()
+    // ...
+}
+
+    static final class BuiltinSchedulerTask implements VirtualThreadTask {
+        private final VirtualThread vthread;
+        @Override
+        public void run() {
+            vthread.runContinuation();   // ⭐ 执行“跑 continuation”的动作 → mount() → cont.run()
+        }
+    }
+```
+
+**文件：`jdk/internal/vm/Continuation.java`（loom，约第 40–44 行）**
+
+```java
+/**
+ * A one-shot delimited continuation.
+ */
+public class Continuation {
+    private final ContinuationScope scope;
+    private final Runnable target;   // 延续体；run() 时执行或从 yield 点恢复
+    private StackChunk tail;         // 栈在堆上
+    // ...
+}
+```
+
+**对应关系**：**task = ForkJoinTask.adapt(runContinuation)** 里，**runContinuation** = 那条 **VirtualThreadTask**（BuiltinSchedulerTask），其 **run()** 调 **vthread.runContinuation()** → mount() → **cont.run()**。入队的是“**跑** continuation 的 Runnable”，不是 **Continuation** 对象。Continuation 是 VT 相关的新增类；进 FJP 的是“执行 runContinuation() 的 Runnable”被 adapt 成的 ForkJoinTask。
 
 #### 4.2.6 BuiltinForkJoinPoolScheduler
 
@@ -1019,6 +1331,59 @@ Built-in 调度器下的 carrier 即 FJP 的 worker 线程；`beginBlocking()` /
 ```
 
 onStart/onContinue 均将 runContinuation 作为 FJP 任务提交；FJP 的 worker 由 CarrierThread 担任，工作窃取与本地队列与 Go 的 P 本地队列在概念上类似。
+
+#### 4.2.7 FJP 的 run queue：如何管理大量 VT（源码）
+
+FJP 的队列结构、task 存储与 task 在 Carrier 间的转移见 §4.2.5.1 与 §4.2.5（「FJP 里直接存什么」「task 如何转移到其他 CarrierThread」）。此处仅补充分入队路径与源码位置。
+
+**“run queue”在哪里**：run queue = 每个 Carrier 的本地任务队列 + FJP 的 submission 队列（上文已述）。
+
+**源码对应（loom：VirtualThread.java）**
+
+- **任务进本地队列还是提交队列**：  
+  `submitRunContinuation` 的注释写明：*For the built-in scheduler, the task will be pushed to the **local queue** if possible, otherwise it will be pushed to an **external submission queue**.*（约第 442–446 行）  
+  即：在默认 scheduler 下，runContinuation 会优先进**当前 Carrier 的本地队列**，否则进**外部提交队列**。
+
+- **何时进本地队列**：  
+  `lazySubmitRunContinuation()`（约第 501–515 行）：当**当前线程是 CarrierThread** 且**该 Carrier 的本地队列为空**时，调用 `ct.getPool().lazySubmit(ForkJoinTask.adapt(runContinuation))`，把 runContinuation 放进**该 Carrier 的本地队列**。否则走 `submitRunContinuation()`，由 FJP 决定进本地还是提交队列。
+
+- **何时进提交队列**：  
+  `externalSubmitRunContinuation()`（约第 525–537 行）：当从 **Carrier 线程**提交且希望任务进**外部提交队列**时（例如 VT 刚 start 时避免只塞进当前 Carrier 的本地队列），调用 `ct.getPool().externalSubmit(ForkJoinTask.adapt(runContinuation))`。  
+  `ForkJoinPool.externalSubmit` 会把任务放入 FJP 的 submission 队列，由任意 worker 在后续取到或窃取到。
+
+**FJP 队列结构（loom：ForkJoinPool.java 注释）**
+
+**文件：`java.base/share/classes/java/util/concurrent/ForkJoinPool.java`（约第 286–295 行、384–401 行）**
+
+```java
+    // 本地队列与 submission 队列共用同一数据结构（同一类）：
+    // We also support a user mode in which local task processing is
+    // in FIFO, not LIFO order, simply by using a local version of
+    // poll rather than pop.  This can be useful in message-passing
+    // frameworks ...
+    // Also, the same data structure (and class) is used for "submission
+    // queues" (described below) holding externally submitted tasks,
+    // that differ only in that a lock (using field "phase"; see below) is
+    // required by external callers to push and pop tasks.
+
+    // submission 队列与提交线程（或 VT 的 carrier）的关联方式：
+    // WorkQueues are also used in a similar way for tasks submitted
+    // to the pool. We cannot mix these tasks in the same queues used
+    // by workers. Instead, we randomly associate submission queues
+    // with submitting threads (or carriers when using VirtualThreads)
+    // using a form of hashing.  The ThreadLocalRandom probe value
+    // serves as a hash code for choosing existing queues, and may be
+    // randomly repositioned upon contention with other submitters.
+    // In essence, submitters act like workers except that they are
+    // restricted to executing local tasks that they submitted (or
+    // when known, subtasks thereof).  Insertion of tasks in shared
+    // mode requires a lock. We use only a simple spinlock (as one
+    // role of field "phase") because submitters encountering a busy
+    // queue move to a different position to use or create other
+    // queues.
+```
+
+**要点**：FJP 用**同一类**（WorkQueue）既做 worker 的**本地任务队列**（deque，owner 用 pop/poll），也做**对外提交队列**（submission queues）；差别仅在于外部调用者 push/pop 时需持锁（`phase` 等）。提交到 pool 的任务不能与 worker 正在用的队列混用，因此通过**哈希**将 submission 队列与提交线程（或使用 VT 时的 **carrier**）随机关联；提交方在行为上类似 worker，但只执行自己提交的本地任务；插入到共享队列需 spinlock。即：run queue 在实现上 = 每个 worker 的 WorkQueue（本地队列）+ 与 carrier/线程关联的 submission WorkQueue；VT 的 onStart/onContinue 经 `execute`/`externalSubmit`/`lazySubmit` 进入上述队列，由 worker 取走或窃取执行。大量 VT 的管理方式见 §4.1「为何无显式 P、如何管理大量 VT」；P 的“队列 + 执行上下文”角色由 (Carrier + 其本地队列) 承担。
 
 **创建与执行流程（高层）**：`Thread.ofVirtual().start(task)` → 创建 VirtualThread（scheduler、Continuation 包装 task）→ `start()` → `scheduler.onStart(runContinuation)` → FJP 某 worker 执行 `runContinuation.run()` → `mount()` → `cont.run()` 执行用户 task；阻塞时 `cont.yield()` 卸载，`afterYield()` 里 `scheduler.onContinue(runContinuation)` 再次入队；其他 worker 或本 worker 之后取到后再次 `runContinuation()` → `unmount()` 已由上次 yield 完成，再次 `cont.run()` 继续。
 
@@ -1630,7 +1995,7 @@ async fn main() {
 - [Go Runtime Hacking Guide](https://go.dev/src/runtime/HACKING.md)
 - [Rust 异步编程指南](https://rust-lang.github.io/async-book/)
 - [Java Virtual Threads (Project Loom)](https://openjdk.org/jeps/444)
-- [OpenJDK Loom 源码](https://github.com/openjdk/loom)（`java.base/share/classes/java/lang/VirtualThread.java`、`jdk/internal/vm/Continuation.java`、`jdk/internal/misc/CarrierThread.java`）
+- [OpenJDK 源码](https://github.com/openjdk/jdk)（Virtual Threads 已并入主线：`java.base/share/classes/java/lang/VirtualThread.java`、`jdk/internal/vm/Continuation.java`、`jdk/internal/misc/CarrierThread.java`；历史可参考 [openjdk/loom](https://github.com/openjdk/loom)）
 - [Inside Java: Virtual Threads](https://inside.java/2023/10/30/sip086/)
 - [The Basis of Virtual Threads: Continuations (foojay.io)](https://foojay.io/today/the-basis-of-virtual-threads-continuations/)
 
